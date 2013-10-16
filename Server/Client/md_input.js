@@ -312,7 +312,7 @@ Input.method("processToolResult", function(result)
 //    resultData.instances = resultData.instances;
 //    resultData.message = resultData.message;
     
-    alert(result);
+    alert(result.message);
 /*
     var data = new Object();
     data.error = false;
