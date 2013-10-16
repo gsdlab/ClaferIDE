@@ -328,8 +328,6 @@ server.post('/upload', function(req, res, next)
                     });
                     
                     clafer_compiler.on('exit', function (code){	
-                        if (code == 0)
-                        {
                             // read the contents of the compiled file
                             fs.readFile(changeFileExt(uploadedFilePath, '.cfr', '.html'), function (err, html) 
                             {
@@ -337,16 +335,42 @@ server.post('/upload', function(req, res, next)
                                 {
                                     console.log('ERROR: Cannot read the compiled HTML file.');
                                     res.writeHead(400, { "Content-Type": "text/html"});
-                                    res.end("error");
+                                    res.end("compile_error");
+                                    process.result = '{"message": "' + escapeJSON("Error: Compilation Error") + '"}';
+                                    process.code = 0;
+                                    process.completed = true;
+                                    process.tool = null;
+                                    processes.push(process);           
+                                    cleanupOldFiles(uploadedFilePath, dlDir); // cleaning up when cached result is found
                                     return;
                                 }
-                                
-                                process.result = '{"message": "' + escapeJSON("PLACEHOLDER") + '"}';
-                                process.code = 0;
-                                process.completed = true;
-                                process.tool = null;
-                                processes.push(process);           
-                                cleanupOldFiles(uploadedFilePath, dlDir); // cleaning up when cached result is found
+                                else
+                                {
+                                    res.writeHead(200, { "Content-Type": "text/html"});
+                                    res.end(html);
+
+                                    if (code != 0)
+                                    {
+                                        process.result = '{"message": "' + escapeJSON("Error: Compilation Error") + '"}';
+                                        process.code = 0;
+                                        process.completed = true;
+                                        process.tool = null;
+                                        processes.push(process);           
+                                        cleanupOldFiles(uploadedFilePath, dlDir); // cleaning up when cached result is found
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        process.result = '{"message": "' + escapeJSON("Successfully Compiled") + '"}';
+                                        process.code = 0;
+                                        process.completed = true;
+                                        process.tool = null;
+                                        processes.push(process);           
+                                        cleanupOldFiles(uploadedFilePath, dlDir); // cleaning up when cached result is found
+                                        return;
+                                    }
+                                }
+                            });
 
 /* Consider Adding this functionality later:
 
@@ -368,16 +392,6 @@ server.post('/upload', function(req, res, next)
 
                                         clearTimeout(process.timeoutObject);
 */                                        
-                                res.writeHead(200, { "Content-Type": "text/html"});
-                                res.end(html); // sending the HTML to the result 
-                            });
-                        }
-                        else // an error occured
-                        {
-                            res.writeHead(400, { "Content-Type": "text/html"});
-                            res.end("error");
-                        
-                        }
                     });
                     
                 });
