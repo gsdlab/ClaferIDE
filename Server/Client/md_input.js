@@ -260,29 +260,10 @@ Input.method("submitFileCall", function(){
 
     $("#exampleURL").val(null);
     $("#exampleFlag").val("0");
-    
-    if (this.dataFileChosen)
-    {
-       	this.optimizeFlag = 0;
-        this.addInstancesFlag = 1;
-    }
-    else 
-    {
-        this.optimizeFlag = 1;
-        this.addInstancesFlag = 0;
-        this.previousData = null;
-        host.findModule("mdComparisonTable").permaHidden = {};
-    }
 });
 
 Input.method("submitExampleCall", function(){
-    this.optimizeFlag = 1;
-    this.addInstancesFlag = 0;
-    this.previousData = null;
-    
     $("#exampleFlag").val("1");
-    
-    host.findModule("mdComparisonTable").permaHidden = {};
 });
 
 Input.method("exampleChange", function(){
@@ -302,24 +283,15 @@ Input.method("inputChange", function(){
     if (filename)
     {
         if (filename.substring(filename.length-4) == ".cfr"){
-            $("#submitFile").val("Optimize");
-            $("#submitFile").removeAttr("disabled");                      
-            this.dataFileChosen = false;
-        } else if (filename.substring(filename.length-5) == ".data"){
-            $("#submitFile").val("Add Instances");
-            $("#submitFile").removeAttr("disabled");             
-            this.dataFileChosen = true;
-        }
+            $("#submitFile").removeAttr("disabled");                    
+        }  
         else{ // unknown file
             $("#submitFile").val("Unknown File");
             $("#submitFile").attr("disabled", "disabled");       
-            this.dataFileChosen = false;
         }
     }
     else{ // no file
-        $("#submitFile").val("Optimize");
         $("#submitFile").attr("disabled", "disabled");       
-        this.dataFileChosen = false;
     }
     
 });
