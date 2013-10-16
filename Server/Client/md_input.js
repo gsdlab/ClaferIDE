@@ -26,10 +26,10 @@ function Input(host)
 
     this.requestTimeout = 60000; // what is the timeout for response after sending a file
     this.pollingTimeout = 60000;  // what is the timeout when polling
-    this.pollingDelay = 2000;    // how often to send requests (poll) for updates
+    this.pollingDelay = 500;    // how often to send requests (poll) for updates
 
-    this.width = 500;
-    this.height = 88;
+    this.width = 640;
+    this.height = 600;
     this.posx = 0;
     this.posy = 0;
     
@@ -40,6 +40,8 @@ function Input(host)
     this.serverAction = "/upload";
     
     this.dataFileChosen = false;
+
+    this.editor = null;
 }
 
 Input.method("onDataLoaded", function(data){
@@ -56,6 +58,7 @@ Input.method("onInitRendered", function()
 
     $("#submitFile").click(this.submitFileCall.bind(this));
     $("#submitExample").click(this.submitExampleCall.bind(this));
+    $("#submitText").click(this.submitTextCall.bind(this));
     
     $("#submitExample").attr("disabled", "disabled");
     $("#submitFile").attr("disabled", "disabled");
@@ -70,6 +73,11 @@ Input.method("onInitRendered", function()
     options.timeout = this.requestTimeout;
 
     $('#myform').ajaxForm(options); 
+
+    this.editor = ace.edit("clafer_editor");
+    this.editor.setTheme("ace/theme/monokai");
+    this.editor.getSession().setMode("ace/mode/text");
+
 //	$('#myform').submit(); moved submit out of here, because the backend list is not loaded yet
 });
 
@@ -266,6 +274,11 @@ Input.method("submitExampleCall", function(){
     $("#exampleFlag").val("1");
 });
 
+Input.method("submitTextCall", function(){
+    $("#claferText").val(this.editor.getValue());
+    $("#exampleFlag").val("2");
+});
+
 Input.method("exampleChange", function(){
     if ($("#exampleURL").val())
     {
@@ -312,7 +325,7 @@ Input.method("processToolResult", function(result)
 //    resultData.instances = resultData.instances;
 //    resultData.message = resultData.message;
     
-    alert(result.message);
+//    alert(result.message);
 /*
     var data = new Object();
     data.error = false;
@@ -369,6 +382,12 @@ Input.method("getInitContent", function()
     result += '</select>';
     result += '<input id="submitExample" type="submit" value="Compile"></input>';
     result += '</fieldset><div style="height:8px">&nbsp;</div>';
+
+    result += 'Or enter your model below: <input id="submitText" type="submit" value="Compile"/>';
+    result += '<input id="claferText" name="claferText" type="hidden"/>';
+
+    result += '<div style="height:500px; width: 620px;" name="clafer_editor" id="clafer_editor">';
+    result += '</div>';
 
     result += '</form></div>';
     

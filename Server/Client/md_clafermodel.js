@@ -26,8 +26,8 @@ function ClaferModel(host)
     this.title = "Clafer Source Model";
     
     this.width = 500;
-    this.height = 88;
-    this.posx = 500;
+    this.height = 600;
+    this.posx = 640;
     this.posy = 0;
     this.iframeType = true;
     this.ajaxUrl = "/htmlwrapper";

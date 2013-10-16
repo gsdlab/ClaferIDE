@@ -44,7 +44,7 @@ function Host(modules)
     this.instanceCounterLabel = "#instance"
     this.modules = new Array();
     this.helpGetter = new helpGetter(this);
-    
+
     for (var i = 0; i < modules.length; i++)
     {
         var MyClass = stringToFunction(modules[i]);        
