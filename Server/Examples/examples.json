@@ -4,6 +4,7 @@
         {"url": "person.cfr", "label": "Person from Clafer Tutorial 9.3"}, 
         {"url": "cardinalities.cfr", "label": "Clafer and group cardinalities"}, 
         {"url": "Car.cfr", "label": "Cruise Control Example"},
-        {"url": "Car4O.cfr", "label": "Cruise Control Example with Quality (4 Objectives)"}
+        {"url": "Car4O.cfr", "label": "Cruise Control Example with Quality (4 Objectives)"},
+        {"url": "Telematics_PLA.cfr", "label": "Telematics PLA Example"}
     ]        
 }
