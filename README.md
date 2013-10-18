@@ -21,7 +21,11 @@ Clafer can be used for *product-line modeling* and *multi-objective optimization
 
 ### Functions
 
-1. 
+1. Provides a web-based IDE for modeling in Clafer
+2. Provides an source code editor (ACE)
+2. Compiles the model to HTML for syntax highlighting and navigation via hyperlinks or error highlighting
+3. Instantiates the model using ClaferIG and allows for global scope setting and requesting a next instance
+4. Provides a set of predefined examples that can be compiler and instantiated
 
 ### Nature
 
@@ -59,6 +63,7 @@ In case these binaries do not work on your particular machine configuration, the
   * can be from the binary distribution
 * [ClaferIG](https://github.com/gsdlab/claferIG) v0.3.5
 * [Node.JS Framework](http://nodejs.org/download/), v0.10.18
+* [ACE](http://ace.c9.io/) Editor
 
 ### Installation
 
@@ -70,7 +75,11 @@ Core
 	
  `npm install`
 
-3. Install the necessary backends using the steps below.
+3. Install the ACE source code editor.
+
+* Clone [ace-builds](https://github.com/ajaxorg/ace-builds/) to some directory `<temp>`
+** execute `git clone https://github.com/ajaxorg/ace-builds.git`
+* copy the `ace-builds/src-nonconflict` folder to `<target directory>/ClaferIDE/Server/Client/ace-builds`
 
 ### Important: Branches must correspond
 
