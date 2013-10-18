@@ -80,6 +80,41 @@ server.post('/', function(req, res, next) {
 	res.end(req.body.data);
 });
 
+server.get('/control', function(req, res){
+    console.log("Control: Enter");
+    for (var y = 0; y < processes.length; y++)
+    {
+        if (processes[y].windowKey == req.query.windowKey)
+        {
+//            var d = new Date();
+//            processes[y].lastUsed = d;
+            var CurProcess = processes[y];
+            if (req.query.operation == "next")
+            {
+                console.log("Control: Next Instance");
+                CurProcess.tool.stdin.write("n\n"); 
+            }
+            else if (req.query.operation == "scope")
+            {
+                console.log("Control: Increase scope by " + req.query.increaseScopeBy);
+                console.log("i " + req.query.increaseScopeBy + "\n");
+                CurProcess.tool.stdin.write("i " + req.query.increaseScopeBy + "\n");
+            }
+            else
+            {
+                console.log("Control: Unknown command");
+            }
+
+            break;
+
+        }
+    }
+
+    res.writeHead(200, { "Content-Type": "application/json"});
+    res.end('{"message": "OK"}');
+
+});
+
 /*
  * Handle Polling
  * The client will poll the server to get the latest updates or the final result
@@ -90,7 +125,7 @@ server.post('/', function(req, res, next) {
 
 server.post('/poll', function(req, res, next)
 {
-    var found = true;
+    var found = false;
     for (var i = 0; i < processes.length; i++)
     {
         if (processes[i].windowKey == req.body.windowKey)
@@ -115,7 +150,7 @@ server.post('/poll', function(req, res, next)
                     }
                     else
                     {
-                        res.writeHead(400, { "Content-Type": "application/json"});
+                        res.writeHead(200, { "Content-Type": "application/json"});
                     }
 
                     res.end(processes[i].result);
@@ -129,8 +164,26 @@ server.post('/poll', function(req, res, next)
                 }	
                 else // still working
                 {
+                    // else ClaferIG is running
+
+                    console.log("Still Working...");
+
+                    var currentResult = "";
+
+                    if (processes[i].freshData != "")
+                    {
+                        currentResult += processes[i].freshData;
+                        processes[i].freshData = "";
+                    }
+
+                    if (processes[i].freshError != "")
+                    {
+                        currentResult += processes[i].freshError;
+                        processes[i].freshError = "";
+                    }                    
+
                     res.writeHead(200, { "Content-Type": "application/json"});
-                    res.end('{"message": "Working"}');
+                    res.end('{"message": "' + escapeJSON(currentResult) + '"}');
                     found = true;
                 }
             }
@@ -163,8 +216,8 @@ server.post('/poll', function(req, res, next)
     
     if (!found)
     {
-        res.writeHead(404, { "Content-Type": "text/html"});
-        res.end("Error: the requested process is not found.");
+        res.writeHead(404, { "Content-Type": "application/json"});
+        res.end('{"message": "Error: the requested process is not found."}');
     }
 });
 
@@ -375,11 +428,9 @@ server.post('/upload', function(req, res, next)
                                 }
                                 else
                                 {
-                                    res.writeHead(200, { "Content-Type": "text/html"});
-                                    res.end(html);
-
                                     if (code != 0)
                                     {
+                                        console.log("CC: Non-zero Return Value");
                                         process.result = '{"message": "' + escapeJSON("Error: Compilation Error") + '"}';
                                         process.code = 0;
                                         process.completed = true;
@@ -390,37 +441,90 @@ server.post('/upload', function(req, res, next)
                                     }
                                     else
                                     {
-                                        process.result = '{"message": "' + escapeJSON("Successfully Compiled") + '"}';
-                                        process.code = 0;
-                                        process.completed = true;
-                                        process.tool = null;
-                                        processes.push(process);           
-                                        cleanupOldFiles(uploadedFilePath, dlDir); // cleaning up when cached result is found
-                                        return;
+                                        console.log("CC: Zero Return Value");
+
+                                        var found = false;
+                                        for (var i = 0; i < processes.length; i++)
+                                        {
+                                            if (processes[i].windowKey == req.body.windowKey)
+                                            {
+                                                found = true;
+                                                break;
+                                                // do some other stuff
+                                            }
+                                        }
+
+                                        if (!found)
+                                        {
+
+                                            var d = new Date();
+                                            var process = { windowKey: req.body.windowKey, tool: null, freshData: "", folder: dlDir, file: uploadedFilePath, lastUsed: d, freshError: ""};
+                                            var args = [uploadedFilePath];
+
+                                            process.executionTimeoutObject = setTimeout(function(process){
+                                                console.log("Error: Execution Timeout.");
+                                                process.result = '{"message": "' + escapeJSON('Error: Execution Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.executionTimeout + ' millisecond(s).') + '"}';
+                                                process.code = 9003;
+                                                process.completed = true;
+                                                killProcessTree(process);
+                                            }, config.executionTimeout, process);
+                                            
+                                            process.pingTimeoutObject = setTimeout(function(process){
+                                                console.log("Error: Ping Timeout.");
+                                                process.result = '{"message": "' + escapeJSON('Error: Ping Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.pingTimeout + ' millisecond(s).') + '"}';
+                                                process.code = 9004;
+                                                process.completed = true;
+                                                process.pingTimeout = true;
+                                                killProcessTree(process);
+                                            }, config.pingTimeout, process);
+                                            
+                                            tool = spawn("claferIG", args);
+                                            process.tool = tool;
+                                            processes.push(process);
+                                            tool.stdout.on("data", function (data){
+                                                for (var i = 0; i < processes.length; i++)
+                                                {
+                                                    if (processes[i].windowKey == req.body.windowKey)
+                                                    {
+                                                        if (!processes[i].completed)
+                                                        {
+                                                            processes[i].freshData += data;
+                                                        }
+                                                    }
+                                                }
+                                            });
+
+                                            tool.stderr.on("data", function (data){
+                                                for (var i = 0; i<processes.length; i++)
+                                                {
+                                                    if (processes[i].windowKey == req.body.windowKey)
+                                                    {
+                                                        if (!processes[i].completed){
+                                                            processes[i].freshError += data;
+                                                        }
+                                                    }
+                                                }
+                                            });
+
+                                            tool.on("close", function (code){
+                                                console.log("CLAFERIG: On Exit");
+                                                for (var i = 0; i<processes.length; i++){
+
+                                                    if (processes[i].windowKey == req.body.windowKey)
+                                                    {
+                                                        processes[i].tool = null;
+                                                        cleanupOldFiles(processes[i].file, processes[i].folder);
+                                                    }
+                                                }
+                                            });
+                                        }
                                     }
+
+                                    res.writeHead(200, { "Content-Type": "text/html"});
+                                    res.end(html);
                                 }
                             });
 
-/* Consider Adding this functionality later:
-
-                                    process.executionTimeoutObject = setTimeout(function(process){
-                                        console.log("Request timed out.");
-                                        process.result = '{"message": "' + escapeJSON('Error: Execution Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.executionTimeout + ' millisecond(s).') + '"}';
-                                        process.code = 9003;
-                                        process.completed = true;
-                                        killProcessTree(process);
-                                    }, config.executionTimeout, process);
-                                    
-                                    process.pingTimeoutObject = setTimeout(function(process){
-                                        process.result = '{"message": "' + escapeJSON('Error: Ping Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.pingTimeout + ' millisecond(s).') + '"}';
-                                        process.code = 9004;
-                                        process.completed = true;
-                                        process.pingTimeout = true;
-                                        killProcessTree(process);
-                                    }, config.pingTimeout, process);
-
-                                        clearTimeout(process.timeoutObject);
-*/                                        
                     });
                     
                 });
@@ -432,7 +536,10 @@ server.post('/upload', function(req, res, next)
 function finishCleanup(dir, results){
 	if (fs.existsSync(dir)){
 		fs.rmdir(dir, function (err) {
-  			if (err) throw err;
+  			if (err) {
+                console.log("Could not finish the cleanup: " + dir);
+                return;
+            };
  			console.log("Successfully deleted " + dir + " along with contents:\n" + results);
 		});
 	}
@@ -442,7 +549,12 @@ function cleanupOldFiles(path, dir) {
     console.log("Cleaning temporary files...");                    
 	//cleanup old files
 	fs.readdir(dir, function(err, files){
-		if (err) throw err;
+		//if (err) throw err;
+        if (err) 
+        {
+            console.log("Could not clear the folder: " + dir);
+            return; // cannot get the folder
+        }
 		var results = "";
 		var numFiles = files.length;
 		console.log("#Files = " + numFiles);
