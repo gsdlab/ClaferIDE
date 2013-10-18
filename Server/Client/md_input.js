@@ -65,7 +65,8 @@ Input.method("onInitRendered", function()
     
     $("#myform [type='file']").change(this.inputChange.bind(this));
     $("#exampleURL").change(this.exampleChange.bind(this));
-    
+    $("#loadExampleInEditor").change(this.exampleChange.bind(this));
+
     var options = new Object();
     options.beforeSubmit = this.beginQuery.bind(this);
     options.success = this.fileSent.bind(this);
@@ -156,6 +157,10 @@ Input.method("setClaferModelHTML", function(html){
     this.host.findModule("mdClaferModel").model = html;
     var iframe = $("#model")[0];
     iframe.src = iframe.src; // reloads the window
+});
+
+Input.method("setEditorModel", function(claferText){
+    this.editor.setValue(claferText);
 });
 
 Input.method("fileSent", function(responseText, statusText, xhr, $form)  { 
@@ -381,6 +386,7 @@ Input.method("getInitContent", function()
     
     result += '</select>';
     result += '<input id="submitExample" type="submit" value="Compile"></input>';
+    result += '<input id="loadExampleInEditor" type="checkbox" value="unchecked"></input>';
     result += '</fieldset><div style="height:8px">&nbsp;</div>';
 
     result += 'Or enter your model below: <input id="submitText" type="submit" value="Compile"/>';
