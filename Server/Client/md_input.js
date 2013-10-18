@@ -26,7 +26,7 @@ function Input(host)
 
     this.requestTimeout = 60000; // what is the timeout for response after sending a file
     this.pollingTimeout = 60000;  // what is the timeout when polling
-    this.pollingDelay = 500;    // how often to send requests (poll) for updates
+    this.pollingDelay = 2000;    // how often to send requests (poll) for updates
 
     this.width = 640;
     this.height = 600;
@@ -45,8 +45,6 @@ function Input(host)
 }
 
 Input.method("onDataLoaded", function(data){
-    this.processor = new ClaferProcessor(data.claferXML);
-    this.goals = this.processor.getGoals();
 });
 
 Input.method("onInitRendered", function()
@@ -121,18 +119,24 @@ Input.method("showRequest", function(formData, jqForm, options) {
 
 Input.method("onPoll", function(responseObject)
 {
-    if (responseObject.message === "Working")
+    console.log(responseObject);
+    if (responseObject.message === "Exited")
     {
-        this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
-    }
-    else if (responseObject.message === "Cancelled")
-    {
-        this.endQuery();
+        this.host.findModule("mdControl").disableAll(); // if exited IG, then disable controls
     }
     else
     {
         this.processToolResult(responseObject);
-        this.endQuery();
+
+        if (responseObject.message.length >= 5 && responseObject.message.substring(0,5) == "Error")
+        {
+            this.host.findModule("mdControl").disableAll(); // if exited IG, then disable controls
+            // stop polling
+        }
+        else
+        {
+            this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
+        }
     }
 });        
 
@@ -149,7 +153,7 @@ Input.method("poll", function()
     
     options.success = this.onPoll.bind(this);
     options.error = this.handleError.bind(this);
-    
+
     $.ajax(options);
 });
 
@@ -165,24 +169,23 @@ Input.method("setEditorModel", function(claferText){
 
 Input.method("fileSent", function(responseText, statusText, xhr, $form)  { 
     this.toCancel = false;
+    this.endQuery();
 
     if (responseText == "error")
     {
         this.handleError(null, "compile_error", null);
-        this.endQuery();
         return;
     }
 
     if (responseText != "no clafer file submitted")
     {
-        if (responseText != "OK")
-        {
-            this.setClaferModelHTML(responseText);
-        }
+        var data = new Object();
+        data.message = responseText;
+        this.host.updateData(data);
+        if (this.pollingTimeoutObject)
+            clearTimeout(this.pollingTimeoutObject);
         this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
     }
-    else
-        this.endQuery();
 });
 
 Input.method("handleError", function(response, statusText, xhr)  { 
@@ -195,18 +198,18 @@ Input.method("handleError", function(response, statusText, xhr)  {
         caption = "<b>Compile Error.</b><br>Please check whether Clafer Compiler is available, and the model is correct.";
     else if (statusText == "timeout")
         caption = "<b>Request Timeout.</b><br>Please check whether the server is available.";
-    else if (statusText == "malformed_output")
-        caption = "<b>Malformed output received from ClaferMoo.</b><br>Please check whether you are using the correct version of ClaferMoo. Also, an unhandled exception is possible.  Please verify your input file: check syntax and integer ranges.";        
-    else if (statusText == "malformed_instance")
-        caption = "<b>Malformed instance data received from ClaferMoo.</b><br>An unhandled exception may have occured during ClaferMoo execution. Please verify your input file: check syntax and integer ranges.";        
-    else if (statusText == "empty_instances")
-        caption = "<b>No instances returned.</b>Possible reasons:<br><ul><li>No optimal instances, all variants are non-optimal.</li><li>An unhandled exception occured during ClaferMoo execution. Please verify your input file: check syntax and integer ranges.</li></ul>.";        
-    else if (statusText == "empty_argument")
-        caption = "<b>Empty argument given to processToolResult.</b><br>Please report this error.";        
-    else if (statusText == "empty_instance_file")
-        caption = "<b>No instances found in the specified file.";        
-    else if (statusText == "optimize_first")
-        caption = "<b>You have to run optimization first, and only then add instances.";        
+//    else if (statusText == "malformed_output")
+//        caption = "<b>Malformed output received from ClaferMoo.</b><br>Please check whether you are using the correct version of ClaferMoo. Also, an unhandled exception is possible.  Please verify your input file: check syntax and integer ranges.";        
+//    else if (statusText == "malformed_instance")
+//        caption = "<b>Malformed instance data received from ClaferMoo.</b><br>An unhandled exception may have occured during ClaferMoo execution. Please verify your input file: check syntax and integer ranges.";        
+//    else if (statusText == "empty_instances")
+//        caption = "<b>No instances returned.</b>Possible reasons:<br><ul><li>No optimal instances, all variants are non-optimal.</li><li>An unhandled exception occured during ClaferMoo execution. Please verify your input file: check syntax and integer ranges.</li></ul>.";        
+//    else if (statusText == "empty_argument")
+//        caption = "<b>Empty argument given to processToolResult.</b><br>Please report this error.";        
+//    else if (statusText == "empty_instance_file")
+//        caption = "<b>No instances found in the specified file.";        
+//    else if (statusText == "optimize_first")
+//        caption = "<b>You have to run optimization first, and only then add instances.";        
     else if (statusText == "error" && response.responseText == "")
         caption = "<b>Request Error.</b><br>Please check whether the server is available.";        
     else
@@ -218,55 +221,6 @@ Input.method("handleError", function(response, statusText, xhr)  {
 	};
 	this.endQuery();
     
-});
-
-Input.method("convertHtmlTags", function(input) {
-  var in_tag=false;
-  var in_var=false;
-  var output = new String("");
-
-  var length = input.length;
-  
-  for (var i=0; i< length; i++) 
-    {
-      ch = input.charAt(i);
-	  
-      if (in_tag) 
-	  {
-		if (in_var) 
-		{
-			if (ch == '"') 
-			{
-				in_var = false;
-			}
-			
-			output += ch;
-		}
-		else 
-		{
-			if (ch == '"') 
-			{
-				in_var = true;
-			}
-			else if (ch == '>') 
-			{
-				in_tag = false;
-			}
-			
-			output += ch.toLowerCase();
-		}
-      }
-      else 
-	  {
-		if (ch == '<') 
-		{
-			in_tag = true;
-		}
-		output += ch;
-      }
-    }
-
-  return output;
 });
 
 Input.method("submitFileCall", function(){
@@ -321,8 +275,9 @@ Input.method("processToolResult", function(result)
         this.handleError(null, "empty_argument", null);
         return;
     }
-    
+
 //    var resultData = JSON.parse(result);
+//    alert(resultData);    
     
 //    resultData.message = unescapeJSON(resultData.message);
 
@@ -330,6 +285,22 @@ Input.method("processToolResult", function(result)
 //    resultData.instances = resultData.instances;
 //    resultData.message = resultData.message;
     
+
+    if (result.html)
+    {
+        this.setClaferModelHTML(result.html);        
+    }
+
+    if (result.model != "")
+    {
+//        alert(result.model);        
+        this.editor.getSession().setValue(result.model);
+    }
+
+
+    $("#output").html($("#output").html() + result.message.replaceAll("claferIG> ", "ClaferIG>\n").replaceAll("\n", "<br>"));
+//    this.host.updateData(resultData);
+
 //    alert(result.message);
 /*
     var data = new Object();
@@ -386,7 +357,7 @@ Input.method("getInitContent", function()
     
     result += '</select>';
     result += '<input id="submitExample" type="submit" value="Compile"></input>';
-    result += '<input id="loadExampleInEditor" type="checkbox" value="unchecked">load in editor</input>';
+    result += '<input id="loadExampleInEditor" type="checkbox" name="loadExampleInEditor" value="unchecked">load in editor</input>';
     result += '</fieldset><div style="height:8px">&nbsp;</div>';
 
     result += 'Or enter your model below: <input id="submitText" type="submit" value="Compile"/>';

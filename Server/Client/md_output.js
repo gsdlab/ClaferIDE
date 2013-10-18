@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2012 Alexander Murashkin, Neil Redman <http://gsd.uwaterloo.ca>
+Copyright (C) 2012 Neil Redman <http://gsd.uwaterloo.ca>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -20,44 +20,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-function ClaferModel(host)
+function Output(host)
 { 
-    this.id = "mdClaferModel";
-    this.title = "Clafer Source Model";
+    this.id = "mdOutput";
+    this.title = "Output";
     
     this.width = 300;
-    this.height = 600;
-    this.posx = 640;
-    this.posy = 0;
-    this.iframeType = true;
-    this.ajaxUrl = "/htmlwrapper";
+    this.height = 500;
+    this.posx = 940;
+    this.posy = 100;
     
     this.host = host;
-    this.goals = null;
-    this.model = "";
+    this.content = "";
 }
 
-ClaferModel.method("onDataLoaded", function(data){
+Output.method("getInitContent", function(){
+    return '<pre id="output">' + this.content + '</pre>';
 });
 
-ClaferModel.method("onRendered", function()
+Output.method("onDataLoaded", function(data){
+//    if (data.consoleOut)
+//        this.content += data.consoleOut;
+});
+
+Output.method("onRendered", function(){
+//    $("#mdOutput .window-content").scrollTop($("#mdOutput #output").height());
+});
+
+Output.method("getContent", function()
 {
+    return '<pre id="output">' + this.content + '</pre>';
 });
-
-ClaferModel.method("onDocLoad", function(){
-    if (this.model != "")
-    {
-        var iframe = $("#model")[0];
-
-        if (iframe.contentWindow)
-            iframe.contentWindow.document.write(this.model);
-        else
-            iframe.document.write(this.model);
-    }
-});
-
-ClaferModel.method("onInitRendered", function()
-{
-    $("#model")[0].onload = this.onDocLoad.bind(this);
-});
-
