@@ -386,7 +386,7 @@ Input.method("getInitContent", function()
     
     result += '</select>';
     result += '<input id="submitExample" type="submit" value="Compile"></input>';
-    result += '<input id="loadExampleInEditor" type="checkbox" value="unchecked"></input>';
+    result += '<input id="loadExampleInEditor" type="checkbox" value="unchecked">load in editor</input>';
     result += '</fieldset><div style="height:8px">&nbsp;</div>';
 
     result += 'Or enter your model below: <input id="submitText" type="submit" value="Compile"/>';
