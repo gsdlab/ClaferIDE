@@ -174,10 +174,11 @@ Input.method("fileSent", function(responseText, statusText, xhr, $form)  {
 
     if (responseText != "no clafer file submitted")
     {
-        this.setClaferModelHTML(responseText);
         var data = new Object();
         data.message = responseText;
         this.host.updateData(data);
+        if (this.pollingTimeoutObject)
+            clearTimeout(this.pollingTimeoutObject);
         this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
     }
 });
@@ -280,7 +281,19 @@ Input.method("processToolResult", function(result)
 //    resultData.message = resultData.message;
     
 
-    $("#output").html($("#output").html() + result.message.replaceAll("\n", "<br>"));
+    if (result.html)
+    {
+        this.setClaferModelHTML(result.html);        
+    }
+
+    if (result.model != "")
+    {
+//        alert(result.model);        
+        this.editor.getSession().setValue(result.model);
+    }
+
+
+    $("#output").html($("#output").html() + result.message.replaceAll("ClaferIG>", "ClaferIG>\n").replaceAll("\n", "<br>"));
 //    this.host.updateData(resultData);
 
 //    alert(result.message);

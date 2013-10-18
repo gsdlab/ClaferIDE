@@ -125,6 +125,7 @@ server.get('/control', function(req, res){
 server.post('/poll', function(req, res, next)
 {
     var found = false;
+    console.log("#Processes: " + processes.length);
     for (var i = 0; i < processes.length; i++)
     {
         if (processes[i].pingTimeout)
@@ -148,7 +149,7 @@ server.post('/poll', function(req, res, next)
                         killProcessTree(process);
                     }, config.pingTimeout, processes[i]);
                     
-                    if (processes[i].completed) // the execution is completed
+                    if (processes[i].completed) // the execution is completed, the process is exited
                     {
                         
                         if (processes[i].code == 0)
@@ -160,7 +161,15 @@ server.post('/poll', function(req, res, next)
                             res.writeHead(200, { "Content-Type": "application/json"});
                         }
 
-                        res.end(processes[i].result);
+                        var jsonObj = JSON.parse(processes[i].result);
+                        jsonObj.html = processes[i].html;
+                        jsonObj.model = processes[i].model;
+
+                        res.end(JSON.stringify(jsonObj));
+
+                        processes[i].html = "";
+                        processes[i].model = "";
+
                         if (processes[i].pingTimeoutObject)
                         {
                             clearTimeout(processes[i].pingTimeoutObject);
@@ -188,7 +197,15 @@ server.post('/poll', function(req, res, next)
                         }                    
 
                         res.writeHead(200, { "Content-Type": "application/json"});
-                        res.end('{"message": "' + escapeJSON(currentResult) + '"}');
+
+                        var jsonObj = new Object();
+                        jsonObj.message = currentResult;
+                        jsonObj.html = processes[i].html;
+                        jsonObj.model = processes[i].model;
+                        res.end(JSON.stringify(jsonObj));
+                        processes[i].html = "";
+                        processes[i].model = "";
+
                         found = true;
                     }
                 }
@@ -421,8 +438,10 @@ server.post('/upload', function(req, res, next)
                             fs.readFile(changeFileExt(uploadedFilePath, '.cfr', '.html'), function (err, html) 
                             {
                                 var d = new Date();
-                                var process = { windowKey: req.body.windowKey, toRemoveCompletely: false, tool: null, freshData: "", folder: dlDir, file: uploadedFilePath, lastUsed: d, freshError: ""};
+                                var process = { windowKey: req.body.windowKey, html: "", toRemoveCompletely: false, tool: null, freshData: "", folder: dlDir, file: uploadedFilePath, lastUsed: d, freshError: ""};
                                 var args = [uploadedFilePath];
+
+                                process.model = file_contents;
 
                                 if (err)
                                 {
@@ -431,10 +450,11 @@ server.post('/upload', function(req, res, next)
                                     process.code = 0;
                                     process.completed = true;
                                     process.tool = null;
+                                    process.html = "";
                                     processes.push(process);           
                                     cleanupOldFiles(uploadedFilePath, dlDir); // cleaning up when cached result is found
-                                    res.writeHead(400, { "Content-Type": "text/html"});
-                                    res.end("compile_error");
+//                                    res.writeHead(400, { "Content-Type": "text/html"});
+//                                    res.end("compile_error");
                                     return;
                                 }
                                 else
@@ -446,6 +466,7 @@ server.post('/upload', function(req, res, next)
                                         process.code = 0;
                                         process.completed = true;
                                         process.tool = null;
+                                        process.html = html.toString();
                                         processes.push(process);           
                                         cleanupOldFiles(uploadedFilePath, dlDir); // cleaning up when cached result is found
                                     }
@@ -492,6 +513,7 @@ server.post('/upload', function(req, res, next)
                                             
                                             tool = spawn("claferIG", args);
                                             process.tool = tool;
+                                            process.html = html.toString();
                                             processes.push(process);
                                             tool.stdout.on("data", function (data){
                                                 for (var i = 0; i < processes.length; i++)
@@ -532,10 +554,13 @@ server.post('/upload', function(req, res, next)
 //                                        }
                                     }
 
-                                    res.writeHead(200, { "Content-Type": "text/html"});
                                     res.end(html);
                                 }
                             });
+
+                        res.writeHead(200, { "Content-Type": "text/html"});
+                        res.end("OK"); // we have to return a response right a way to avoid confusion.
+                        // HTML will be returned on the next polling
 
                     });
                     
