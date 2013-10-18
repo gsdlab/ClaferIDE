@@ -254,6 +254,7 @@ server.post('/upload', function(req, res, next)
 	console.log("/Upload request initiated.");
 
     var key = req.body.windowKey;
+    var loadExampleInEditor = req.body.loadExampleInEditor;
     var fileTextContents = req.body.claferText;
     var currentURL = "";
     
@@ -441,7 +442,10 @@ server.post('/upload', function(req, res, next)
                                 var process = { windowKey: req.body.windowKey, html: "", toRemoveCompletely: false, tool: null, freshData: "", folder: dlDir, file: uploadedFilePath, lastUsed: d, freshError: ""};
                                 var args = [uploadedFilePath];
 
-                                process.model = file_contents;
+                                if (loadExampleInEditor)
+                                    process.model = file_contents;
+                                else
+                                    process.model = "";                                    
 
                                 if (err)
                                 {
