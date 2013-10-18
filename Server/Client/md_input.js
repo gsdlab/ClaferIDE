@@ -298,7 +298,7 @@ Input.method("processToolResult", function(result)
     }
 
 
-    $("#output").html($("#output").html() + result.message.replaceAll("ClaferIG>", "ClaferIG>\n").replaceAll("\n", "<br>"));
+    $("#output").html($("#output").html() + result.message.replaceAll("claferIG>", "ClaferIG>\n").replaceAll("\n", "<br>"));
 //    this.host.updateData(resultData);
 
 //    alert(result.message);
