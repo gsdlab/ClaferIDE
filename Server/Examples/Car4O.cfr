@@ -1,12 +1,16 @@
+/*
+Example from <a href="http://t3-necsis.cs.uwaterloo.ca:8091/NECSIS-Workshop/Modeling%20Quality%204">wiki</a>
+*/
+
 abstract Feature
-    cost: integer
-    mass: integer
+    cost ->> integer
+    mass ->> integer
 
 abstract ComfortFeature : Feature
-    comfort: integer
+    comfort ->> integer
 
 abstract FuelFeature : ComfortFeature
-    fuel: integer
+    fuel ->> integer
     
 abstract Car
     ABS : ComfortFeature ?
@@ -63,14 +67,14 @@ abstract Car
             [cost = 3]
     [ ACC => FCA]
     
-    total_cost : integer = sum Feature.cost
-    total_comfort : integer = sum ComfortFeature.cost
-    total_fuel : integer = sum FuelFeature.cost
-    total_mass : integer = sum FuelFeature.mass
+    total_cost ->> integer = sum Feature.cost
+    total_comfort ->> integer = sum ComfortFeature.cost
+    total_fuel ->> integer = sum FuelFeature.cost
+    total_mass ->> integer = sum FuelFeature.mass
     
-aCar : Car
+optimalCar : Car
 
-<< min aCar.total_cost >>
-<< min aCar.total_fuel >>
-<< max aCar.total_comfort >>
-<< min aCar.total_mass >>
+<< min optimalCar.total_cost >>
+<< min optimalCar.total_fuel >>
+<< max optimalCar.total_comfort >>
+<< min optimalCar.total_mass >>

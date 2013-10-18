@@ -1,0 +1,34 @@
+/*
+Example from <a href="http://t3-necsis.cs.uwaterloo.ca:8091/NECSIS-Workshop/Modeling%20Variability%207">wiki</a>
+*/
+
+BumbleBee : Camaro
+    [ transformer ]
+
+abstract Camaro : Car
+    [ ACC ]
+    [ backlight ]
+    transformer ?
+
+abstract Car
+    ABS ?
+    xor Transmission
+        Automatic
+        Manual
+    `FCA ?
+    `CC ?
+    [ ACC => FCA ]
+
+abstract FCA
+    xor Sensor
+        Radar
+        Lidar
+    xor Alert
+        Haptic
+        Audible
+
+abstract CC
+    switch
+        backlight ?
+    ACC ?
+

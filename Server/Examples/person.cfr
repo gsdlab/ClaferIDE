@@ -1,0 +1,69 @@
+/*
+Example from <a href="http://t3-necsis.cs.uwaterloo.ca:8091/Tutorial/Intro">Clafer Tutorial 9.3</a>
+*/
+
+abstract Person
+  Name : string
+  Surname : string
+  DateOfBirth  : date
+  or Gender
+    Male
+    Female
+  xor MaritalStatus
+    NeverMarried
+    Married
+    Divorced
+  Address
+    Street : string
+      UnitNo : string ?
+    City : string
+    Country : string
+    PostalCode : string
+
+abstract date : string
+// here should go format regular expression
+
+JohnDoe : Person
+    [ Name = "John" ]
+    [ Surname = "Doe" ]
+    [ DateOfBirth = "01-02-1985" ]
+    [ Male ]
+    [ Married ]
+    [ Street = "123 Main St." ]
+    [ City = "Great Town" ]
+    [ Country = "Canada" ]
+    [ PostalCode = "A1B 2C3" ]
+
+abstract Student : Person
+  StudentId : string
+
+abstract  WaitingLine 
+  participants -> Person *
+
+MaryJane  :  Student
+    [ Name = "Mary Jane" ]
+    [ StudentId = "MJ13421354" ]
+
+BusLine : WaitingLine
+  [ JohnDoe in participants ]
+  [ MaryJane in participants ]
+
+JohnAndMaryLine : WaitingLine
+  [ participants = JohnDoe, MaryJane ]
+
+abstract TwoPersonLine : WaitingLine
+  [ # participants  = 2 ]
+
+abstract OneToTenPersonLine : WaitingLine
+  [ # participants  >= 1 ]
+  [ # participants  <= 10]
+
+
+enum NorthAmericanCountry = Canada | USA | Mexico
+
+abstract Person2
+  Country -> NorthAmericanCountry
+
+JohnDoe2 : Person2
+  [ Country = Canada ]
+
