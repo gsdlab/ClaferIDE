@@ -1,3 +1,7 @@
+/*
+Example from <a href="http://t3-necsis.cs.uwaterloo.ca:8091/NECSIS-Workshop/Modeling%20Quality%204">wiki</a>
+*/
+
 abstract Feature
     cost ->> integer
     mass ->> integer

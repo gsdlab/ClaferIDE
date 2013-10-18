@@ -1,9 +1,9 @@
 {
     "examples": [
         {"url": "", "label": "Or Choose Example..."}, 
-        {"url": "person.cfr", "label": "Person from Clafer Tutorial 9.3", "sourceURL": "http://t3-necsis.cs.uwaterloo.ca:8091/Tutorial/Intro"}, 
-        {"url": "cardinalities.cfr", "label": "Clafer and group cardinalities", "sourceURL": "http://t3-necsis.cs.uwaterloo.ca:8091/Capabilities%20of%20Clafer"}, 
-        {"url": "Car.cfr", "label": "Cruise Control Example", "sourceURL": "http://t3-necsis.cs.uwaterloo.ca:8091/NECSIS-Workshop/Modeling%20Variability%207"},
-        {"url": "Car4O.cfr", "label": "Cruise Control Example with Quality (4 Objectives)", "sourceURL": "http://t3-necsis.cs.uwaterloo.ca:8091/NECSIS-Workshop/Modeling%20Quality%204"}
+        {"url": "person.cfr", "label": "Person from Clafer Tutorial 9.3"}, 
+        {"url": "cardinalities.cfr", "label": "Clafer and group cardinalities"}, 
+        {"url": "Car.cfr", "label": "Cruise Control Example"},
+        {"url": "Car4O.cfr", "label": "Cruise Control Example with Quality (4 Objectives)"}
     ]        
 }

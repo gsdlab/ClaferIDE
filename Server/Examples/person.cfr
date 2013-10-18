@@ -1,3 +1,7 @@
+/*
+Example from <a href="http://t3-necsis.cs.uwaterloo.ca:8091/Tutorial/Intro">Clafer Tutorial 9.3</a>
+*/
+
 abstract Person
   Name : string
   Surname : string
