@@ -97,7 +97,6 @@ server.get('/control', function(req, res){
             else if (req.query.operation == "scope")
             {
                 console.log("Control: Increase scope by " + req.query.increaseScopeBy);
-                console.log("i " + req.query.increaseScopeBy + "\n");
                 CurProcess.tool.stdin.write("i " + req.query.increaseScopeBy + "\n");
             }
             else
@@ -128,83 +127,96 @@ server.post('/poll', function(req, res, next)
     var found = false;
     for (var i = 0; i < processes.length; i++)
     {
-        if (processes[i].windowKey == req.body.windowKey)
+        if (processes[i].pingTimeout)
         {
-            if (req.body.command == "ping") // normal ping
-            {                
-                clearTimeout(processes[i].pingTimeoutObject);
-                processes[i].pingTimeoutObject = setTimeout(function(process){
-                    process.result = '{"message": "' + escapeJSON('Error: Ping Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.pingTimeout + ' millisecond(s).') + '"}';
-                    process.code = 9004;
-                    process.completed = true;
-                    process.pingTimeout = true;
-                    killProcessTree(process);
-                }, config.pingTimeout, processes[i]);
-                
-                if (processes[i].completed) // the execution is completed
-                {
+            processes[i].toRemoveCompletely = true;   
+        }
+        else
+        {
+            if (processes[i].windowKey == req.body.windowKey)
+            {
+                if (req.body.command == "ping") // normal ping
+                {                
+                    console.log("Ping...");
+
+                    clearTimeout(processes[i].pingTimeoutObject);
+                    processes[i].pingTimeoutObject = setTimeout(function(process){
+                        process.result = '{"message": "' + escapeJSON('Error: Ping Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.pingTimeout + ' millisecond(s).') + '"}';
+                        process.code = 9004;
+                        process.completed = true;
+                        process.pingTimeout = true;
+                        killProcessTree(process);
+                    }, config.pingTimeout, processes[i]);
                     
-                    if (processes[i].code == 0)
+                    if (processes[i].completed) // the execution is completed
                     {
-                        res.writeHead(200, { "Content-Type": "application/json"});
-                    }
-                    else
-                    {
-                        res.writeHead(200, { "Content-Type": "application/json"});
-                    }
+                        
+                        if (processes[i].code == 0)
+                        {
+                            res.writeHead(200, { "Content-Type": "application/json"});
+                        }
+                        else
+                        {
+                            res.writeHead(200, { "Content-Type": "application/json"});
+                        }
 
-                    res.end(processes[i].result);
-                    if (processes[i].pingTimeoutObject)
+                        res.end(processes[i].result);
+                        if (processes[i].pingTimeoutObject)
+                        {
+                            clearTimeout(processes[i].pingTimeoutObject);
+                            clearTimeout(processes[i].executionTimeoutObject);                    
+                        }
+                        processes[i].toRemoveCompletely = true;
+                        found = true;
+                    }	
+                    else // still working
                     {
-                        clearTimeout(processes[i].pingTimeoutObject);
-                        clearTimeout(processes[i].executionTimeoutObject);                    
+                        // else ClaferIG is running
+
+                        var currentResult = "";
+
+                        if (processes[i].freshData != "")
+                        {
+                            currentResult += processes[i].freshData;
+                            processes[i].freshData = "";
+                        }
+
+                        if (processes[i].freshError != "")
+                        {
+                            currentResult += processes[i].freshError;
+                            processes[i].freshError = "";
+                        }                    
+
+                        res.writeHead(200, { "Content-Type": "application/json"});
+                        res.end('{"message": "' + escapeJSON(currentResult) + '"}');
+                        found = true;
                     }
-                    processes.splice(i, 1);
-                    found = true;
-                }	
-                else // still working
+                }
+                else // if it is cancel
                 {
-                    // else ClaferIG is running
-
-                    console.log("Still Working...");
-
-                    var currentResult = "";
-
-                    if (processes[i].freshData != "")
-                    {
-                        currentResult += processes[i].freshData;
-                        processes[i].freshData = "";
-                    }
-
-                    if (processes[i].freshError != "")
-                    {
-                        currentResult += processes[i].freshError;
-                        processes[i].freshError = "";
-                    }                    
-
+                    killProcessTree(processes[i]);
+                    clearTimeout(processes[i].pingTimeoutObject);                
+                    clearTimeout(processes[i].executionTimeoutObject);
+                    processes[i].toRemoveCompletely = true;
                     res.writeHead(200, { "Content-Type": "application/json"});
-                    res.end('{"message": "' + escapeJSON(currentResult) + '"}');
+                    res.end('{"message": "Cancelled"}');
                     found = true;
                 }
             }
-            else // if it is cancel
-            {
-                killProcessTree(processes[i]);
-                clearTimeout(processes[i].pingTimeoutObject);                
-                clearTimeout(processes[i].executionTimeoutObject);
-                processes.splice(i, 1);
-                res.writeHead(200, { "Content-Type": "application/json"});
-                res.end('{"message": "Cancelled"}');
-                found = true;
-            }
-        }
-        
+        }    
     }
     
+    if (!found)
+    {
+        res.writeHead(404, { "Content-Type": "application/json"});
+        res.end('{"message": "Error: the requested process is not found."}');
+    }
+
+    // clearing part
     var i = 0;
     while (i < processes.length)
     {
-        if (processes[i].pingTimeout)
+        if (processes[i].toRemoveCompletely)
         {
             clearTimeout(processes[i].pingTimeoutObject);
             clearTimeout(processes[i].executionTimeoutObject);                    
@@ -214,11 +226,6 @@ server.post('/poll', function(req, res, next)
             i++;
     }
     
-    if (!found)
-    {
-        res.writeHead(404, { "Content-Type": "application/json"});
-        res.end('{"message": "Error: the requested process is not found."}');
-    }
 });
 
 /*
@@ -413,17 +420,21 @@ server.post('/upload', function(req, res, next)
                             // read the contents of the compiled file
                             fs.readFile(changeFileExt(uploadedFilePath, '.cfr', '.html'), function (err, html) 
                             {
+                                var d = new Date();
+                                var process = { windowKey: req.body.windowKey, toRemoveCompletely: false, tool: null, freshData: "", folder: dlDir, file: uploadedFilePath, lastUsed: d, freshError: ""};
+                                var args = [uploadedFilePath];
+
                                 if (err)
                                 {
                                     console.log('ERROR: Cannot read the compiled HTML file.');
-                                    res.writeHead(400, { "Content-Type": "text/html"});
-                                    res.end("compile_error");
                                     process.result = '{"message": "' + escapeJSON("Error: Compilation Error") + '"}';
                                     process.code = 0;
                                     process.completed = true;
                                     process.tool = null;
                                     processes.push(process);           
                                     cleanupOldFiles(uploadedFilePath, dlDir); // cleaning up when cached result is found
+                                    res.writeHead(400, { "Content-Type": "text/html"});
+                                    res.end("compile_error");
                                     return;
                                 }
                                 else
@@ -437,7 +448,6 @@ server.post('/upload', function(req, res, next)
                                         process.tool = null;
                                         processes.push(process);           
                                         cleanupOldFiles(uploadedFilePath, dlDir); // cleaning up when cached result is found
-                                        return;
                                     }
                                     else
                                     {
@@ -448,19 +458,21 @@ server.post('/upload', function(req, res, next)
                                         {
                                             if (processes[i].windowKey == req.body.windowKey)
                                             {
+                                                killProcessTree(processes[i]);
+                                                clearTimeout(processes[i].pingTimeoutObject);                
+                                                clearTimeout(processes[i].executionTimeoutObject);
+                                                processes[i].toRemoveCompletely = true;
+                                                processes[i].windowKey = "none";
                                                 found = true;
+
                                                 break;
                                                 // do some other stuff
                                             }
                                         }
-
+/*
                                         if (!found)
                                         {
-
-                                            var d = new Date();
-                                            var process = { windowKey: req.body.windowKey, tool: null, freshData: "", folder: dlDir, file: uploadedFilePath, lastUsed: d, freshError: ""};
-                                            var args = [uploadedFilePath];
-
+*/                                            
                                             process.executionTimeoutObject = setTimeout(function(process){
                                                 console.log("Error: Execution Timeout.");
                                                 process.result = '{"message": "' + escapeJSON('Error: Execution Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.executionTimeout + ' millisecond(s).') + '"}';
@@ -517,7 +529,7 @@ server.post('/upload', function(req, res, next)
                                                     }
                                                 }
                                             });
-                                        }
+//                                        }
                                     }
 
                                     res.writeHead(200, { "Content-Type": "text/html"});

@@ -126,7 +126,16 @@ Input.method("onPoll", function(responseObject)
     else
     {
         this.processToolResult(responseObject);
-        this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
+
+        if (responseObject.message.length >= 5 && responseObject.message.substring(0,5) == "Error")
+        {
+            this.host.findModule("mdControl").disableAll(); // if exited IG, then disable controls
+            // stop polling
+        }
+        else
+        {
+            this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
+        }
     }
 });        
 
