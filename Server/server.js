@@ -426,7 +426,7 @@ server.post('/upload', function(req, res, next)
 
                     var process = { windowKey: key, tool: null, folder: dlDir, path: uploadedFilePath, completed: false, code: 0, killed:false, contents: file_contents};
 
-                    var clafer_compiler  = spawn("clafer", ["--mode=HTML", "--self-contained", uploadedFilePath]);
+                    var clafer_compiler  = spawn("clafer", ["--mode=HTML", "--self-contained", "--add-comments", "--ss=none", uploadedFilePath]);
                     clafer_compiler.on('error', function (err){
                         console.log('ERROR: Cannot find Clafer Compiler (clafer). Please check whether it is installed and accessible.');
                         res.writeHead(400, { "Content-Type": "text/html"});

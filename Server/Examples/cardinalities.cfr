@@ -1,0 +1,42 @@
+/*
+Example from <a href="http://t3-necsis.cs.uwaterloo.ca:8091/Capabilities%20of%20Clafer">wiki</a>
+*/
+
+/*
+Clafer cardinality
+*/
+
+head          // mandatory feature, cardinality 1..1 by default
+
+married 0..1  // optional feature
+
+married1 ?     // optional feature, cardinality 0..1
+
+immortal 0    // forbidden feature, cardinality 0..0
+
+hand 2        // multiple feature, cardinality 2..2
+  finger 5    // nested feature: each hand has 5 fingers
+
+hair1 0..*     // multiple feature, cardinality 0..*
+
+hair2 *        // multiple feature, cardinality 0..*
+
+hair3 1..*     // multiple feature
+
+hair4 +        // multiple feature, cardinality 1..*
+
+/*
+Group cardinality
+*/
+
+leg                  // unconstrained feature group, default group cardinality 0..*
+
+1..1 gender1         // xor feature group
+   male              // grouped feature, default cardinality 0..1
+   female
+
+xor gender2          // xor feature group, group cardinality 1..1
+
+or gender3          // or feature group, group cardinality 1..*
+
+mux gender4          // mux feature group, group cardinality 0..1
