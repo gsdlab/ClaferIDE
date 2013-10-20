@@ -82,7 +82,6 @@ Control.method("disableAll", function(){
 });
 
 Control.method("onDataLoaded", function(data){
-    this.enableAll();
 });
 
 Control.method("beginQuery", function(formData, jqForm, options){

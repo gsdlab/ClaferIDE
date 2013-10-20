@@ -74,17 +74,17 @@ server.post('/control', function(req, res){
     console.log("Control: Enter");
     for (var i = 0; i < processes.length; i++)
     {
-        if (processes[y].windowKey == req.body.windowKey)
+        if (processes[i].windowKey == req.body.windowKey)
         {
             if (req.body.operation == "next")
             {
                 console.log("Control: Next Instance");
-                processes[y].tool.stdin.write("\n"); 
+                processes[i].tool.stdin.write("\n"); 
             }
             else if (req.body.operation == "scope")
             {
                 console.log("Control: Increase scope by " + req.body.increaseScopeBy);
-                processes[y].tool.stdin.write("i " + req.body.increaseScopeBy + "\n");
+                processes[i].tool.stdin.write("i " + req.body.increaseScopeBy + "\n");
             }
             else
             {
@@ -92,10 +92,10 @@ server.post('/control', function(req, res){
             }
 
             // resetting the execution timeout
-            if (processes[y].executionTimeoutObject)
+            if (processes[i].executionTimeoutObject)
             {
-                clearTimeout(processes[y].executionTimeoutObject);
-                processes[y].executionTimeoutObject = setTimeout(executionTimeoutFunc, config.executionTimeout, processes[y]);
+                clearTimeout(processes[i].executionTimeoutObject);
+                processes[i].executionTimeoutObject = setTimeout(executionTimeoutFunc, config.executionTimeout, processes[i]);
             }
 
             break;
@@ -119,7 +119,7 @@ server.post('/control', function(req, res){
 server.post('/poll', function(req, res, next)
 {
     var found = false;
-    console.log("#Processes: " + processes.length);
+    console.log("Polling client " + req.body.windowKey + ". #Processes: " + processes.length);
     for (var i = 0; i < processes.length; i++)
     {
         if (processes[i].pingTimeout)
@@ -132,8 +132,6 @@ server.post('/poll', function(req, res, next)
             {
                 if (req.body.command == "ping") // normal ping
                 {                
-                    console.log("Ping...");
-
                     clearTimeout(processes[i].pingTimeoutObject);
                     processes[i].pingTimeoutObject = setTimeout(function(process){
                         process.result = '{"message": "' + escapeJSON('Error: Ping Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.pingTimeout + ' millisecond(s).') + '"}';
