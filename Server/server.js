@@ -146,7 +146,7 @@ server.post('/poll', function(req, res, next)
                         process.code = 9004;
                         process.completed = true;
                         process.pingTimeout = true;
-                        killProcessTree(process);
+                        process.toKill = true;
                     }, config.pingTimeout, processes[i]);
                     
                     if (processes[i].completed) // the execution is completed, the process is exited
@@ -211,7 +211,7 @@ server.post('/poll', function(req, res, next)
                 }
                 else // if it is cancel
                 {
-                    killProcessTree(processes[i]);
+                    processes[i].toKill = true;
                     clearTimeout(processes[i].pingTimeoutObject);                
                     clearTimeout(processes[i].executionTimeoutObject);
                     processes[i].toRemoveCompletely = true;
@@ -233,6 +233,13 @@ server.post('/poll', function(req, res, next)
     var i = 0;
     while (i < processes.length)
     {
+        if (processes[i].toKill)
+        {
+            clearTimeout(processes[i].pingTimeoutObject);
+            clearTimeout(processes[i].executionTimeoutObject);                    
+            killProcessTree(processes[i]);
+        }
+
         if (processes[i].toRemoveCompletely)
         {
             clearTimeout(processes[i].pingTimeoutObject);
@@ -425,7 +432,7 @@ server.post('/upload', function(req, res, next)
                     
                     console.log("Compiling...");
 
-                    var process = { windowKey: key, tool: null, folder: dlDir, path: uploadedFilePath, completed: false, code: 0, killed:false, contents: file_contents};
+                    var process = { windowKey: key, tool: null, folder: dlDir, path: uploadedFilePath, completed: false, code: 0, killed:false, contents: file_contents, toKill: false};
 
                     var clafer_compiler  = spawn("clafer", ["--mode=HTML", "--self-contained", "--add-comments", "--ss=none", uploadedFilePath]);
                     clafer_compiler.on('error', function (err){
@@ -483,7 +490,7 @@ server.post('/upload', function(req, res, next)
                                         {
                                             if (processes[i].windowKey == req.body.windowKey)
                                             {
-                                                killProcessTree(processes[i]);
+                                                processes[i].toKill = true;
                                                 clearTimeout(processes[i].pingTimeoutObject);                
                                                 clearTimeout(processes[i].executionTimeoutObject);
                                                 processes[i].toRemoveCompletely = true;
@@ -503,7 +510,7 @@ server.post('/upload', function(req, res, next)
                                                 process.result = '{"message": "' + escapeJSON('Error: Execution Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.executionTimeout + ' millisecond(s).') + '"}';
                                                 process.code = 9003;
                                                 process.completed = true;
-                                                killProcessTree(process);
+                                                process.toKill = true;
                                             }, config.executionTimeout, process);
                                             
                                             process.pingTimeoutObject = setTimeout(function(process){
@@ -512,7 +519,7 @@ server.post('/upload', function(req, res, next)
                                                 process.code = 9004;
                                                 process.completed = true;
                                                 process.pingTimeout = true;
-                                                killProcessTree(process);
+                                                process.toKill = true;
                                             }, config.pingTimeout, process);
                                             
                                             tool = spawn("claferIG", args);
@@ -550,7 +557,7 @@ server.post('/upload', function(req, res, next)
 
                                                     if (processes[i].windowKey == req.body.windowKey)
                                                     {
-                                                        processes[i].tool = null;
+//                                                        processes[i].tool = null;
                                                         cleanupOldFiles(processes[i].file, processes[i].folder);
                                                     }
                                                 }
@@ -646,12 +653,12 @@ function changeFileExt(name, ext, newExt)
 function killProcessTree(process)
 {
     var spawn = require('child_process').spawn;
-    console.log("Killing the process tree with Parent PID = " + process.tool.pid);
     
     process.killed = true;
     
     if (process.tool)
     {
+        console.log("Killing the process tree with Parent PID = " + process.tool.pid);
     
         // first, try a Windows command
         var killer_win  = spawn("taskkill", ["/F", "/T", "/PID", process.tool.pid]);

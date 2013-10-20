@@ -26,7 +26,7 @@ function Input(host)
 
     this.requestTimeout = 60000; // what is the timeout for response after sending a file
     this.pollingTimeout = 60000;  // what is the timeout when polling
-    this.pollingDelay = 2000;    // how often to send requests (poll) for updates
+    this.pollingDelay = 700;    // how often to send requests (poll) for updates
 
     this.width = 640;
     this.height = 600;
