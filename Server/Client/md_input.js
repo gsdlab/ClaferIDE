@@ -80,7 +80,7 @@ Input.method("onInitRendered", function()
     this.editor.getSession().setMode("ace/mode/text");
     this.editor.setShowPrintMargin(false);
 
-//	$('#myform').submit(); moved submit out of here, because the backend list is not loaded yet
+	$('#myform').submit();
 });
 
 /*
@@ -185,8 +185,6 @@ Input.method("fileSent", function(responseText, statusText, xhr, $form)  {
         var data = new Object();
         data.message = responseText;
         this.host.updateData(data);
-        if (this.pollingTimeoutObject)
-            clearTimeout(this.pollingTimeoutObject);
         this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
     }
 });
@@ -226,19 +224,27 @@ Input.method("handleError", function(response, statusText, xhr)  {
     
 });
 
+Input.method("onSubmit", function(){
+    if (this.pollingTimeoutObject)
+        clearTimeout(this.pollingTimeoutObject);
+});
+
 Input.method("submitFileCall", function(){
 
     $("#exampleURL").val(null);
     $("#exampleFlag").val("0");
+    this.onSubmit();
 });
 
 Input.method("submitExampleCall", function(){
     $("#exampleFlag").val("1");
+    this.onSubmit();
 });
 
 Input.method("submitTextCall", function(){
     $("#claferText").val(this.editor.getValue());
     $("#exampleFlag").val("2");
+    this.onSubmit();
 });
 
 Input.method("exampleChange", function(){
