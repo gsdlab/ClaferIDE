@@ -122,7 +122,7 @@ Input.method("showRequest", function(formData, jqForm, options) {
 
 Input.method("onPoll", function(responseObject)
 {
-    console.log(responseObject);
+//    console.log(responseObject);
     if (responseObject.message === "Exited")
     {
         this.host.findModule("mdControl").disableAll(); // if exited IG, then disable controls
