@@ -33,6 +33,8 @@ $(document).ready(function()
     
     modules.push("Input");
     modules.push("ClaferModel");
+    modules.push("Control");
+    modules.push("Output");
     
     host = new Host(modules);
 });
@@ -96,7 +98,7 @@ function Host(modules)
 
         if (this.modules[i].iframeType)
         {
-            $.updateWindowContent(this.modules[i].id, '<iframe id="model" src="' + this.modules[i].ajaxUrl + '" frameborder="0" width="' + this.modules[i].width + '"></iframe>');
+            $.updateWindowContent(this.modules[i].id, '<iframe id="model" style="height:100%" src="' + this.modules[i].ajaxUrl + '" frameborder="0" width="' + this.modules[i].width + '"></iframe>');
         }
             
         if (this.modules[i].onInitRendered)
@@ -147,24 +149,16 @@ Host.method("selectionChanged", function(data)
 //runs after data is uploaded from server. Causes all modules to update their data.
 Host.method("updateData", function(data)
 {
-    if (data.error == true) // we do not process errors here anymore
+/*
+    if (data.error != "") // we do not process errors here anymore
     {
         return;
     }
-
-    this.selector.clearSelection();
-
+*/
     for (var i = 0; i < this.modules.length; i++)
     {
         if (this.modules[i].onDataLoaded)
             this.modules[i].onDataLoaded(data);
-    }
-    
-    if (typeof variable !== 'undefined' && console.log)
-    {
-        console.log(data.claferXML);
-        console.log(data.instancesXML);
-        console.log(data.output);
     }
     
     for (var i = 0; i < this.modules.length; i++)
@@ -180,7 +174,7 @@ Host.method("updateData", function(data)
                 
     }
     
-    $.placeholder.shim(); // fixes the placeholder issue in IE
+//    $.placeholder.shim(); // fixes the placeholder issue in IE
     
 });
 

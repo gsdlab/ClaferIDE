@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2012 Alexander Murashkin, Neil Redman <http://gsd.uwaterloo.ca>
+Copyright (C) 2012 Neil Redman <http://gsd.uwaterloo.ca>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -20,44 +20,33 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-function ClaferModel(host)
+function Output(host)
 { 
-    this.id = "mdClaferModel";
-    this.title = "Clafer Source Model";
-    
+    this.id = "mdOutput";
+    this.title = "Output";
+
     this.width = (window.parent.innerWidth-30) / 4;
-    this.height = window.parent.innerHeight-50;
-    this.posx = (window.parent.innerWidth-30) / 2;
-    this.posy = 0;
-    this.iframeType = true;
-    this.ajaxUrl = "/htmlwrapper";
-    
+    this.height = window.parent.innerHeight-190;
+    this.posx = (window.parent.innerWidth-30) * 3 / 4;
+    this.posy = 140;
     this.host = host;
-    this.goals = null;
-    this.model = "";
+    this.content = "";
 }
 
-ClaferModel.method("onDataLoaded", function(data){
+Output.method("getInitContent", function(){
+    return '<pre id="output">' + this.content + '</pre>';
 });
 
-ClaferModel.method("onRendered", function()
+Output.method("onDataLoaded", function(data){
+//    if (data.consoleOut)
+//        this.content += data.consoleOut;
+});
+
+Output.method("onRendered", function(){
+//    $("#mdOutput .window-content").scrollTop($("#mdOutput #output").height());
+});
+
+Output.method("getContent", function()
 {
+    return '<pre id="output">' + this.content + '</pre>';
 });
-
-ClaferModel.method("onDocLoad", function(){
-    if (this.model != "")
-    {
-        var iframe = $("#model")[0];
-
-        if (iframe.contentWindow)
-            iframe.contentWindow.document.write(this.model);
-        else
-            iframe.document.write(this.model);
-    }
-});
-
-ClaferModel.method("onInitRendered", function()
-{
-    $("#model")[0].onload = this.onDocLoad.bind(this);
-});
-

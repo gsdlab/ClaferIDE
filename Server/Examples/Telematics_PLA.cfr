@@ -1,0 +1,51 @@
+/*
+Example from <a href="http://t3-necsis.cs.uwaterloo.ca:8091/Telematics/PLA" target="exampleSource">wiki</a>
+*/
+
+telematicsSystem
+    xor channel
+        single
+        dual
+    extraDisplay ?
+    xor size
+        small
+        large
+    [ dual <=> ECU2 ]
+    [ extraDisplay <=> #ECU1.display = 2 ]
+    [ extraDisplay <=> (ECU2 => #ECU2.display = 2) ]
+    [ large <=> ! plaECU.display.options.size.small ]
+    [ small <=> ! plaECU.display.options.size.large ]
+
+abstract comp
+    version : integer
+
+abstract ECU : comp
+
+abstract display : comp
+    server -> ECU
+    `options
+    [this.version >= server.version]
+
+abstract options
+    xor size
+        small
+        large
+    cache ?
+        size : integer
+            fixed ?
+    [small && cache => fixed]
+
+abstract plaECU : ECU
+    `display 1..2
+        [server = parent ]
+        [ ! options.cache]
+
+ECU1 : plaECU
+
+ECU2 : plaECU ?
+    master -> ECU1
+
+[dual ]
+[ extraDisplay ]
+[ telematicsSystem.size.large ]
+[ comp.version = 1 ]
