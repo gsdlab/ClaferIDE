@@ -25,11 +25,10 @@ function Control(host)
     this.id = "mdControl";
     this.title = "Control";
     
-    this.width = 300;
+    this.width = (window.parent.innerWidth-30) / 4;
     this.height = 100;
-    this.posx = 940;
+    this.posx = (window.parent.innerWidth-30) * 3 / 4;
     this.posy = 0;
-    
     this.host = host;
 }
 

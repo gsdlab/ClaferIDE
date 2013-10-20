@@ -24,12 +24,11 @@ function Output(host)
 { 
     this.id = "mdOutput";
     this.title = "Output";
-    
-    this.width = 300;
-    this.height = 500;
-    this.posx = 940;
-    this.posy = 100;
-    
+
+    this.width = (window.parent.innerWidth-30) / 4;
+    this.height = window.parent.innerHeight-190;
+    this.posx = (window.parent.innerWidth-30) * 3 / 4;
+    this.posy = 140;
     this.host = host;
     this.content = "";
 }

@@ -28,8 +28,8 @@ function Input(host)
     this.pollingTimeout = 60000;  // what is the timeout when polling
     this.pollingDelay = 700;    // how often to send requests (poll) for updates
 
-    this.width = 640;
-    this.height = 600;
+    this.width = (window.parent.innerWidth-30) / 2;
+    this.height = window.parent.innerHeight-50;
     this.posx = 0;
     this.posy = 0;
     
@@ -42,6 +42,8 @@ function Input(host)
     this.dataFileChosen = false;
 
     this.editor = null;
+    this.editorWidth = ((window.parent.innerWidth-40) / 2) - 10;
+    this.editorHeight = window.parent.innerHeight-140;
 }
 
 Input.method("onDataLoaded", function(data){
@@ -76,6 +78,7 @@ Input.method("onInitRendered", function()
     this.editor = ace.edit("clafer_editor");
     this.editor.setTheme("ace/theme/monokai");
     this.editor.getSession().setMode("ace/mode/text");
+    this.editor.setShowPrintMargin(false);
 
 //	$('#myform').submit(); moved submit out of here, because the backend list is not loaded yet
 });
@@ -363,7 +366,7 @@ Input.method("getInitContent", function()
     result += 'Or enter your model below: <input id="submitText" type="submit" value="Compile"/>';
     result += '<input id="claferText" name="claferText" type="hidden"/>';
 
-    result += '<div style="height:500px; width: 620px;" name="clafer_editor" id="clafer_editor">';
+    result += '<div style="height:' + this.editorHeight + 'px; width: ' + this.editorWidth + 'px;" name="clafer_editor" id="clafer_editor">';
     result += '</div>';
 
     result += '</form></div>';

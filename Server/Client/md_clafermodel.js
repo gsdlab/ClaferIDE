@@ -25,9 +25,9 @@ function ClaferModel(host)
     this.id = "mdClaferModel";
     this.title = "Clafer Source Model";
     
-    this.width = 300;
-    this.height = 600;
-    this.posx = 640;
+    this.width = (window.parent.innerWidth-30) / 4;
+    this.height = window.parent.innerHeight-50;
+    this.posx = (window.parent.innerWidth-30) / 2;
     this.posy = 0;
     this.iframeType = true;
     this.ajaxUrl = "/htmlwrapper";
