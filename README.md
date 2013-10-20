@@ -5,7 +5,7 @@ v0.3.5.??-??-????
 
 A web-based IDE for Clafer.
 
-ClaferMooVisualizer is part of Clafer Tools. 
+ClaferIDE is part of Clafer Tools. 
 Read more in the paper [Clafer Tools for Product Line Engineering](http://gsd.uwaterloo.ca/publications/view/519).
 
 ### Live demo
@@ -78,7 +78,7 @@ Core
 3. Install the ACE source code editor.
 
 * Clone [ace-builds](https://github.com/ajaxorg/ace-builds/) to some directory `<temp>`
-** execute `git clone https://github.com/ajaxorg/ace-builds.git`
+  * execute `git clone https://github.com/ajaxorg/ace-builds.git`
 * copy the `ace-builds/src-nonconflict` folder to `<target directory>/ClaferIDE/Server/Client/ace-builds`
 
 ### Important: Branches must correspond
