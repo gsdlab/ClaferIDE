@@ -72,22 +72,19 @@ server.get('/htmlwrapper', function(req, res) {
 
 server.post('/control', function(req, res){
     console.log("Control: Enter");
-    for (var y = 0; y < processes.length; y++)
+    for (var i = 0; i < processes.length; i++)
     {
         if (processes[y].windowKey == req.body.windowKey)
         {
-//            var d = new Date();
-//            processes[y].lastUsed = d;
-            var process = processes[y];
             if (req.body.operation == "next")
             {
                 console.log("Control: Next Instance");
-                process.tool.stdin.write("n\n"); 
+                processes[y].tool.stdin.write("\n"); 
             }
             else if (req.body.operation == "scope")
             {
                 console.log("Control: Increase scope by " + req.body.increaseScopeBy);
-                process.tool.stdin.write("i " + req.body.increaseScopeBy + "\n");
+                processes[y].tool.stdin.write("i " + req.body.increaseScopeBy + "\n");
             }
             else
             {
@@ -95,10 +92,10 @@ server.post('/control', function(req, res){
             }
 
             // resetting the execution timeout
-            if (process.executionTimeoutObject)
+            if (processes[y].executionTimeoutObject)
             {
-                clearTimeout(process.executionTimeoutObject);
-                process.executionTimeoutObject = setTimeout(executionTimeoutFunc, config.executionTimeout, process);
+                clearTimeout(processes[y].executionTimeoutObject);
+                processes[y].executionTimeoutObject = setTimeout(executionTimeoutFunc, config.executionTimeout, processes[y]);
             }
 
             break;
