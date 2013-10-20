@@ -70,34 +70,24 @@ server.get('/htmlwrapper', function(req, res) {
     res.sendfile("Client/compiler_html_wrapper.html");
 });
 
-/*
- * Handle Clientside save requests
- */
-server.post('/', function(req, res, next) {
-	console.log("returning instances.cfr.data file");
-   	res.writeHead(200, { "Content-Type": "text/html",
-   						 "Content-Disposition": "attachment; filename=Instances.cfr.data"});
-	res.end(req.body.data);
-});
-
-server.get('/control', function(req, res){
+server.post('/control', function(req, res){
     console.log("Control: Enter");
     for (var y = 0; y < processes.length; y++)
     {
-        if (processes[y].windowKey == req.query.windowKey)
+        if (processes[y].windowKey == req.body.windowKey)
         {
 //            var d = new Date();
 //            processes[y].lastUsed = d;
             var process = processes[y];
-            if (req.query.operation == "next")
+            if (req.body.operation == "next")
             {
                 console.log("Control: Next Instance");
                 process.tool.stdin.write("n\n"); 
             }
-            else if (req.query.operation == "scope")
+            else if (req.body.operation == "scope")
             {
-                console.log("Control: Increase scope by " + req.query.increaseScopeBy);
-                process.tool.stdin.write("i " + req.query.increaseScopeBy + "\n");
+                console.log("Control: Increase scope by " + req.body.increaseScopeBy);
+                process.tool.stdin.write("i " + req.body.increaseScopeBy + "\n");
             }
             else
             {
