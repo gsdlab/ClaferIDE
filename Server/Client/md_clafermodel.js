@@ -34,7 +34,8 @@ function ClaferModel(host)
     
     this.host = host;
     this.goals = null;
-    this.model = "";
+    this.model = "The compilation result will be here.";
+    this.lastModel = this.model;
 }
 
 ClaferModel.method("onDataLoaded", function(data){

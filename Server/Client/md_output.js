@@ -34,7 +34,7 @@ function Output(host)
 }
 
 Output.method("getInitContent", function(){
-    return '<pre id="output">' + this.content + '</pre>';
+    return '<textarea id="output" readonly="readonly" style="width:95%;height:95%;border:0" border="0">The Instance Generator result will be here.\n</textarea>';
 });
 
 Output.method("onDataLoaded", function(data){
@@ -46,7 +46,6 @@ Output.method("onRendered", function(){
 //    $("#mdOutput .window-content").scrollTop($("#mdOutput #output").height());
 });
 
-Output.method("getContent", function()
-{
-    return '<pre id="output">' + this.content + '</pre>';
+Output.method("onInitRendered", function(){
+    $('#myform').submit();
 });

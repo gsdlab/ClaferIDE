@@ -33,7 +33,7 @@ function Control(host)
 }
 
 Control.method("getInitContent", function(){
-	var ret = '<form id="ControlForm" enctype="multipart/form-data" method="get" action="/control" style="display: block">';
+	var ret = '<form id="ControlForm" method="post" action="/control" style="display: block">';
 	ret += '<input type="hidden" id="ControlOp" name="operation" value="next">';
     ret += '<input type="hidden" id="windowKey" name="windowKey" value="' + this.host.key + '">';
     ret += '<input type="hidden" id="iScopeBy" name="increaseScopeBy" value="1">';
@@ -82,7 +82,6 @@ Control.method("disableAll", function(){
 });
 
 Control.method("onDataLoaded", function(data){
-    this.enableAll();
 });
 
 Control.method("beginQuery", function(formData, jqForm, options){
