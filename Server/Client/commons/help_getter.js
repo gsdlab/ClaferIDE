@@ -15,8 +15,8 @@ helpGetter.method("setListeners", function(){
 	$(".fadeOverlay").click(function(){
 		$("#help").hide(500);
 		$(".fadeOverlay").hide(500);
-		if($("#helpContainer").contents().find("#noVizHelpChoice").length > 0){
-			if ($("#helpContainer").contents().find("#noVizHelpChoice").is(':checked')){
+		if($("#helpContainer").contents().find("#noIDEHelpChoice").length > 0){
+			if ($("#helpContainer").contents().find("#noIDEHelpChoice").is(':checked')){
 				setCookie("startHelpMooViz", "no", 5);
 			}
 		}
