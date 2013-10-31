@@ -287,6 +287,8 @@ server.post('/upload', function(req, res, next)
                 currentURL = URLs[x].url;
                 URLs.splice(x,1);
                 found = true;
+                // files loaded by URL which are not examples should be loaded in editor by default
+                loadExampleInEditor = true;
                 break;
             }
         }
