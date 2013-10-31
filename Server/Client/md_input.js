@@ -202,7 +202,7 @@ Input.method("fileSent", function(responseText, statusText, xhr, $form)  {
 Input.method("handleError", function(response, statusText, xhr)  { 
 	clearTimeout(this.pollingTimeoutObject);
 	var er = document.getElementById("error_overlay");
-	er.style.visibility = "visible";	
+	er.style.display = "block";	
     var caption;
 
     if (statusText == "compile_error")
@@ -228,7 +228,7 @@ Input.method("handleError", function(response, statusText, xhr)  {
     
 	document.getElementById("error_report").innerHTML = ('<span id="close_error" alt="close">Close Message</span><p>' + caption + "</p>");
 	document.getElementById("close_error").onclick = function(){ 
-		document.getElementById("error_overlay").style.visibility = "hidden";
+		document.getElementById("error_overlay").style.display = "none";
 	};
 	this.endQuery();
     
