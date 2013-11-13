@@ -1,0 +1,18 @@
+{
+    "formats": [
+        {
+            "id": "choco", 
+            "label": "Choco JS", 
+            "file_extension": "js",             
+            "compiler_mode": "choco", // --mode=choco
+            "compiler_args": []
+        },
+        {
+            "id": "html", 
+            "label": "HTML", 
+            "file_extension": "html",             
+            "compiler_mode": "HTML", // --mode=HTML
+            "compiler_args": ["--self-contained"]
+        }
+    ]   
+}
