@@ -47,5 +47,5 @@ Output.method("onRendered", function(){
 });
 
 Output.method("onInitRendered", function(){
-    $('#myform').submit();
+//    $('#myform').submit();
 });

@@ -27,11 +27,8 @@ var path = require('path');
 var express = require('express');
 var config = require('./config.json');
 var crypto = require('crypto'); // for getting hashes
-
-//var tool_path = __dirname + "/ClaferMoo/spl_datagenerator/";
-//var python_file_name = "IntegratedFeatureModelOptimizer.py";
-//var pythonPath = config.pythonPath;
-
+var backendConfig = require('./Backends/backends.json');
+var formatConfig = require('./Formats/formats.json');
 
 var port = config.port;
 
@@ -51,6 +48,14 @@ var processes = [];
 
 server.get('/Examples/:file', function(req, res) {
     res.sendfile('Examples/' + req.params.file);
+});
+
+server.get('/Backends/:file', function(req, res) {
+    res.sendfile('Backends/' + req.params.file);
+});
+
+server.get('/Formats/:file', function(req, res) {
+    res.sendfile('Formats/' + req.params.file);
 });
 
 server.get('/', function(req, res) {
@@ -428,6 +433,10 @@ server.post('/upload', function(req, res, next)
 
                     var process = { windowKey: key, tool: null, folder: dlDir, path: uploadedFilePath, completed: false, code: 0, killed:false, contents: file_contents, toKill: false};
 
+                    // temporary
+//                    var clafer_compiler_CHOCO  = spawn("clafer", ["--mode=choco", "--ss=none", uploadedFilePath]);
+                    // -------
+
                     var clafer_compiler  = spawn("clafer", ["--mode=HTML", "--self-contained", "--add-comments", "--ss=none", uploadedFilePath]);
                     clafer_compiler.on('error', function (err){
                         console.log('ERROR: Cannot find Clafer Compiler (clafer). Please check whether it is installed and accessible.');
@@ -436,111 +445,72 @@ server.post('/upload', function(req, res, next)
                     });
                     
                     clafer_compiler.on('exit', function (code){	
-                        // read the contents of the compiled file
+                        
+                        var found = false;
+                        for (var i = 0; i < processes.length; i++)
+                        {
+                            if (processes[i].windowKey == req.body.windowKey)
+                            {
+                                processes[i].toKill = true;
+                                clearTimeout(processes[i].pingTimeoutObject);                
+                                clearTimeout(processes[i].executionTimeoutObject);
+                                processes[i].toRemoveCompletely = true;
+                                processes[i].windowKey = "none";
+                                found = true;
+
+                                break;
+                                // do some other stuff
+                            }
+                        }
+
+                        var d = new Date();
+                        var process = { windowKey: req.body.windowKey, toRemoveCompletely: false, tool: null, freshData: "", folder: dlDir, file: uploadedFilePath, lastUsed: d, freshError: ""};
+
+                        if (loadExampleInEditor)
+                            process.model = file_contents;
+                        else
+                            process.model = "";                                   
+
+                        processes.push(process);                                
+
                         fs.readFile(changeFileExt(uploadedFilePath, '.cfr', '.html'), function (err, html) 
                         {
-
-
-                            var found = false;
                             for (var i = 0; i < processes.length; i++)
                             {
                                 if (processes[i].windowKey == req.body.windowKey)
                                 {
-                                    processes[i].toKill = true;
-                                    clearTimeout(processes[i].pingTimeoutObject);                
-                                    clearTimeout(processes[i].executionTimeoutObject);
-                                    processes[i].toRemoveCompletely = true;
-                                    processes[i].windowKey = "none";
-                                    found = true;
+                                    if (err) // error reading HTML, maybe it is not really present, means a fatal compilation error
+                                    {
+                                        console.log('ERROR: Cannot read the compiled HTML file.');
+                                        processes[i].result = '{"message": "' + escapeJSON("Error: Compilation Error") + '"}';
+                                        processes[i].code = 0;
+                                        processes[i].completed = true;
+                                        processes[i].tool = null;
+                                        processes[i].html = "";
+                                        cleanupOldFiles(uploadedFilePath, dlDir); // cleaning up when cached result is found
+                                        // here we write the response, because we return 
+                                        res.writeHead(400, { "Content-Type": "text/html"});
+                                        res.end("compile_error");
+                                        return;
+                                    }
+                                    // else there is no error, and HTML file is present.
 
-                                    break;
-                                    // do some other stuff
+                                    if (code != 0) // if the result is non-zero, means compilation error
+                                    {
+                                        console.log("CC: Non-zero Return Value");
+                                        processes[i].result = '{"message": "' + escapeJSON("Error: Compilation Error") + '"}';
+                                        processes[i].code = 0;
+                                        processes[i].completed = true;
+                                        processes[i].tool = null;
+                                        processes[i].html = html.toString();
+                                        cleanupOldFiles(uploadedFilePath, dlDir); // cleaning up when cached result is found
+                                    }
+                                    else
+                                    {
+                                        console.log("CC: Zero Return Value");
+                                        processes[i].html = html.toString();
+                                    }
                                 }
-                            }
-
-                            var d = new Date();
-                            var process = { windowKey: req.body.windowKey, html: "", toRemoveCompletely: false, tool: null, freshData: "", folder: dlDir, file: uploadedFilePath, lastUsed: d, freshError: ""};
-                            var args = [uploadedFilePath];
-
-                            if (loadExampleInEditor)
-                                process.model = file_contents;
-                            else
-                                process.model = "";                                    
-
-                            if (err) // error reading HTML, maybe it is not really present, means a fatal compilation error
-                            {
-                                console.log('ERROR: Cannot read the compiled HTML file.');
-                                process.result = '{"message": "' + escapeJSON("Error: Compilation Error") + '"}';
-                                process.code = 0;
-                                process.completed = true;
-                                process.tool = null;
-                                process.html = "";
-                                processes.push(process);           
-                                cleanupOldFiles(uploadedFilePath, dlDir); // cleaning up when cached result is found
-                                // here we write the response, because we return 
-                                res.writeHead(400, { "Content-Type": "text/html"});
-                                res.end("compile_error");
-                                return;
-                            }
-                            // else there is no error, and HTML file is present.
-
-                            if (code != 0) // if the result is non-zero, means compilation error
-                            {
-                                console.log("CC: Non-zero Return Value");
-                                process.result = '{"message": "' + escapeJSON("Error: Compilation Error") + '"}';
-                                process.code = 0;
-                                process.completed = true;
-                                process.tool = null;
-                                process.html = html.toString();
-                                processes.push(process);           
-                                cleanupOldFiles(uploadedFilePath, dlDir); // cleaning up when cached result is found
-                            }
-                            else
-                            {
-                                console.log("CC: Zero Return Value");
-
-                                process.executionTimeoutObject = setTimeout(executionTimeoutFunc, config.executionTimeout, process);
-                                process.pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, process);
-                                
-                                tool = spawn("claferIG", args);
-                                process.tool = tool;
-                                process.html = html.toString();
-                                processes.push(process);
-                                tool.stdout.on("data", function (data){
-                                    for (var i = 0; i < processes.length; i++)
-                                    {
-                                        if (processes[i].windowKey == req.body.windowKey)
-                                        {
-                                            if (!processes[i].completed)
-                                            {
-                                                processes[i].freshData += data;
-                                            }
-                                        }
-                                    }
-                                });
-
-                                tool.stderr.on("data", function (data){
-                                    for (var i = 0; i<processes.length; i++)
-                                    {
-                                        if (processes[i].windowKey == req.body.windowKey)
-                                        {
-                                            if (!processes[i].completed){
-                                                processes[i].freshError += data;
-                                            }
-                                        }
-                                    }
-                                });
-
-                                tool.on("close", function (code){
-                                    console.log("CLAFERIG: On Exit");
-                                    for (var i = 0; i<processes.length; i++){
-
-                                        if (processes[i].windowKey == req.body.windowKey)
-                                        {
-                                            cleanupOldFiles(processes[i].file, processes[i].folder);
-                                        }
-                                    }
-                                });
                             }
                         });
 
@@ -555,6 +525,72 @@ server.post('/upload', function(req, res, next)
         });
     }
 });
+
+/*
+    process.executionTimeoutObject = setTimeout(executionTimeoutFunc, config.executionTimeout, process);
+    process.pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, process);
+
+                        var args = [uploadedFilePath];
+    
+    tool = spawn("claferIG", args);
+
+    process.tool = tool;
+    process.html = html.toString();
+    processes.push(process);
+
+    tool.on('error', function (err){
+        console.log('ERROR: Cannot find Clafer Instance Generator (claferIG). Please check whether it is installed and accessible.');
+        for (var i = 0; i < processes.length; i++)
+        {
+            if (processes[i].windowKey == req.body.windowKey)
+            {
+                processes[i].result = '{"message": "' + escapeJSON("Error: Cannot run claferIG") + '"}';
+                processes[i].code = 0;
+                processes[i].completed = true;
+                processes[i].tool = null;
+            }
+        }
+    });
+
+    tool.stdout.on("data", function (data){
+        for (var i = 0; i < processes.length; i++)
+        {
+            if (processes[i].windowKey == req.body.windowKey)
+            {
+                if (!processes[i].completed)
+                {
+                    processes[i].freshData += data;
+                }
+            }
+        }
+    });
+
+    tool.stderr.on("data", function (data){
+        for (var i = 0; i<processes.length; i++)
+        {
+            if (processes[i].windowKey == req.body.windowKey)
+            {
+                if (!processes[i].completed){
+                    processes[i].freshError += data;
+                }
+            }
+        }
+    });
+
+    tool.on("close", function (code){
+        console.log("CLAFERIG: On Exit");
+        for (var i = 0; i<processes.length; i++){
+
+            if (processes[i].windowKey == req.body.windowKey)
+            {
+                cleanupOldFiles(processes[i].file, processes[i].folder);
+            }
+        }
+    });
+
+
+
+*/
 
 function executionTimeoutFunc (process)
 {

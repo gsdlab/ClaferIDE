@@ -35,6 +35,32 @@ function Control(host)
 Control.method("getInitContent", function(){
 	var ret = '<form id="ControlForm" method="post" action="/control" style="display: block">';
 	ret += '<input type="hidden" id="ControlOp" name="operation" value="next">';
+
+    ret += '<span>Instance Generators:</span><select id="backend" name="backend" style="width: 288px;">';   
+    
+    $.getJSON('/Backends/backends.json', 
+        function(data)
+        {
+            var backends = data.backends;
+            var options = "";
+        
+            for (var i = 0; i < backends.length; i++)
+            {
+                options += '<option value="' + backends[i].id + '">' + backends[i].label + '</option>';
+            }
+            
+            $("#backend").html(options);
+            $('#myform').submit(); // make the submit here            
+        }
+    ).error(function() 
+        { 
+            var options = '<option value="">(Could not load instance generators)</option>';
+            $("#backend").html(options);
+            $('#myform').submit(); // make the submit here                        
+        });
+    
+    ret += '</select>';
+
     ret += '<input type="hidden" id="windowKey" name="windowKey" value="' + this.host.key + '">';
     ret += '<input type="hidden" id="iScopeBy" name="increaseScopeBy" value="1">';
 	ret += '<input type="button" class="inputNextButton" id="Next" value="Next Instance" disabled="disabled"><br>';

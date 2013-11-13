@@ -29,7 +29,6 @@ function ClaferModel(host)
     this.height = window.parent.innerHeight-50;
     this.posx = (window.parent.innerWidth-30) / 2;
     this.posy = 0;
-    this.iframeType = true;
     this.ajaxUrl = "/htmlwrapper";
     
     this.host = host;
@@ -55,6 +54,11 @@ ClaferModel.method("onDocLoad", function(){
         else
             iframe.document.write(this.model);
     }
+});
+
+ClaferModel.method("getInitContent", function()
+{
+    return '<iframe id="model" style="height:' + this.height + '" src="' + this.ajaxUrl + '" frameborder="0" width="' + this.width + '"></iframe>';
 });
 
 ClaferModel.method("onInitRendered", function()

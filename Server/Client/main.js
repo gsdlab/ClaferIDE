@@ -66,10 +66,10 @@ function Host(modules)
 
         var windowType = "normal";
         
-        if (this.modules[i].iframeType)
-        {
-            windowType = "iframe";
-        }
+//        if (this.modules[i].iframeType)
+//        {
+//            windowType = "iframe";
+//        }
         
         var x = $.newWindow({
             id: this.modules[i].id,
@@ -95,12 +95,12 @@ function Host(modules)
     
         if (this.modules[i].getInitContent)
             $.updateWindowContent(this.modules[i].id, this.modules[i].getInitContent());
+  
+//        if (this.modules[i].iframeType)
+//        {
+//            $.updateWindowContent(this.modules[i].id, '<iframe id="model" style="height:100%" src="' + this.modules[i].ajaxUrl + '" frameborder="0" width="' + this.modules[i].width + '"></iframe>');
+//        }
 
-        if (this.modules[i].iframeType)
-        {
-            $.updateWindowContent(this.modules[i].id, '<iframe id="model" style="height:100%" src="' + this.modules[i].ajaxUrl + '" frameborder="0" width="' + this.modules[i].width + '"></iframe>');
-        }
-            
         if (this.modules[i].onInitRendered)
             this.modules[i].onInitRendered();        
 

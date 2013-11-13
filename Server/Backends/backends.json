@@ -12,9 +12,9 @@
             ],
             "control_options": [
                 {"next_instance": {"command": "\n", "label" : "Next"}}, 
-                {"reload": {command: "r\n", "label" : "Reload"}}, 
-                {"unsat_core": {command: "unsatCore\n", "label" : "UNSAT Core"}}
-                {"alloy_model": {command: "alloyModel\n", "label" : "Alloy Model"}}                
+                {"reload": {"command": "r\n", "label" : "Reload"}}, 
+                {"unsat_core": {"command": "unsatCore\n", "label" : "UNSAT Core"}},
+                {"alloy_model": {"command": "alloyModel\n", "label" : "Alloy Model"}}                
             ]            
         }, 
         {
@@ -22,15 +22,15 @@
             "label": "Choco Instance Generator",
             "accepted_format": "choco",             
             "tool": "java",
-            "tool_args": ["-jar", "$dirname$/ChocoIG/claferchocoig-0.0.1-SNAPSHOT-jar-with-dependencies.jar", "$filepath$"]            
+            "tool_args": ["-jar", "$dirname$/ChocoIG/claferchocoig-0.0.1-SNAPSHOT-jar-with-dependencies.jar", "$filepath$"],            
             "scope_options": [
                 {"global_scope" : {"command": "setscope $value$\n"}}, 
                 {"clafer_scope" : {"command": "setscope $clafer$ $value$\n"}} 
             ],
             "control_options": [
                 {"next_instance": {"command": "\n", "label" : "Next"}}, 
-                {"reload": {command: "r\n", "label" : "Reload"}}, 
-                {"min_unsat": {command: "minUnsat\n", "label" : "Min UNSAT"}}
+                {"reload": {"command": "r\n", "label" : "Reload"}}, 
+                {"min_unsat": {"command": "minUnsat\n", "label" : "Min UNSAT"}}
             ]            
         }
     ]   
