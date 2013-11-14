@@ -34,9 +34,9 @@ function Control(host)
 
 Control.method("getInitContent", function(){
 	var ret = '<form id="ControlForm" method="post" action="/control" style="display: block">';
-	ret += '<input type="hidden" id="ControlOp" name="operation" value="next">';
+	ret += '<input type="hidden" id="ControlOp" name="operation" value="">';
 
-    ret += '<span>Instance Generators:</span><select id="backend" name="backend" style="width: 288px;">';   
+    ret += '<span>Instance Generators:</span><select id="backend" name="backend">';   
     
     $.getJSON('/Backends/backends.json', 
         function(data)
@@ -64,10 +64,8 @@ Control.method("getInitContent", function(){
     ret += '</select>';
 
     ret += '<input type="hidden" id="windowKey" name="windowKey" value="' + this.host.key + '">';
-    ret += '<input type="hidden" id="iScopeBy" name="increaseScopeBy" value="1">';
-	ret += '<input type="button" class="inputNextButton" id="Next" value="Next Instance" disabled="disabled"><br>';
-    ret += '<input type="number" class="inputText" id="ScopeValue" placeholder="Increase Scope By" disabled="disabled">';
-	ret += '<input type="button" class="inputButton" id="Scope" value="Increase Scope" disabled="disabled"></form>';	
+	ret += '<input type="button" class="inputRunStopButton" id="RunStop" value="Run" disabled="disabled"/><br>';
+    ret += '<input type="button" class="inputNextButton" id="Next" value="Next Instance" disabled="disabled"/><br>';
 
     this.data = "";
     this.error = "";
@@ -78,15 +76,13 @@ Control.method("getInitContent", function(){
 
 Control.method("onInitRendered", function()
 {
-    $("#Next").click(function(){
-        $("#ControlOp").val("next");
-        $("#iScopeBy").val("0");
+    $("#RunStop").click(function(){
+        $("#ControlOp").val("runstop");
         $("#ControlForm").submit();
     });
 
-    $("#Scope").click(function(){
-        $("#ControlOp").val("scope");
-        $("#iScopeBy").val($("#ScopeValue").val());
+    $("#Next").click(function(){
+        $("#ControlOp").val("next");
         $("#ControlForm").submit();
     });
 
@@ -97,16 +93,20 @@ Control.method("onInitRendered", function()
     $('#ControlForm').ajaxForm(options); 
 });
 
+Control.method("resetControls", function(){
+    $("#RunStop").removeAttr("disabled");
+    $("#RunStop").val("Run");
+});
+
 Control.method("enableAll", function(){
-    $("#Scope").removeAttr("disabled");
-    $("#ScopeValue").removeAttr("disabled");
     $("#Next").removeAttr("disabled");
+    $("#RunStop").removeAttr("disabled");
+    $("#RunStop").val("Stop");
 });
 
 Control.method("disableAll", function(){
-    $("#Scope").attr("disabled", "disabled");
-    $("#ScopeValue").attr("disabled", "disabled");
     $("#Next").attr("disabled", "disabled");
+    $("#RunStop").attr("disabled", "disabled");
 });
 
 Control.method("onDataLoaded", function(data){

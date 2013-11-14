@@ -326,7 +326,7 @@ Input.method("processToolResult", function(result)
 
     if (result.message != "")
     {
-        this.host.findModule("mdControl").enableAll();
+        this.host.findModule("mdControl").resetControls();
     }
 
     $("#output").html($("#output").html() + result.message.replaceAll("claferIG> ", "ClaferIG>\n"));
