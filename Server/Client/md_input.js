@@ -132,7 +132,8 @@ Input.method("onPoll", function(responseObject)
     }
     else
     {
-        this.processToolResult(responseObject);
+        if (responseObject.message != "Working") 
+            this.processToolResult(responseObject);
 
         if (responseObject.message.length >= 5 && responseObject.message.substring(0,5) == "Error")
         {

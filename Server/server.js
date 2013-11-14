@@ -206,7 +206,6 @@ server.post('/control', function(req, res){
 server.post('/poll', function(req, res, next)
 {
     var found = false;
-    console.log("Polling client " + req.body.windowKey + ". #Processes: " + processes.length);
     for (var i = 0; i < processes.length; i++)
     {
 //        if (processes[i].pingTimeout)
@@ -280,8 +279,8 @@ server.post('/poll', function(req, res, next)
                     {
                         if (processes[i].mode == "compiler") // if the mode completed is compilation
                         {
-//                            res.writeHead(200, { "Content-Type": "application/json"});
-//                            res.end('{"message": "Working"}');
+                            res.writeHead(200, { "Content-Type": "application/json"});
+                            res.end('{"message": "Working"}');
                         }
                         else
                         {
@@ -349,6 +348,8 @@ server.post('/poll', function(req, res, next)
         else
             i++;
     }
+
+    console.log("Polled client " + req.body.windowKey + ". #Processes: " + processes.length);
     
 });
 
@@ -541,127 +542,133 @@ server.post('/upload', function(req, res, next)
                     // -------
 
                     var clafer_compiler  = spawn("clafer", ["--mode=HTML", "--self-contained", "--add-comments", "--ss=none", uploadedFilePath]);
-                    clafer_compiler.on('error', function (err){
-                        console.log('ERROR: Cannot find Clafer Compiler (clafer). Please check whether it is installed and accessible.');
-                        res.writeHead(400, { "Content-Type": "text/html"});
-                        res.end("error");
-                    });
+//                    clafer_compiler.on('error', function (err){
+//                        console.log('ERROR: Cannot find Clafer Compiler (clafer). Please check whether it is installed and accessible.');
+//                        res.writeHead(400, { "Content-Type": "text/html"});
+//                        res.end("error");
+//                    });
+
+
+                    for (var i = 0; i < processes.length; i++)
+                    {
+                        if (processes[i].windowKey == req.body.windowKey)
+                        {
+                            processes[i].toKill = true;
+//                                clearTimeout(processes[i].pingTimeoutObject);                
+//                                clearTimeout(processes[i].executionTimeoutObject);
+                            processes[i].toRemoveCompletely = true;
+                            processes[i].windowKey = "none";
+
+                            break;
+                            // do some other stuff
+                        }
+                    }
+
+                    var d = new Date();
+                    var process = { 
+                        windowKey: req.body.windowKey, 
+                        toRemoveCompletely: false, 
+                        tool: null, 
+                        freshData: "", 
+                        folder: dlDir, 
+                        file: uploadedFilePath, 
+                        lastUsed: d,
+                        mode : "compiler", 
+                        freshError: ""};
+
+                    process.compiled_formats = new Array();
+
+                    if (loadExampleInEditor)
+                        process.model = file_contents;
+                    else
+                        process.model = "";                                   
+
+                    processes.push(process);    
                     
-                    clafer_compiler.on('exit', function (code){	
-                        
-                        var found = false;
+                    clafer_compiler.on('exit', function (code)
+                    {	
                         for (var i = 0; i < processes.length; i++)
                         {
                             if (processes[i].windowKey == req.body.windowKey)
                             {
-                                processes[i].toKill = true;
-//                                clearTimeout(processes[i].pingTimeoutObject);                
-//                                clearTimeout(processes[i].executionTimeoutObject);
-                                processes[i].toRemoveCompletely = true;
-                                processes[i].windowKey = "none";
-                                found = true;
 
-                                break;
-                                // do some other stuff
-                            }
-                        }
-
-                        var d = new Date();
-                        var process = { 
-                            windowKey: req.body.windowKey, 
-                            toRemoveCompletely: false, 
-                            tool: null, 
-                            freshData: "", 
-                            folder: dlDir, 
-                            file: uploadedFilePath, 
-                            lastUsed: d,
-                            mode : "compiler", 
-                            freshError: ""};
-
-                        process.compiled_formats = new Array();
-
-                        if (loadExampleInEditor)
-                            process.model = file_contents;
-                        else
-                            process.model = "";                                   
-
-                        if (code != 0) // if the result is non-zero, means compilation error
-                        {
-                            console.log("CC: Non-zero Return Value");
-                            process.compiler_result = '{"message": "' + escapeJSON("Error: Compilation Error") + '"}';
-                            process.compiler_code = 1;
-                        }
-                        else
-                        {
-                            console.log("CC: Zero Return Value");
-                            process.compiler_result = '{"message": "' + escapeJSON("Success") + '"}';
-                            process.compiler_code = 0;
-                        }
-
-                        processes.push(process);    
-
-                        // it makes sense to get the compiled files for the models (e.g., HTML) 
-                        // that may show syntax errors
-
-                        var formats_for_process = [];
-
-                        for (var i = 0; i < formatConfig.formats.length; i++)
-                        {
-                            var format = new Object();
-                            format.id = formatConfig.formats[i].id;
-                            format.file_extension = formatConfig.formats[i].file_extension;
-                            format.shows_compilation_errors = formatConfig.formats[i].shows_compilation_errors;
-                            format.process = process;
-                            formats_for_process.push(format);
-                        }
-
-                        formats_for_process.forEach(function(item) 
-                        {
-                            if (item.shows_compilation_errors || (item.process.compiler_code == 0))
-                            {
-                                fs.readFile(changeFileExt(uploadedFilePath, '.cfr', item.file_extension), function (err, file_contents) 
+                                if (code != 0) // if the result is non-zero, means compilation error
                                 {
-                                    var obj = new Object();
-                                    obj.id = item.id;
-                                    if (err) // error reading HTML, maybe it is not really present, means a fatal compilation error
+                                    console.log("CC: Non-zero Return Value");
+                                    processes[i].compiler_result = '{"message": "' + escapeJSON("Error: Compilation Error") + '"}';
+                                    processes[i].compiler_code = 1;
+                                }
+                                else
+                                {
+                                    console.log("CC: Zero Return Value");
+                                    processes[i].compiler_result = '{"message": "' + escapeJSON("Success") + '"}';
+                                    processes[i].compiler_code = 0;
+                                }
+
+
+                                // it makes sense to get the compiled files for the models (e.g., HTML) 
+                                // that may show syntax errors
+
+                                var formats_for_process = [];
+
+                                for (var j = 0; j < formatConfig.formats.length; j++)
+                                {
+                                    var format = new Object();
+                                    format.id = formatConfig.formats[j].id;
+                                    format.file_extension = formatConfig.formats[j].file_extension;
+                                    format.shows_compilation_errors = formatConfig.formats[j].shows_compilation_errors;
+                                    format.process = processes[i];
+                                    formats_for_process.push(format);
+                                }
+
+                                formats_for_process.forEach(function(item) 
+                                {
+                                    if (item.shows_compilation_errors || (item.process.compiler_code == 0))
                                     {
-                                        console.log('ERROR: Cannot read the compiled file.');
+                                        fs.readFile(changeFileExt(uploadedFilePath, '.cfr', item.file_extension), function (err, file_contents) 
+                                        {
+                                            var obj = new Object();
+                                            obj.id = item.id;
+                                            if (err) // error reading HTML, maybe it is not really present, means a fatal compilation error
+                                            {
+                                                console.log('ERROR: Cannot read the compiled file.');
+                                                obj.message = "compile_error";
+                                                obj.result = "";
+                                            }
+                                            else
+                                            {
+                                                obj.message = "OK";
+                                                obj.result = file_contents.toString();
+                                            }
+
+                                            item.process.compiled_formats.push(obj);
+
+                                            if (formats_for_process.length == item.process.compiled_formats.length)
+                                            {
+                                                onAllFormatsCompiled(item.process);
+                                            }
+                                        });
+                                    }
+                                    else 
+                                    {
+                                        var obj = new Object();
+                                        obj.id = item.id;
                                         obj.message = "compile_error";
                                         obj.result = "";
-                                    }
-                                    else
-                                    {
-                                        obj.message = "OK";
-                                        obj.result = file_contents.toString();
-                                    }
+                                        item.process.compiled_formats.push(obj);
 
-                                    item.process.compiled_formats.push(obj);
-
-                                    if (formats_for_process.length == item.process.compiled_formats.length)
-                                    {
-                                        onAllFormatsCompiled(item.process);
+                                        if (formats_for_process.length == item.process.compiled_formats.length)
+                                        {
+                                            onAllFormatsCompiled(item.process);
+                                        }
                                     }
                                 });
                             }
-                            else 
-                            {
-                                var obj = new Object();
-                                obj.id = item.id;
-                                obj.message = "compile_error";
-                                obj.result = "";
-                                item.process.compiled_formats.push(obj);
-
-                                if (formats_for_process.length == item.process.compiled_formats.length)
-                                {
-                                    onAllFormatsCompiled(item.process);
-                                }
-                            }
-                        });
-
-                        res.writeHead(200, { "Content-Type": "text/html"});
-                        res.end("OK"); // we have to return a response right a way to avoid confusion.
-
+                        }
                     });
+
+                    res.writeHead(200, { "Content-Type": "text/html"});
+                    res.end("OK"); // we have to return a response right a way to avoid confusion.
                     
                 });
             });
