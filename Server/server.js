@@ -81,7 +81,89 @@ server.post('/control', function(req, res){
     {
         if (processes[i].windowKey == req.body.windowKey)
         {
-            if (req.body.operation == "next")
+            if (req.body.operation == "run")
+            {
+                console.log("Control: Run");
+                var backendId = req.body.backend;
+                console.log("Backend: " + backendId);
+                if (processes[i].mode != "ig")
+                {
+                    console.log("Error: Not compiled yet");
+                }
+                else
+                {
+                    processes[i].mode_completed = false;
+
+//                    processes[i].executionTimeoutObject = setTimeout(executionTimeoutFunc, config.executionTimeout, processes[i]);
+//                    processes[i].pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, processes[i]);
+
+                    var args = [processes[i].file];
+                    
+                    processes[i].tool = spawn("claferIG", args);
+
+                    processes[i].tool.on('error', function (err){
+                        console.log('ERROR: Cannot find Clafer Instance Generator (claferIG). Please check whether it is installed and accessible.');
+                        for (var i = 0; i < processes.length; i++)
+                        {
+                            if (processes[i].windowKey == req.body.windowKey)
+                            {
+                                processes[i].result = '{"message": "' + escapeJSON("Error: Cannot run claferIG") + '"}';
+                                processes[i].code = 0;
+                                processes[i].completed = true;
+                                processes[i].tool = null;
+                            }
+                        }
+                    });
+
+                    processes[i].tool.stdout.on("data", function (data){
+                        for (var i = 0; i < processes.length; i++)
+                        {
+                            if (processes[i].windowKey == req.body.windowKey)
+                            {
+                                if (!processes[i].completed)
+                                {
+                                    processes[i].freshData += data;
+                                }
+                            }
+                        }
+                    });
+
+                    processes[i].tool.stderr.on("data", function (data){
+                        for (var i = 0; i<processes.length; i++)
+                        {
+                            if (processes[i].windowKey == req.body.windowKey)
+                            {
+                                if (!processes[i].completed){
+                                    processes[i].freshError += data;
+                                }
+                            }
+                        }
+                    });
+
+                    processes[i].tool.on("close", function (code){
+                        console.log("CLAFERIG: On Exit");
+/*
+                        for (var i = 0; i<processes.length; i++){
+
+                            if (processes[i].windowKey == req.body.windowKey)
+                            {
+                                cleanupOldFiles(processes[i].file, processes[i].folder);
+                            }
+                        }
+*/                        
+                    });
+                }
+            }
+            else if (req.body.operation == "stop")
+            {
+                console.log("Control: Stop");
+                processes[i].toKill = true;
+                processes[i].mode_completed = true;
+                processes[i].freshData += "\nManually Stopped\n";
+//                clearTimeout(processes[i].pingTimeoutObject);                
+//                clearTimeout(processes[i].executionTimeoutObject);
+            }
+            else if (req.body.operation == "next")
             {
                 console.log("Control: Next Instance");
                 processes[i].tool.stdin.write("\n"); 
@@ -97,11 +179,11 @@ server.post('/control', function(req, res){
             }
 
             // resetting the execution timeout
-            if (processes[i].executionTimeoutObject)
-            {
-                clearTimeout(processes[i].executionTimeoutObject);
-                processes[i].executionTimeoutObject = setTimeout(executionTimeoutFunc, config.executionTimeout, processes[i]);
-            }
+//            if (processes[i].executionTimeoutObject)
+//            {
+//                clearTimeout(processes[i].executionTimeoutObject);
+//                processes[i].executionTimeoutObject = setTimeout(executionTimeoutFunc, config.executionTimeout, processes[i]);
+//            }
 
             break;
 
@@ -127,16 +209,18 @@ server.post('/poll', function(req, res, next)
     console.log("Polling client " + req.body.windowKey + ". #Processes: " + processes.length);
     for (var i = 0; i < processes.length; i++)
     {
-        if (processes[i].pingTimeout)
-        {
-            processes[i].toRemoveCompletely = true;   
-        }
-        else
-        {
+//        if (processes[i].pingTimeout)
+//        {
+//            processes[i].toRemoveCompletely = true;   
+//            console.log("pingTimeout");
+//        }
+ //       else
+//        {
             if (processes[i].windowKey == req.body.windowKey)
             {
                 if (req.body.command == "ping") // normal ping
                 {                
+/*
                     clearTimeout(processes[i].pingTimeoutObject);
                     processes[i].pingTimeoutObject = setTimeout(function(process){
                         process.result = '{"message": "' + escapeJSON('Error: Ping Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.pingTimeout + ' millisecond(s).') + '"}';
@@ -145,7 +229,9 @@ server.post('/poll', function(req, res, next)
                         process.pingTimeout = true;
                         process.toKill = true;
                     }, config.pingTimeout, processes[i]);
-                    
+*/                      
+                    found = true;
+
                     if (processes[i].mode_completed) // the execution of the current mode is completed
                     {
                         if (processes[i].mode == "compiler") // if the mode completed is compilation
@@ -157,21 +243,45 @@ server.post('/poll', function(req, res, next)
                             jsonObj.model = processes[i].model;
                             res.end(JSON.stringify(jsonObj));
 
-                            if (processes[i].pingTimeoutObject)
-                            {
-                                clearTimeout(processes[i].pingTimeoutObject);
-                                clearTimeout(processes[i].executionTimeoutObject);                    
-                            }
-                            found = true;
+//                            if (processes[i].pingTimeoutObject)
+//                            {
+//                                clearTimeout(processes[i].pingTimeoutObject);
+//                                clearTimeout(processes[i].executionTimeoutObject);                    
+//                            }
+
                             processes[i].mode = "ig";
                             processes[i].mode_completed = false;
+                        }
+                        else
+                        {
+                            var currentResult = "";
+
+                            if (processes[i].freshData != "")
+                            {
+                                currentResult += processes[i].freshData;
+                                processes[i].freshData = "";
+                            }
+
+                            if (processes[i].freshError != "")
+                            {
+                                currentResult += processes[i].freshError;
+                                processes[i].freshError = "";
+                            }                    
+
+                            res.writeHead(200, { "Content-Type": "application/json"});
+
+                            var jsonObj = new Object();
+                            jsonObj.message = currentResult;
+                            jsonObj.completed = true;
+                            res.end(JSON.stringify(jsonObj));
                         }
                     }	
                     else // still working
                     {
                         if (processes[i].mode == "compiler") // if the mode completed is compilation
                         {
-
+//                            res.writeHead(200, { "Content-Type": "application/json"});
+//                            res.end('{"message": "Working"}');
                         }
                         else
                         {
@@ -194,27 +304,22 @@ server.post('/poll', function(req, res, next)
 
                             var jsonObj = new Object();
                             jsonObj.message = currentResult;
-                            jsonObj.html = processes[i].html;
-                            jsonObj.model = processes[i].model;
+                            jsonObj.completed = false;
                             res.end(JSON.stringify(jsonObj));
-                            processes[i].html = "";
-                            processes[i].model = "";
                         }
-                        found = true;
                     }
                 }
                 else // if it is cancel
                 {
-                    processes[i].toKill = true;
-                    clearTimeout(processes[i].pingTimeoutObject);                
-                    clearTimeout(processes[i].executionTimeoutObject);
-                    processes[i].toRemoveCompletely = true;
-                    res.writeHead(200, { "Content-Type": "application/json"});
-                    res.end('{"message": "Cancelled"}');
-                    found = true;
+//                    processes[i].toKill = true;
+//                    clearTimeout(processes[i].pingTimeoutObject);                
+//                    clearTimeout(processes[i].executionTimeoutObject);
+//                    processes[i].toRemoveCompletely = true;
+//                    res.writeHead(200, { "Content-Type": "application/json"});
+//                    res.end('{"message": "Cancelled"}');
                 }
             }
-        }    
+ //       }    
     }
     
     if (!found)
@@ -229,15 +334,16 @@ server.post('/poll', function(req, res, next)
     {
         if (processes[i].toKill)
         {
-            clearTimeout(processes[i].pingTimeoutObject);
-            clearTimeout(processes[i].executionTimeoutObject);                    
+//            clearTimeout(processes[i].pingTimeoutObject);
+//            clearTimeout(processes[i].executionTimeoutObject);                    
             killProcessTree(processes[i]);
+            processes[i].toKill = false;
         }
 
         if (processes[i].toRemoveCompletely)
         {
-            clearTimeout(processes[i].pingTimeoutObject);
-            clearTimeout(processes[i].executionTimeoutObject);                    
+//            clearTimeout(processes[i].pingTimeoutObject);
+//            clearTimeout(processes[i].executionTimeoutObject);                    
             processes.splice(i, 1);
         }
         else
@@ -449,8 +555,8 @@ server.post('/upload', function(req, res, next)
                             if (processes[i].windowKey == req.body.windowKey)
                             {
                                 processes[i].toKill = true;
-                                clearTimeout(processes[i].pingTimeoutObject);                
-                                clearTimeout(processes[i].executionTimeoutObject);
+//                                clearTimeout(processes[i].pingTimeoutObject);                
+//                                clearTimeout(processes[i].executionTimeoutObject);
                                 processes[i].toRemoveCompletely = true;
                                 processes[i].windowKey = "none";
                                 found = true;

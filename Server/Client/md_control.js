@@ -25,6 +25,12 @@ function Control(host)
     this.id = "mdControl";
     this.title = "Control";
     
+    this.requestTimeout = 60000; // what is the timeout for response after sending a file
+    this.pollingTimeout = 60000;  // what is the timeout when polling
+    this.pollingDelay = 700;    // how often to send requests (poll) for updates
+    this.pollingTimeoutObject = null;
+    this.toCancel = false;
+
     this.width = (window.parent.innerWidth-30) / 4;
     this.height = 100;
     this.posx = (window.parent.innerWidth-30) * 3 / 4;
@@ -77,8 +83,18 @@ Control.method("getInitContent", function(){
 Control.method("onInitRendered", function()
 {
     $("#RunStop").click(function(){
-        $("#ControlOp").val("runstop");
-        $("#ControlForm").submit();
+        if ($(this).val() == "Run")
+        {
+            $("#ControlOp").val("run");
+            $(this).val("Stop");
+            $("#ControlForm").submit();
+        }
+        else
+        {
+            $("#ControlOp").val("stop");
+            $(this).val("Run");
+            $("#ControlForm").submit();
+        }
     });
 
     $("#Next").click(function(){
@@ -118,9 +134,64 @@ Control.method("beginQuery", function(formData, jqForm, options){
 
 Control.method("showResponse", function(responseText, statusText, xhr, $form)
 {
+    this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay); // start polling
     $("#ControlForm").show();
 });
 
 Control.method("handleError", function(responseText, statusText, xhr, $form){
     $("#ControlForm").show();
+});
+
+
+Control.method("onPoll", function(responseObject)
+{
+//    console.log(responseObject);
+    this.processToolResult(responseObject);
+    
+    if (responseObject.completed)
+    {
+//        this.disableAll(); // if exited IG, then disable controls
+    }
+    else
+    {
+        if (responseObject.message.length >= 5 && responseObject.message.substring(0,5) == "Error")
+        {
+//            this.disableAll(); // if exited IG, then disable controls
+            // stop polling
+        }
+        else
+        {
+            this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
+        }
+    }
+});        
+
+Control.method("poll", function()
+{
+    var options = new Object();
+    options.url = "/poll";
+    options.type = "post";
+    options.timeout = this.pollingTimeout;
+    if (!this.toCancel)
+        options.data = {windowKey: this.host.key, command: "ping"};
+    else
+        options.data = {windowKey: this.host.key, command: "cancel"};
+    
+    options.success = this.onPoll.bind(this);
+    options.error = this.handleError.bind(this);
+
+    $.ajax(options);
+});
+
+
+Control.method("processToolResult", function(result)
+{
+    if (!result)
+    {
+        this.handleError(null, "empty_argument", null);
+        return;
+    }
+
+    $("#output").html($("#output").html() + result.message.replaceAll("claferIG> ", "ClaferIG>\n"));
+
 });

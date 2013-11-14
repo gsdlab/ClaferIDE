@@ -27,14 +27,13 @@ function Input(host)
     this.requestTimeout = 60000; // what is the timeout for response after sending a file
     this.pollingTimeout = 60000;  // what is the timeout when polling
     this.pollingDelay = 700;    // how often to send requests (poll) for updates
+    this.pollingTimeoutObject = null;
+    this.toCancel = false;
 
     this.width = (window.parent.innerWidth-30) / 2;
     this.height = window.parent.innerHeight-50;
     this.posx = 0;
     this.posy = 0;
-    
-    this.pollingTimeoutObject = null;
-    this.toCancel = false;
     
     this.host = host;
     this.serverAction = "/upload";
