@@ -47,7 +47,7 @@ ClaferModel.method("onRendered", function()
 ClaferModel.method("onDocLoad", function(){
     if (this.model != "")
     {
-        var iframe = $("#model")[0];
+        var iframe = $("#html_format")[0];
 
         if (iframe.contentWindow)
             iframe.contentWindow.document.write(this.model);
@@ -58,11 +58,75 @@ ClaferModel.method("onDocLoad", function(){
 
 ClaferModel.method("getInitContent", function()
 {
-    return '<iframe id="model" style="height:' + this.height + '" src="' + this.ajaxUrl + '" frameborder="0" width="' + this.width + '"></iframe>';
+    var result = "";
+    result += '<span>Show:</span><select id="formats">';   
+    result += '</select>';   
+    result += '<div id="format_views">';
+    result += '<iframe id="html_format" height = "' + (this.height - 45) + '" src="' + this.ajaxUrl + '" frameborder="0" width="' + (this.width - 5) + '"></iframe>';
+    result += '</div>';
+
+    return result;
+
 });
 
 ClaferModel.method("onInitRendered", function()
 {
-    $("#model")[0].onload = this.onDocLoad.bind(this);
+    $("#html_format")[0].onload = this.onDocLoad.bind(this); // do it here.
+    $("#formats")[0].onchange = this.onFormatChange.bind(this);        
+
+    var height = (this.height - 35);
+    var width = (this.width - 5);
+
+    $.getJSON('/Formats/formats.json', 
+        function(data)
+        {
+            var formats = data.formats;
+            var options = "";
+            var views = "";
+        
+            for (var i = 0; i < formats.length; i++)
+            {
+                if (i == 0)
+                {
+                    style = "display:block;";
+                }
+                else
+                {
+                    style = "display:none;";                    
+                }
+
+                options += '<option value="' + formats[i].id + '">' + formats[i].label + '</option>';
+                
+                if (formats[i].display_element == "iframe") // all iframes have to be put in advance
+                {
+                }
+                else // textarea
+                {
+                    style += 'width: ' + (width - 10) + 'px; height: ' + height + 'px;' + 'white-space: nowrap; overflow: auto; resize: none;';
+                    views += '<textarea readonly="readonly" id="' + formats[i].id + '_format" height = "' + height+ '" width="' + width + '" style="' + style + '"></textarea>';
+                }
+            }
+            
+            $("#formats").html(options);
+            $("#format_views textarea").remove();
+            $("#format_views").append(views);
+
+        }
+    ).error(function() 
+        { 
+            var options = '<option value="">(Could not load formats)</option>';
+            $("#formats").html(options);
+
+        });
+
 });
 
+
+ClaferModel.method("onFormatChange", function()
+{
+    $("#format_views").children().each(function(){
+        this.style.display = "none";
+    });
+
+    $("#format_views").children("#" + $( "#formats option:selected" ).val() + "_format")[0].style.display = "block";
+});

@@ -140,7 +140,7 @@ Input.method("onPoll", function(responseObject)
             this.host.findModule("mdControl").disableAll(); // if exited IG, then disable controls
             // stop polling
         }
-        else
+        else if (responseObject.message != "Success")
         {
             this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
         }
@@ -167,7 +167,7 @@ Input.method("poll", function()
 Input.method("setClaferModelHTML", function(html){
     this.host.findModule("mdClaferModel").lastModel = this.host.findModule("mdClaferModel").model;
     this.host.findModule("mdClaferModel").model = html;
-    var iframe = $("#model")[0];
+    var iframe = $("#html_format")[0];
     iframe.src = iframe.src; // reloads the window
 });
 
@@ -295,12 +295,29 @@ Input.method("processToolResult", function(result)
         return;
     }
 
-    if (result.html)
+    if (result.compiled_formats)
     {
-        this.setClaferModelHTML(result.html);        
-        // when we receive first HTML, it means our model is compiled, and we show the input form again
+        for (var i = 0; i < result.compiled_formats.length; i++)
+        {
+            if (result.compiled_formats[i].id == "html")
+            {
+                this.setClaferModelHTML(result.compiled_formats[i].result);         
+            }
+            else // textarea
+            {
+                $("#" + result.compiled_formats[i].id + "_format").val(result.compiled_formats[i].result); 
+            }
+        }
+        
         this.endQuery();
     }
+
+//    if (result.html)
+//    {
+//        this.setClaferModelHTML(result.html);        
+//        // when we receive first HTML, it means our model is compiled, and we show the input form again
+//        this.endQuery();
+//    }
 
     if (result.model != "")
     {
@@ -311,7 +328,6 @@ Input.method("processToolResult", function(result)
     {
         this.host.findModule("mdControl").enableAll();
     }
-
 
     $("#output").html($("#output").html() + result.message.replaceAll("claferIG> ", "ClaferIG>\n"));
 

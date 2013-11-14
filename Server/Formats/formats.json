@@ -1,18 +1,22 @@
 {
     "formats": [
         {
-            "id": "choco", 
-            "label": "Choco JS", 
-            "file_extension": "js",             
-            "compiler_mode": "choco",
-            "compiler_args": []
-        },
-        {
             "id": "html", 
             "label": "HTML", 
-            "file_extension": "html",             
+            "file_extension": ".html",             
             "compiler_mode": "HTML",
-            "compiler_args": ["--self-contained"]
+            "compiler_args": ["--self-contained"],
+            "shows_compilation_errors" : "true",            
+            "display_element": "iframe"
+        },
+        {
+            "id": "choco", 
+            "label": "Choco JS", 
+            "file_extension": ".js",             
+            "compiler_mode": "choco",
+            "compiler_args": [],
+            "shows_compilation_errors" : "false",
+            "display_element": "textarea"
         }
     ]   
 }

@@ -146,63 +146,60 @@ server.post('/poll', function(req, res, next)
                         process.toKill = true;
                     }, config.pingTimeout, processes[i]);
                     
-                    if (processes[i].completed) // the execution is completed, the process is exited
+                    if (processes[i].mode_completed) // the execution of the current mode is completed
                     {
-                        
-                        if (processes[i].code == 0)
-                        {
+                        if (processes[i].mode == "compiler") // if the mode completed is compilation
+                        {       
+
                             res.writeHead(200, { "Content-Type": "application/json"});
+                            var jsonObj = JSON.parse(processes[i].compiler_result);
+                            jsonObj.compiled_formats = processes[i].compiled_formats;
+                            jsonObj.model = processes[i].model;
+                            res.end(JSON.stringify(jsonObj));
+
+                            if (processes[i].pingTimeoutObject)
+                            {
+                                clearTimeout(processes[i].pingTimeoutObject);
+                                clearTimeout(processes[i].executionTimeoutObject);                    
+                            }
+                            found = true;
+                            processes[i].mode = "ig";
+                            processes[i].mode_completed = false;
                         }
-                        else
-                        {
-                            res.writeHead(200, { "Content-Type": "application/json"});
-                        }
-
-                        var jsonObj = JSON.parse(processes[i].result);
-                        jsonObj.html = processes[i].html;
-                        jsonObj.model = processes[i].model;
-
-                        res.end(JSON.stringify(jsonObj));
-
-                        processes[i].html = "";
-                        processes[i].model = "";
-
-                        if (processes[i].pingTimeoutObject)
-                        {
-                            clearTimeout(processes[i].pingTimeoutObject);
-                            clearTimeout(processes[i].executionTimeoutObject);                    
-                        }
-                        processes[i].toRemoveCompletely = true;
-                        found = true;
                     }	
                     else // still working
                     {
-                        // else ClaferIG is running
-
-                        var currentResult = "";
-
-                        if (processes[i].freshData != "")
+                        if (processes[i].mode == "compiler") // if the mode completed is compilation
                         {
-                            currentResult += processes[i].freshData;
-                            processes[i].freshData = "";
+
                         }
-
-                        if (processes[i].freshError != "")
+                        else
                         {
-                            currentResult += processes[i].freshError;
-                            processes[i].freshError = "";
-                        }                    
 
-                        res.writeHead(200, { "Content-Type": "application/json"});
+                            var currentResult = "";
 
-                        var jsonObj = new Object();
-                        jsonObj.message = currentResult;
-                        jsonObj.html = processes[i].html;
-                        jsonObj.model = processes[i].model;
-                        res.end(JSON.stringify(jsonObj));
-                        processes[i].html = "";
-                        processes[i].model = "";
+                            if (processes[i].freshData != "")
+                            {
+                                currentResult += processes[i].freshData;
+                                processes[i].freshData = "";
+                            }
 
+                            if (processes[i].freshError != "")
+                            {
+                                currentResult += processes[i].freshError;
+                                processes[i].freshError = "";
+                            }                    
+
+                            res.writeHead(200, { "Content-Type": "application/json"});
+
+                            var jsonObj = new Object();
+                            jsonObj.message = currentResult;
+                            jsonObj.html = processes[i].html;
+                            jsonObj.model = processes[i].model;
+                            res.end(JSON.stringify(jsonObj));
+                            processes[i].html = "";
+                            processes[i].model = "";
+                        }
                         found = true;
                     }
                 }
@@ -434,7 +431,7 @@ server.post('/upload', function(req, res, next)
                     var process = { windowKey: key, tool: null, folder: dlDir, path: uploadedFilePath, completed: false, code: 0, killed:false, contents: file_contents, toKill: false};
 
                     // temporary
-//                    var clafer_compiler_CHOCO  = spawn("clafer", ["--mode=choco", "--ss=none", uploadedFilePath]);
+                    var clafer_compiler_CHOCO  = spawn("clafer", ["--mode=choco", "--ss=none", uploadedFilePath]);
                     // -------
 
                     var clafer_compiler  = spawn("clafer", ["--mode=HTML", "--self-contained", "--add-comments", "--ss=none", uploadedFilePath]);
@@ -464,59 +461,99 @@ server.post('/upload', function(req, res, next)
                         }
 
                         var d = new Date();
-                        var process = { windowKey: req.body.windowKey, toRemoveCompletely: false, tool: null, freshData: "", folder: dlDir, file: uploadedFilePath, lastUsed: d, freshError: ""};
+                        var process = { 
+                            windowKey: req.body.windowKey, 
+                            toRemoveCompletely: false, 
+                            tool: null, 
+                            freshData: "", 
+                            folder: dlDir, 
+                            file: uploadedFilePath, 
+                            lastUsed: d,
+                            mode : "compiler", 
+                            freshError: ""};
+
+                        process.compiled_formats = new Array();
 
                         if (loadExampleInEditor)
                             process.model = file_contents;
                         else
                             process.model = "";                                   
 
-                        processes.push(process);                                
-
-                        fs.readFile(changeFileExt(uploadedFilePath, '.cfr', '.html'), function (err, html) 
+                        if (code != 0) // if the result is non-zero, means compilation error
                         {
-                            for (var i = 0; i < processes.length; i++)
+                            console.log("CC: Non-zero Return Value");
+                            process.compiler_result = '{"message": "' + escapeJSON("Error: Compilation Error") + '"}';
+                            process.compiler_code = 1;
+                        }
+                        else
+                        {
+                            console.log("CC: Zero Return Value");
+                            process.compiler_result = '{"message": "' + escapeJSON("Success") + '"}';
+                            process.compiler_code = 0;
+                        }
+
+                        processes.push(process);    
+
+                        // it makes sense to get the compiled files for the models (e.g., HTML) 
+                        // that may show syntax errors
+
+                        var formats_for_process = [];
+
+                        for (var i = 0; i < formatConfig.formats.length; i++)
+                        {
+                            var format = new Object();
+                            format.id = formatConfig.formats[i].id;
+                            format.file_extension = formatConfig.formats[i].file_extension;
+                            format.shows_compilation_errors = formatConfig.formats[i].shows_compilation_errors;
+                            format.process = process;
+                            formats_for_process.push(format);
+                        }
+
+                        formats_for_process.forEach(function(item) 
+                        {
+                            if (item.shows_compilation_errors || (item.process.compiler_code == 0))
                             {
-                                if (processes[i].windowKey == req.body.windowKey)
+                                fs.readFile(changeFileExt(uploadedFilePath, '.cfr', item.file_extension), function (err, file_contents) 
                                 {
+                                    var obj = new Object();
+                                    obj.id = item.id;
                                     if (err) // error reading HTML, maybe it is not really present, means a fatal compilation error
                                     {
-                                        console.log('ERROR: Cannot read the compiled HTML file.');
-                                        processes[i].result = '{"message": "' + escapeJSON("Error: Compilation Error") + '"}';
-                                        processes[i].code = 0;
-                                        processes[i].completed = true;
-                                        processes[i].tool = null;
-                                        processes[i].html = "";
-                                        cleanupOldFiles(uploadedFilePath, dlDir); // cleaning up when cached result is found
-                                        // here we write the response, because we return 
-                                        res.writeHead(400, { "Content-Type": "text/html"});
-                                        res.end("compile_error");
-                                        return;
-                                    }
-                                    // else there is no error, and HTML file is present.
-
-                                    if (code != 0) // if the result is non-zero, means compilation error
-                                    {
-                                        console.log("CC: Non-zero Return Value");
-                                        processes[i].result = '{"message": "' + escapeJSON("Error: Compilation Error") + '"}';
-                                        processes[i].code = 0;
-                                        processes[i].completed = true;
-                                        processes[i].tool = null;
-                                        processes[i].html = html.toString();
-                                        cleanupOldFiles(uploadedFilePath, dlDir); // cleaning up when cached result is found
+                                        console.log('ERROR: Cannot read the compiled file.');
+                                        obj.message = "compile_error";
+                                        obj.result = "";
                                     }
                                     else
                                     {
-                                        console.log("CC: Zero Return Value");
-                                        processes[i].html = html.toString();
+                                        obj.message = "OK";
+                                        obj.result = file_contents.toString();
                                     }
+
+                                    item.process.compiled_formats.push(obj);
+
+                                    if (formats_for_process.length == item.process.compiled_formats.length)
+                                    {
+                                        onAllFormatsCompiled(item.process);
+                                    }
+                                });
+                            }
+                            else 
+                            {
+                                var obj = new Object();
+                                obj.id = item.id;
+                                obj.message = "compile_error";
+                                obj.result = "";
+                                item.process.compiled_formats.push(obj);
+
+                                if (formats_for_process.length == item.process.compiled_formats.length)
+                                {
+                                    onAllFormatsCompiled(item.process);
                                 }
                             }
                         });
 
                         res.writeHead(200, { "Content-Type": "text/html"});
                         res.end("OK"); // we have to return a response right a way to avoid confusion.
-                        // HTML will be returned on the next polling
 
                     });
                     
@@ -525,6 +562,19 @@ server.post('/upload', function(req, res, next)
         });
     }
 });
+
+function onAllFormatsCompiled(process)
+{
+    process.mode_completed = true;
+//for (var i = 0; i < processes.length; i++)
+//{
+//if (processes[i].windowKey == req.body.windowKey)
+//{
+
+//}
+//}
+
+}
 
 /*
     process.executionTimeoutObject = setTimeout(executionTimeoutFunc, config.executionTimeout, process);

@@ -50,13 +50,15 @@ Control.method("getInitContent", function(){
             }
             
             $("#backend").html(options);
-            $('#myform').submit(); // make the submit here            
+            $("#myform").submit();
+
         }
     ).error(function() 
         { 
             var options = '<option value="">(Could not load instance generators)</option>';
             $("#backend").html(options);
-            $('#myform').submit(); // make the submit here                        
+            $("#myform").submit();
+
         });
     
     ret += '</select>';
