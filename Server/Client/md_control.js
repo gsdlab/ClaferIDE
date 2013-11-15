@@ -70,15 +70,21 @@ Control.method("getInitContent", function(){
 
                 for (var j = 0; j < backends[i].control_buttons.length; j++)
                 {
-                    backendButtons += '<button disabled="disabled" id="' + backends[i].id + '" name="' + backends[i].control_buttons[j].id + '">' + backends[i].control_buttons[j].label + "</button>";
+                    backendButtons += '<button class="control_button" disabled="disabled" id="' + backends[i].id + "-" + backends[i].control_buttons[j].id + '" name="' + backends[i].control_buttons[j].id + '">' + backends[i].control_buttons[j].label + "</button>";
                 }
 
                 backendButtons += '</div>';
 
             }
-            
+
             $("#backend").html(options);
             $("#backendButtons").html(backendButtons);
+
+            $(".control_button").click(function(){
+                $("#ControlOp").val(this.id);
+//                return false;
+            });
+
             $("#myform").submit();
 
         }
@@ -102,11 +108,6 @@ Control.method("onInitRendered", function()
     $("#backend")[0].onchange = this.onBackendChange.bind(this);        
     $("#RunStop")[0].onclick = this.runStopClick.bind(this);
 
-    $("#Next").click(function(){
-        $("#ControlOp").val("next");
-        $("#ControlForm").submit();
-    });
-
     var options = new Object();
     options.beforeSubmit = this.beginQuery.bind(this);
     options.success = this.showResponse.bind(this);
@@ -124,7 +125,7 @@ Control.method("runStopClick", function(){
     {
         $("#ControlOp").val("run");
         $("#RunStop").val("Stop");
-        $("#backend").attr("disabled", "disabled");
+//        $("#backend").attr("disabled", "disabled");
         this.enableRuntimeControls();
         $("#ControlForm").submit();
     }
@@ -132,7 +133,7 @@ Control.method("runStopClick", function(){
     {
         $("#ControlOp").val("stop");
         $("#RunStop").val("Run");
-        $("#backend").removeAttr("disabled");
+//        $("#backend").removeAttr("disabled");
         this.disableRuntimeControls();
         $("#ControlForm").submit();
     }

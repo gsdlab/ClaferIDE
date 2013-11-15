@@ -84,6 +84,7 @@ server.post('/control', function(req, res){
             if (req.body.operation == "run")
             {
                 console.log("Control: Run");
+
                 var backendId = req.body.backend;
                 console.log("Backend: " + backendId);
                 if (processes[i].mode != "ig")
@@ -92,14 +93,69 @@ server.post('/control', function(req, res){
                 }
                 else
                 {
+                    var found = false;
+                    var backend = null;
+                    var format = null;
+                    // looking for a backend
+
+                    for (var j = 0; j < backendConfig.backends.length; j++)
+                    {
+                        if (backendConfig.backends[j].id == backendId)
+                        {
+                            found = true;
+                            backend = backendConfig.backends[j]; 
+                            break;
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        console.log("Error: Backend was not found");
+                        break;
+                    }
+
+                    // looking for a format
+                    var found = false;
+
+                    for (var j = 0; j < formatConfig.formats.length; j++)
+                    {
+                        if (formatConfig.formats[j].id == backend.accepted_format)
+                        {
+                            format = formatConfig.formats[j];
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        console.log("Error: Required format was not found");
+                        break;
+                    }
+
+                    console.log(backend.id + " ==> " + format.id);
+
                     processes[i].mode_completed = false;
 
 //                    processes[i].executionTimeoutObject = setTimeout(executionTimeoutFunc, config.executionTimeout, processes[i]);
 //                    processes[i].pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, processes[i]);
 
-                    var args = [processes[i].file + ".cfr"];
+                    var fileAndPathReplacement = [
+                            {
+                                "needle": "$dirname$", 
+                                "replacement": __dirname + "/Backends"
+                            },
+                            {
+                                "needle": "$filepath$", 
+                                "replacement": processes[i].file + format.file_extension
+                            }
+                        ];
+
+                    var args = replaceTemplateList(backend.tool_args, fileAndPathReplacement);
+
+                    console.log(args);
                     
-                    processes[i].tool = spawn("claferIG", args);
+                    processes[i].tool = spawn(replaceTemplate(backend.tool, fileAndPathReplacement), args);
 
                     processes[i].tool.on('error', function (err){
                         console.log('ERROR: Cannot find Clafer Instance Generator (claferIG). Please check whether it is installed and accessible.');
@@ -163,19 +219,59 @@ server.post('/control', function(req, res){
 //                clearTimeout(processes[i].pingTimeoutObject);                
 //                clearTimeout(processes[i].executionTimeoutObject);
             }
-            else if (req.body.operation == "next")
-            {
-                console.log("Control: Next Instance");
-                processes[i].tool.stdin.write("\n"); 
-            }
-            else if (req.body.operation == "scope")
-            {
-                console.log("Control: Increase scope by " + req.body.increaseScopeBy);
-                processes[i].tool.stdin.write("i " + req.body.increaseScopeBy + "\n");
-            }
             else
             {
-                console.log("Control: Unknown command");
+                var parts = req.body.operation.split("-");
+                if (parts.length != 2)
+                {
+                    console.log('Control: Command does not follow pattern "backend-opreration": "' + req.body.operation + '"');
+                }
+
+                var backendId = parts[0]; // it does not matter how to get backendid.
+                var operationId = parts[1];
+
+                var found = false;
+                var backend = null;
+                var operation = null;
+                // looking for a backend
+
+                for (var j = 0; j < backendConfig.backends.length; j++)
+                {
+                    if (backendConfig.backends[j].id == backendId)
+                    {
+                        found = true;
+                        backend = backendConfig.backends[j]; 
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    console.log("Error: Backend was not found");
+                    break;
+                }
+
+                // looking for a format
+                var found = false;
+
+                for (var j = 0; j < backend.control_buttons.length; j++)
+                {
+                    if (backend.control_buttons[j].id == operationId)
+                    {
+                        operation = backend.control_buttons[j];
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    console.log("Error: Required operation was not found");
+                    break;
+                }
+
+                console.log(backend.id + " ==> " + operation.id);
+
             }
 
             // resetting the execution timeout
@@ -956,3 +1052,26 @@ function dependency_ok()
         console.log('Ready. Listening on port ' + port);        
     }
 }
+
+function replaceTemplate(input_string, replacement_map)
+{
+    var result = input_string;
+
+    for (var j = 0; j < replacement_map.length; j++)
+    {
+        result = result.replace(replacement_map[j].needle, replacement_map[j].replacement);
+    }
+
+    return result;
+}
+
+function replaceTemplateList(input_list, replacement_map)
+{
+    var result = new Array();
+    for (var i = 0; i < input_list.length; i++)
+    {
+        result.push(replaceTemplate(input_list[i], replacement_map));
+    }
+    
+    return result;
+}                            
