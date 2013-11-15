@@ -84,9 +84,16 @@ ClaferModel.method("onInitRendered", function()
             var options = "";
             var views = "";
         
+            var counter = 0; // need this, because not all formats are displayable
+
             for (var i = 0; i < formats.length; i++)
             {
-                if (i == 0)
+                if (formats[i].display_element == "none") // invisible in the view
+                {
+                    continue;
+                }
+
+                if (counter == 0)
                 {
                     style = "display:block;";
                 }
@@ -105,6 +112,8 @@ ClaferModel.method("onInitRendered", function()
                     style += 'width: ' + (width - 10) + 'px; height: ' + height + 'px;' + 'white-space: nowrap; overflow: auto; resize: none;';
                     views += '<textarea readonly="readonly" id="' + formats[i].id + '_format" height = "' + height+ '" width="' + width + '" style="' + style + '"></textarea>';
                 }
+
+                counter++;
             }
             
             $("#formats").html(options);

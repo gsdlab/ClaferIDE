@@ -97,7 +97,7 @@ server.post('/control', function(req, res){
 //                    processes[i].executionTimeoutObject = setTimeout(executionTimeoutFunc, config.executionTimeout, processes[i]);
 //                    processes[i].pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, processes[i]);
 
-                    var args = [processes[i].file];
+                    var args = [processes[i].file + ".cfr"];
                     
                     processes[i].tool = spawn("claferIG", args);
 
@@ -446,7 +446,7 @@ server.post('/upload', function(req, res, next)
 
         console.log(fileTextContents);
 
-        fs.writeFile(uploadedFilePath, fileTextContents, function(err) {
+        fs.writeFile(uploadedFilePath + ".cfr", fileTextContents, function(err) {
             if(err) {
                 console.log(err);
             } else {
@@ -515,12 +515,14 @@ server.post('/upload', function(req, res, next)
             if (err) throw err;
             var dlDir = uploadedFilePath;
             uploadedFilePath += pathTokens[2];
-            fs.rename(oldPath, uploadedFilePath, function (err){
+            uploadedFilePath = uploadedFilePath.substring(0, uploadedFilePath.length - 4); // to remove the extention
+
+            fs.rename(oldPath, uploadedFilePath + ".cfr", function (err){
                 if (err) throw err;
                 console.log("Proceeding with " + uploadedFilePath);
                 
                 // read the contents of the uploaded file
-                fs.readFile(uploadedFilePath, function (err, data) {
+                fs.readFile(uploadedFilePath + ".cfr", function (err, data) {
 
                     var file_contents;
                     if(data)
@@ -529,7 +531,7 @@ server.post('/upload', function(req, res, next)
                     {
                         res.writeHead(500, { "Content-Type": "text/html"});
                         res.end("No data has been read");
-                        cleanupOldFiles(uploadedFilePath, dlDir);
+                        cleanupOldFiles(dlDir);
                         return;
                     }
                     
@@ -538,10 +540,10 @@ server.post('/upload', function(req, res, next)
                     var process = { windowKey: key, tool: null, folder: dlDir, path: uploadedFilePath, completed: false, code: 0, killed:false, contents: file_contents, toKill: false};
 
                     // temporary
-                    var clafer_compiler_CHOCO  = spawn("clafer", ["--mode=choco", "--ss=none", uploadedFilePath]);
+                    var clafer_compiler_CHOCO  = spawn("clafer", ["--mode=choco", "--ss=none", uploadedFilePath + ".cfr"]);
                     // -------
 
-                    var clafer_compiler  = spawn("clafer", ["--mode=HTML", "--self-contained", "--add-comments", "--ss=none", uploadedFilePath]);
+                    var clafer_compiler  = spawn("clafer", ["--mode=HTML", "--self-contained", "--add-comments", "--ss=none", uploadedFilePath + ".cfr"]);
 //                    clafer_compiler.on('error', function (err){
 //                        console.log('ERROR: Cannot find Clafer Compiler (clafer). Please check whether it is installed and accessible.');
 //                        res.writeHead(400, { "Content-Type": "text/html"});
@@ -625,7 +627,7 @@ server.post('/upload', function(req, res, next)
                                 {
                                     if (item.shows_compilation_errors || (item.process.compiler_code == 0))
                                     {
-                                        fs.readFile(changeFileExt(uploadedFilePath, '.cfr', item.file_extension), function (err, file_contents) 
+                                        fs.readFile(uploadedFilePath + item.file_extension, function (err, file_contents) 
                                         {
                                             var obj = new Object();
                                             obj.id = item.id;
@@ -786,7 +788,7 @@ function finishCleanup(dir, results){
 	}
 }
  
-function cleanupOldFiles(path, dir) {
+function cleanupOldFiles(dir) {
     console.log("Cleaning temporary files...");                    
 	//cleanup old files
 	fs.readdir(dir, function(err, files){

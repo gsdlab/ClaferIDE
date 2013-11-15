@@ -1,6 +1,15 @@
 {
     "formats": [
         {
+            "id": "clafer_source", 
+            "label": "Source", 
+            "file_extension": ".cfr",             
+            "compiler_mode": "none",
+            "compiler_args": [],
+            "shows_compilation_errors" : "false",            
+            "display_element": "none"
+        },
+        {
             "id": "html", 
             "label": "HTML", 
             "file_extension": ".html",             
