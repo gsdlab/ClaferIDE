@@ -28,11 +28,7 @@
                 {"id": "global_scope", "command": "setscope $value$\n"}, 
                 {"id": "clafer_scope", "command": "setscope $clafer$ $value$\n"} 
             ],
-            "control_buttons": [
-                {"id": "next_instance", "command": "\n", "label" : "Next"}, 
-                {"id": "reload", "command": "r\n", "label" : "Reload"}, 
-                {"id": "min_unsat", "command": "minUnsat\n", "label" : "Min UNSAT"}
-            ]            
+            "control_buttons": []            
         }
     ]   
 }
