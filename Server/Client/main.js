@@ -107,6 +107,8 @@ function Host(modules)
         var helpButton = this.getHelpButton(this.modules[i].title);
         $("#" + this.modules[i].id + " .window-titleBar").append(helpButton);   
     }
+
+    this.print("ClaferIDE> Welcome!\n");
     
     var displayHelp=getCookie("startHelpMooViz")
     if(displayHelp==null){
@@ -122,6 +124,11 @@ function Host(modules)
 //    $.minimizeWindow("mdComparisonTable");    
 }
 
+Host.method("print", function(text)
+{
+    $("#output").html($("#output").html() + text);
+});
+
 //returns the module object. useful for modifying or getting data from other modules.
 Host.method("findModule", function(id)
 {
@@ -133,17 +140,6 @@ Host.method("findModule", function(id)
     
     return null;
 
-});
-
-//runs the "onSelectionChanged" function for each module. Called by the selector.
-Host.method("selectionChanged", function(data)
-{
-    for (var i = 0; i < this.modules.length; i++)
-    {
-        if (this.modules[i].onSelectionChanged)
-            this.modules[i].onSelectionChanged(data);
-    }
-    
 });
 
 //runs after data is uploaded from server. Causes all modules to update their data.

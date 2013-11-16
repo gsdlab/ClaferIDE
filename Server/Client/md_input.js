@@ -97,6 +97,13 @@ Input.method("cancelCall", function()
  * Shows uploader and hides the form
 */
 Input.method("beginQuery", function(formData, jqForm, options) {
+
+    if (this.host.findModule("mdControl").sessionActive) // if there is an active IG session
+    {
+        alert("Please stop the instance generator and save your results first");
+        return false;
+    }
+
 	$("#load_area #myform").hide();
 	$("#load_area").append('<div id="preloader"><img id="preloader_img" src="/images/preloader.gif" alt="Loading..."/><span id="status_label">Loading and processing...</span><button id="cancel">Cancel</button></div>');	
     $("#cancel").click(this.cancelCall.bind(this));
@@ -186,7 +193,8 @@ Input.method("fileSent", function(responseText, statusText, xhr, $form)  {
 
     if (responseText != "no clafer file submitted")
     {
-        $("#output").html($("#output").html() + "===============\n");
+        this.host.print("ClaferIDE> Processing the submitted model. Compiling...\n");
+
         var data = new Object();
         data.message = responseText;
         this.host.updateData(data);
@@ -312,13 +320,6 @@ Input.method("processToolResult", function(result)
         this.endQuery();
     }
 
-//    if (result.html)
-//    {
-//        this.setClaferModelHTML(result.html);        
-//        // when we receive first HTML, it means our model is compiled, and we show the input form again
-//        this.endQuery();
-//    }
-
     if (result.model != "")
     {
         this.editor.getSession().setValue(result.model);
@@ -329,7 +330,8 @@ Input.method("processToolResult", function(result)
         this.host.findModule("mdControl").resetControls();
     }
 
-    $("#output").html($("#output").html() + result.message.replaceAll("claferIG> ", "ClaferIG>\n"));
+    this.host.print("Compiler> " + result.message + "\n");
+    this.host.print(result.compiler_message + "\n");    
 
 });
 

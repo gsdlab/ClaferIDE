@@ -34,7 +34,7 @@ function Output(host)
 }
 
 Output.method("getInitContent", function(){
-    return '<textarea id="output" readonly="readonly" style="width:95%;height:95%;border:0" border="0">The Instance Generator result will be here.\n</textarea>';
+    return '<textarea id="output" readonly="readonly" style="width:95%;height:95%;border:0" border="0"></textarea>';
 });
 
 Output.method("onDataLoaded", function(data){
