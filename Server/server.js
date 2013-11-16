@@ -77,6 +77,10 @@ server.get('/htmlwrapper', function(req, res) {
 
 server.post('/control', function(req, res){
     console.log("Control: Enter");
+
+    var isError = true;
+    var resultMessage = "Error: Could not find the process"; // default message
+
     for (var i = 0; i < processes.length; i++)
     {
         if (processes[i].windowKey == req.body.windowKey)
@@ -90,6 +94,9 @@ server.post('/control', function(req, res){
                 if (processes[i].mode != "ig")
                 {
                     console.log("Error: Not compiled yet");
+                    resultMessage = "Error: The mode is not IG: the compilation is still running";
+                    isError = true;
+                    break;
                 }
                 else
                 {
@@ -111,6 +118,8 @@ server.post('/control', function(req, res){
                     if (!found)
                     {
                         console.log("Error: Backend was not found");
+                        resultMessage = "Error: Could not find the backend by its submitted id.";
+                        isError = true;
                         break;
                     }
 
@@ -130,6 +139,8 @@ server.post('/control', function(req, res){
                     if (!found)
                     {
                         console.log("Error: Required format was not found");
+                        resultMessage = "Error: Could not find the required file format.";
+                        isError = true;
                         break;
                     }
 
@@ -208,6 +219,10 @@ server.post('/control', function(req, res){
                         }
 */                        
                     });
+
+                    resultMessage = "started";
+                    isError = false;
+
                 }
             }
             else if (req.body.operation == "stop")
@@ -216,6 +231,8 @@ server.post('/control', function(req, res){
                 processes[i].toKill = true;
                 processes[i].mode_completed = true;
                 processes[i].freshData += "\nManually Stopped\n";
+                resultMessage = "stopped";
+                isError = false;
 //                clearTimeout(processes[i].pingTimeoutObject);                
 //                clearTimeout(processes[i].executionTimeoutObject);
             }
@@ -225,6 +242,8 @@ server.post('/control', function(req, res){
                 if (parts.length != 2)
                 {
                     console.log('Control: Command does not follow pattern "backend-opreration": "' + req.body.operation + '"');
+                    resultMessage = "Error: Command does not follow the 'backend-operation' pattern.";
+                    isError = true;
                 }
 
                 var backendId = parts[0]; // it does not matter how to get backendid.
@@ -248,6 +267,8 @@ server.post('/control', function(req, res){
                 if (!found)
                 {
                     console.log("Error: Backend was not found");
+                    resultMessage = "Error: Could not find the backend specified in the command.";
+                    isError = true;
                     break;
                 }
 
@@ -267,11 +288,14 @@ server.post('/control', function(req, res){
                 if (!found)
                 {
                     console.log("Error: Required operation was not found");
+                    resultMessage = "Error: Could not find the required operation.";
                     break;
                 }
 
                 console.log(backend.id + " ==> " + operation.id);
 
+                resultMessage = "operation";
+                isError = false;
             }
 
             // resetting the execution timeout
@@ -286,9 +310,16 @@ server.post('/control', function(req, res){
         }
     }
 
-    res.writeHead(200, { "Content-Type": "application/json"});
-    res.end('{"message": "OK"}');
-
+    if (!isError)
+    {
+        res.writeHead(200, { "Content-Type": "text/html"});
+    }
+    else
+    {
+        res.writeHead(400, { "Content-Type": "text/html"});
+    }
+    
+    res.end(resultMessage);        
 });
 
 /*

@@ -162,7 +162,10 @@ Control.method("beginQuery", function(formData, jqForm, options){
 
 Control.method("showResponse", function(responseText, statusText, xhr, $form)
 {
-    this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay); // start polling
+    if (responseText == "started")
+    {        
+        this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay); // start polling
+    }
     $("#ControlForm").show();
 });
 
