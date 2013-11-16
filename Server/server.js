@@ -291,8 +291,9 @@ server.post('/control', function(req, res){
                     resultMessage = "Error: Could not find the required operation.";
                     break;
                 }
-
                 console.log(backend.id + " ==> " + operation.id);
+
+                processes[i].tool.stdin.write(operation.command);
 
                 resultMessage = "operation";
                 isError = false;
