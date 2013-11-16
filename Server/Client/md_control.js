@@ -36,6 +36,8 @@ function Control(host)
     this.posx = (window.parent.innerWidth-30) * 3 / 4;
     this.posy = 0;
     this.host = host;
+
+    this.sessionActive = false;
 }
 
 Control.method("getInitContent", function(){
@@ -124,36 +126,30 @@ Control.method("runStopClick", function(){
     if ($("#RunStop").val() == "Run")
     {
         $("#ControlOp").val("run");
-        $("#RunStop").val("Stop");
 //        $("#backend").attr("disabled", "disabled");
-        this.enableRuntimeControls();
+        this.sessionActive = true; // activating IG session
         $("#ControlForm").submit();
     }
     else
     {
         $("#ControlOp").val("stop");
-        $("#RunStop").val("Run");
-//        $("#backend").removeAttr("disabled");
-        this.disableRuntimeControls();
         $("#ControlForm").submit();
     }
 });
 
 Control.method("enableRuntimeControls", function(){
     $("#" + $( "#backend option:selected" ).val() + "_buttons").children("button").removeAttr("disabled");
+    $("#RunStop").val("Stop");
 });
 
 Control.method("disableRuntimeControls", function(){
     $("#" + $( "#backend option:selected" ).val() + "_buttons").children("button").attr("disabled", "disabled");
+    $("#RunStop").val("Run");
 });
 
 Control.method("disableAll", function(){
     $("#RunStop").attr("disabled", "disabled");
     $("#" + $( "#backend option:selected" ).val() + "_buttons").children("button").attr("disabled", "disabled");
-});
-
-
-Control.method("onDataLoaded", function(data){
 });
 
 Control.method("beginQuery", function(formData, jqForm, options){
@@ -164,13 +160,47 @@ Control.method("showResponse", function(responseText, statusText, xhr, $form)
 {
     if (responseText == "started")
     {        
+        this.host.print("ClaferIDE> Running the chosen instance generator...\n");
         this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay); // start polling
+        this.enableRuntimeControls();
     }
-    $("#ControlForm").show();
+    else if (responseText == "stopped")
+    {
+        this.host.print("ClaferIDE> Forcing the instance generator to close...\n");
+    }
+
+    this.endQuery();
 });
 
-Control.method("handleError", function(responseText, statusText, xhr, $form){
+Control.method("endQuery", function()  { 
     $("#ControlForm").show();
+    
+    return true;
+});
+
+Control.method("handleError", function(response, statusText, xhr)  { 
+    clearTimeout(this.pollingTimeoutObject);
+    
+    this.sessionActive = false;
+    
+    var er = document.getElementById("error_overlay");
+    er.style.display = "block"; 
+    var caption;
+
+    if (statusText == "timeout")
+        caption = "<b>Request Timeout.</b><br>Please check whether the server is available.";
+    else if (statusText == "error" && response.responseText == "")
+        caption = "<b>Request Error.</b><br>Please check whether the server is available.";        
+    else
+        caption = '<b>' + xhr + '</b><br>' + response.responseText.replace("\n", "<br>");
+    
+    document.getElementById("error_report").innerHTML = ('<span id="close_error" alt="close">Close Message</span><p>' + caption + "</p>");
+    document.getElementById("close_error").onclick = function(){ 
+        document.getElementById("error_overlay").style.display = "none";
+    };
+
+    this.endQuery();
+    
 });
 
 
@@ -181,6 +211,9 @@ Control.method("onPoll", function(responseObject)
     
     if (responseObject.completed)
     {
+        this.host.print("ClaferIDE> The instance generator is exited.\n");
+        this.disableRuntimeControls();
+        this.sessionActive = false;
     }
     else
     {
@@ -220,7 +253,7 @@ Control.method("processToolResult", function(result)
         return;
     }
 
-    $("#output").html($("#output").html() + result.message.replaceAll("claferIG> ", "ClaferIG>\n"));
+    $("#output").html($("#output").html() + result.message);
 
 });
 
@@ -231,4 +264,7 @@ Control.method("onBackendChange", function()
     });
 
     $("#backendButtons").children("#" + $( "#backend option:selected" ).val() + "_buttons")[0].style.display = "block";
+});
+
+Control.method("onDataLoaded", function(data){
 });

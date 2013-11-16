@@ -14,7 +14,8 @@
                 {"id": "next_instance", "command": "\n", "label" : "Next"}, 
                 {"id": "reload", "command": "r\n", "label" : "Reload"}, 
                 {"id": "unsat_core", "command": "unsatCore\n", "label" : "UNSAT Core"},
-                {"id": "alloy_model", "command": "alloyModel\n", "label" : "Alloy Model"}                
+                {"id": "alloy_model", "command": "alloyModel\n", "label" : "Alloy Model"},                
+                {"id": "quit", "command": "q\n", "label" : "Safe Exit"}                
             ]            
         }, 
         {
