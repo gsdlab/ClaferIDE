@@ -25,16 +25,25 @@ function Output(host)
     this.id = "mdOutput";
     this.title = "Output";
 
-    this.width = (window.parent.innerWidth-30) / 4;
-    this.height = window.parent.innerHeight-190;
-    this.posx = (window.parent.innerWidth-30) * 3 / 4;
-    this.posy = 140;
+    this.width = (window.parent.innerWidth+45) * 0.38;
+    this.height = window.parent.innerHeight-50;
+    this.posx = (window.parent.innerWidth-30) * (1 - 0.38);
+    this.posy = 0;
     this.host = host;
     this.content = "";
+
+    this.editor = null;
+    this.editorWidth =this.width - 5;
+    this.editorHeight = this.height;    
 }
 
 Output.method("getInitContent", function(){
-    return '<textarea id="output" readonly="readonly" style="width:95%;height:95%;border:0" border="0"></textarea>';
+	var result = "";
+
+    result += '<div style="height:' + this.editorHeight + 'px; width: ' + this.editorWidth + 'px;" name="clafer_editor" id="console_editor">';
+    result += '</div>';
+
+    return result;
 });
 
 Output.method("onDataLoaded", function(data){
@@ -46,6 +55,23 @@ Output.method("onRendered", function(){
 //    $("#mdOutput .window-content").scrollTop($("#mdOutput #output").height());
 });
 
+Output.method("appendConsole", function(text){
+    this.editor.setValue(this.editor.getValue() + text);
+
+	var count = this.editor.getSession().getLength();
+	//Go to end of the last line
+	this.editor.gotoLine(count, this.editor.getSession().getLine(count - 1).length);
+
+});
+
 Output.method("onInitRendered", function(){
-//    $('#myform').submit();
+    this.editor = ace.edit("console_editor");
+    this.editor.setTheme("ace/theme/terminal");
+    this.editor.getSession().setMode("ace/mode/text");
+    this.editor.setShowPrintMargin(false);
+
+	this.editor.getSession().setUseWrapMode(true);   
+	this.editor.setReadOnly(true); 
+	this.editor.setHighlightActiveLine(false);	 
+	this.editor.renderer.setShowGutter(false);
 });

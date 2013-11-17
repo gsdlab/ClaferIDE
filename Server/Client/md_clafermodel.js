@@ -25,9 +25,9 @@ function ClaferModel(host)
     this.id = "mdClaferModel";
     this.title = "Clafer Source Model";
     
-    this.width = (window.parent.innerWidth-30) / 4;
-    this.height = window.parent.innerHeight-50;
-    this.posx = (window.parent.innerWidth-30) / 2;
+    this.width = (window.parent.innerWidth-30) * (0.24);
+    this.height = window.parent.innerHeight - 50 - 245;
+    this.posx = (window.parent.innerWidth-30) * 0.38;
     this.posy = 0;
     this.ajaxUrl = "/htmlwrapper";
     
@@ -62,7 +62,7 @@ ClaferModel.method("getInitContent", function()
     result += '<span>Show:</span><select id="formats">';   
     result += '</select>';   
     result += '<div id="format_views">';
-    result += '<iframe id="html_format" height = "' + (this.height - 45) + '" src="' + this.ajaxUrl + '" frameborder="0" width="' + (this.width - 5) + '"></iframe>';
+    result += '<iframe id="html_format" scrolling="yes" height = "' + (this.height - 30) + '" src="' + this.ajaxUrl + '" frameborder="0" width="' + (this.width - 5) + '"></iframe>';
     result += '</div>';
 
     return result;

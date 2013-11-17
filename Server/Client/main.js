@@ -126,7 +126,7 @@ function Host(modules)
 
 Host.method("print", function(text)
 {
-    $("#output").html($("#output").html() + text);
+    this.findModule("mdOutput").appendConsole(text);
 });
 
 //returns the module object. useful for modifying or getting data from other modules.

@@ -31,10 +31,10 @@ function Control(host)
     this.pollingTimeoutObject = null;
     this.toCancel = false;
 
-    this.width = (window.parent.innerWidth-30) / 4;
-    this.height = 100;
-    this.posx = (window.parent.innerWidth-30) * 3 / 4;
-    this.posy = 0;
+    this.width = (window.parent.innerWidth-30) * (0.24);
+    this.height = 200;
+    this.posx = (window.parent.innerWidth-30) * 0.38;
+    this.posy = window.parent.innerHeight - 50 - 200;
     this.host = host;
 
     this.sessionActive = false;
@@ -44,15 +44,25 @@ Control.method("getInitContent", function(){
 	var ret = '<form id="ControlForm" method="post" action="/control" style="display: block">';
 	ret += '<input type="hidden" id="ControlOp" name="operation" value="">';
 
-    ret += '<span>Instance Generators:</span><select id="backend" name="backend">';   
-    
+    ret += '<select id="backend" name="backend">';       
     ret += '</select>';
 
     ret += '<input type="hidden" id="windowKey" name="windowKey" value="' + this.host.key + '">';
 	ret += '<input type="button" class="inputRunStopButton" id="RunStop" value="Run" disabled="disabled"/><br>';
-    ret += '<div id="backendButtons"></div>';
+    ret += '<fieldset id="backendButtonsFieldset"><div id="backendButtons"></div></fieldset>';
 
-    
+    ret += '<br/><fieldset id="scopeControl">';
+
+    ret += '<legend>Scopes</legend>';   
+    ret += '<span>Global:</span><input type="text" size="2"/><button>Set</button>';
+    ret += '<br/>Individual scopes:</span><br/><select style="width:190px;" id="clafer_scope_list" name="clafer_scope_list"></select><input type="text" size="2"/>';
+
+    ret += '<button>Set</button>';
+
+    ret += '</fieldset>';
+   
+    ret += '</form>';
+
     $.getJSON('/Backends/backends.json', 
         function(data)
         {

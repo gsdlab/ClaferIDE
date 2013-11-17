@@ -30,7 +30,7 @@ function Input(host)
     this.pollingTimeoutObject = null;
     this.toCancel = false;
 
-    this.width = (window.parent.innerWidth-30) / 2;
+    this.width = (window.parent.innerWidth-30) * 0.38;
     this.height = window.parent.innerHeight-50;
     this.posx = 0;
     this.posy = 0;
@@ -41,8 +41,8 @@ function Input(host)
     this.dataFileChosen = false;
 
     this.editor = null;
-    this.editorWidth = ((window.parent.innerWidth-40) / 2) - 10;
-    this.editorHeight = window.parent.innerHeight-140;
+    this.editorWidth =this.width - 5;
+    this.editorHeight = this.height - 90;
 }
 
 Input.method("onDataLoaded", function(data){
@@ -340,14 +340,14 @@ Input.method("getInitContent", function()
     result = '<div id = "load_area">';
     result += '<form id="myform" action="' + this.serverAction + '" method="post" enctype="multipart/form-data" style="display: block;">';
     result += '<fieldset>';
-    result += '<input type="file" size="25" name="claferFile" id="claferFile" style="width: 388px;">';
+    result += '<input type="file" size="25" name="claferFile" id="claferFile" style="width: 230px;">';
     result += '<input type="hidden" name="claferFileURL" value="' + window.location + '">';
     result += '<input type="hidden" name="exampleFlag" id="exampleFlag" value="0">';
     result += '<input id="submitFile" type="submit" value="Compile">';
 
     result += '<input type="hidden" id="windowKey" name="windowKey" value="' + this.host.key + '">';
     result += '<br>';
-    result += '<select id="exampleURL" name="exampleURL" style="width: 388px;">';   
+    result += '<select id="exampleURL" name="exampleURL" style="width: 230px;">';   
 
     $.getJSON('/Examples/examples.json', 
         function(data)
