@@ -42,7 +42,9 @@ function Control(host)
 
 Control.method("getInitContent", function(){
 	var ret = '<form id="ControlForm" method="post" action="/control" style="display: block">';
-	ret += '<input type="hidden" id="ControlOp" name="operation" value="">';
+	ret += '<input type="hidden" id="ControlOp" name="operation" value=""/>';
+    ret += '<input type="hidden" id="ControlOpArg1" name="operation_arg1" value=""/>';
+    ret += '<input type="hidden" id="ControlOpArg2" name="operation_arg2" value=""/>';
 
     ret += '<select id="backend" name="backend">';       
     ret += '</select>';
@@ -54,10 +56,10 @@ Control.method("getInitContent", function(){
     ret += '<br/><fieldset id="scopeControl">';
 
     ret += '<legend>Scopes</legend>';   
-    ret += '<span>Global:</span><input type="text" size="2"/><button>Set</button>';
-    ret += '<br/>Individual scopes:</span><br/><select style="width:190px;" id="clafer_scope_list" name="clafer_scope_list"></select><input type="text" size="2"/>';
+    ret += '<span>Global:</span><input type="text" size="2" value="1" id="globalScopeValue"/><button id="setGlobalScope">Set</button>';
+    ret += '<br/>Individual scopes:</span><br/><input type="text" style="width:190px;" id="individualClafer"></input><input type="text" size="2" id="individualScopeValue"/>';
 
-    ret += '<button>Set</button>';
+    ret += '<button id="setIndividualScope">Set</button>';
 
     ret += '</fieldset>';
    
@@ -120,6 +122,9 @@ Control.method("onInitRendered", function()
     $("#backend")[0].onchange = this.onBackendChange.bind(this);        
     $("#RunStop")[0].onclick = this.runStopClick.bind(this);
 
+    $("#setGlobalScope")[0].onclick = this.setGlobalScopeClick.bind(this);
+    $("#setIndividualScope")[0].onclick = this.setIndividualScopeClick.bind(this);
+
     var options = new Object();
     options.beforeSubmit = this.beginQuery.bind(this);
     options.success = this.showResponse.bind(this);
@@ -147,19 +152,47 @@ Control.method("runStopClick", function(){
     }
 });
 
+Control.method("setGlobalScopeClick", function(){
+    $("#ControlOp").val("setGlobalScope");
+    $("#ControlOpArg1").val($ ("#globalScopeValue").val());
+//    $("#ControlForm").submit();
+});
+
+Control.method("setIndividualScopeClick", function(){
+    $("#ControlOp").val("setIndividualScope");
+    $("#ControlOpArg1").val($ ("#individualScopeValue").val());
+    $("#ControlOpArg2").val($ ("#individualClafer").val());
+//    $("#ControlForm").submit();
+});
+
 Control.method("enableRuntimeControls", function(){
     $("#" + $( "#backend option:selected" ).val() + "_buttons").children("button").removeAttr("disabled");
     $("#RunStop").val("Stop");
+
+    $("#setIndividualScope").removeAttr("disabled");
+    $("#setGlobalScope").removeAttr("disabled");
+    $("#globalScopeValue").removeAttr("disabled");    
+    $("#individualScopeValue").removeAttr("disabled");    
 });
 
 Control.method("disableRuntimeControls", function(){
     $("#" + $( "#backend option:selected" ).val() + "_buttons").children("button").attr("disabled", "disabled");
     $("#RunStop").val("Run");
+
+    $("#setIndividualScope").attr("disabled", "disabled");
+    $("#setGlobalScope").attr("disabled", "disabled");
+    $("#globalScopeValue").attr("disabled", "disabled");    
+    $("#individualScopeValue").attr("disabled", "disabled");    
 });
 
 Control.method("disableAll", function(){
     $("#RunStop").attr("disabled", "disabled");
     $("#" + $( "#backend option:selected" ).val() + "_buttons").children("button").attr("disabled", "disabled");
+
+    $("#setIndividualScope").attr("disabled", "disabled");
+    $("#setGlobalScope").attr("disabled", "disabled");
+    $("#globalScopeValue").attr("disabled", "disabled");    
+    $("#individualScopeValue").attr("disabled", "disabled");    
 });
 
 Control.method("beginQuery", function(formData, jqForm, options){
@@ -177,6 +210,14 @@ Control.method("showResponse", function(responseText, statusText, xhr, $form)
     else if (responseText == "stopped")
     {
         this.host.print("ClaferIDE> Forcing the instance generator to close...\n");
+    }
+    else if (responseText == "global_scope_set")
+    {
+        this.host.print("ClaferIDE> Setting the global scope...\n");
+    }
+    else if (responseText == "individual_scope_set")
+    {
+        this.host.print("ClaferIDE> Setting the individual scope...\n");
     }
 
     this.endQuery();

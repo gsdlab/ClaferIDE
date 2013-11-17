@@ -236,6 +236,70 @@ server.post('/control', function(req, res){
 //                clearTimeout(processes[i].pingTimeoutObject);                
 //                clearTimeout(processes[i].executionTimeoutObject);
             }
+            else if (req.body.operation == "setGlobalScope")
+            {
+                console.log("Control: setGlobalScope");
+
+                var backendId = req.body.backend;
+                var found = false;
+                var backend = null;
+                // looking for a backend
+
+                for (var j = 0; j < backendConfig.backends.length; j++)
+                {
+                    if (backendConfig.backends[j].id == backendId)
+                    {
+                        found = true;
+                        backend = backendConfig.backends[j]; 
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    console.log("Error: Backend was not found");
+                    resultMessage = "Error: Could not find the backend by its submitted id.";
+                    isError = true;
+                    break;
+                }
+
+                console.log(backend.id + " " + req.body.operation_arg1);
+
+                resultMessage = "global_scope_set";
+                isError = false;
+            }
+            else if (req.body.operation == "setIndividualScope")
+            {
+                console.log("Control: setIndividualScope");
+
+                var backendId = req.body.backend;
+                var found = false;
+                var backend = null;
+                // looking for a backend
+
+                for (var j = 0; j < backendConfig.backends.length; j++)
+                {
+                    if (backendConfig.backends[j].id == backendId)
+                    {
+                        found = true;
+                        backend = backendConfig.backends[j]; 
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    console.log("Error: Backend was not found");
+                    resultMessage = "Error: Could not find the backend by its submitted id.";
+                    isError = true;
+                    break;
+                }
+
+                console.log(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2);
+
+                resultMessage = "individual_scope_set";
+                isError = false;
+            }
             else
             {
                 var parts = req.body.operation.split("-");
