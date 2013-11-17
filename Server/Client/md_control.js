@@ -304,7 +304,7 @@ Control.method("processToolResult", function(result)
         return;
     }
 
-    $("#output").html($("#output").html() + result.message);
+    this.host.print(result.message);
 
 });
 

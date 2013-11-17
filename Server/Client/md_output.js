@@ -47,12 +47,9 @@ Output.method("getInitContent", function(){
 });
 
 Output.method("onDataLoaded", function(data){
-//    if (data.consoleOut)
-//        this.content += data.consoleOut;
 });
 
 Output.method("onRendered", function(){
-//    $("#mdOutput .window-content").scrollTop($("#mdOutput #output").height());
 });
 
 Output.method("appendConsole", function(text){
