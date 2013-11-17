@@ -6,10 +6,10 @@
             "accepted_format": "clafer_source",               
             "tool": "claferIG", 
             "tool_args": ["$filepath$"],
-            "scope_options": [
-                {"id": "global_scope", "command": "setscope $value$\n"}, 
-                {"id": "clafer_scope", "command": "setscope $clafer$ $value$\n"} 
-            ],
+            "scope_options": {
+                "global_scope" : {"command": "setscope $value$\n"}, 
+                "individual_scope": {"command": "setscope $clafer$ $value$\n"} 
+            },
             "control_buttons": [
                 {"id": "next_instance", "command": "\n", "label" : "Next"}, 
                 {"id": "reload", "command": "r\n", "label" : "Reload"}, 
@@ -24,10 +24,10 @@
             "accepted_format": "choco",             
             "tool": "java",
             "tool_args": ["-jar", "$dirname$/ChocoIG/claferchocoig-0.0.1-SNAPSHOT-jar-with-dependencies.jar", "$filepath$"],            
-            "scope_options": [
-                {"id": "global_scope", "command": "setscope $value$\n"}, 
-                {"id": "clafer_scope", "command": "setscope $clafer$ $value$\n"} 
-            ],
+            "scope_options": {
+                "global_scope" : {"command": "setscope $value$\n"}, 
+                "individual_scope": {"command": "setscope $clafer$ $value$\n"} 
+            },
             "control_buttons": [
                 {"id": "next_instance", "command": "\n", "label" : "Next"}, 
                 {"id": "reload", "command": "r\n", "label" : "Reload"}, 

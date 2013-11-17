@@ -265,6 +265,16 @@ server.post('/control', function(req, res){
 
                 console.log(backend.id + " " + req.body.operation_arg1);
 
+                var replacements = [
+                        {
+                            "needle": "$value$", 
+                            "replacement": req.body.operation_arg1
+                        }
+                    ];
+
+                var command = replaceTemplate(backend.scope_options.global_scope.command, replacements);
+                processes[i].tool.stdin.write(command);
+
                 resultMessage = "global_scope_set";
                 isError = false;
             }
@@ -296,6 +306,20 @@ server.post('/control', function(req, res){
                 }
 
                 console.log(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2);
+
+                var replacements = [
+                        {
+                            "needle": "$clafer$", 
+                            "replacement": req.body.operation_arg2
+                        },
+                        {
+                            "needle": "$value$", 
+                            "replacement": req.body.operation_arg1
+                        }
+                    ];
+
+                var command = replaceTemplate(backend.scope_options.individual_scope.command, replacements);
+                processes[i].tool.stdin.write(command);
 
                 resultMessage = "individual_scope_set";
                 isError = false;
