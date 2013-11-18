@@ -664,7 +664,7 @@ server.post('/upload', function(req, res, next)
 
         console.log(fileTextContents);
 
-        fs.writeFile(uploadedFilePath + ".cfr", fileTextContents, function(err) {
+        fs.writeFile(uploadedFilePath, fileTextContents, function(err) {
             if(err) {
                 console.log(err);
             } else {
