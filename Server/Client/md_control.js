@@ -304,7 +304,10 @@ Control.method("processToolResult", function(result)
         return;
     }
 
-    this.host.print(result.message);
+    if (result.message != "")
+    {
+        this.host.print(result.message);
+    }
 
 });
 
