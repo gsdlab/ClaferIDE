@@ -20,10 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-function ClaferModel(host)
+function CompiledFormats(host)
 { 
-    this.id = "mdClaferModel";
-    this.title = "Clafer Source Model";
+    this.id = "mdCompiledFormats";
+    this.title = "Compiled Formats";
     
     this.width = (window.parent.innerWidth-30) * (0.24);
     this.height = window.parent.innerHeight - 50 - 245;
@@ -37,14 +37,7 @@ function ClaferModel(host)
     this.lastModel = this.model;
 }
 
-ClaferModel.method("onDataLoaded", function(data){
-});
-
-ClaferModel.method("onRendered", function()
-{
-});
-
-ClaferModel.method("onDocLoad", function(){
+CompiledFormats.method("onDocLoad", function(){
     if (this.model != "")
     {
         var iframe = $("#html_format")[0];
@@ -56,7 +49,7 @@ ClaferModel.method("onDocLoad", function(){
     }
 });
 
-ClaferModel.method("getInitContent", function()
+CompiledFormats.method("getInitContent", function()
 {
     var result = "";
     result += '<span>Show:</span><select id="formats">';   
@@ -69,7 +62,7 @@ ClaferModel.method("getInitContent", function()
 
 });
 
-ClaferModel.method("onInitRendered", function()
+CompiledFormats.method("onInitRendered", function()
 {
     $("#html_format")[0].onload = this.onDocLoad.bind(this); // do it here.
     $("#formats")[0].onchange = this.onFormatChange.bind(this);        
@@ -131,7 +124,7 @@ ClaferModel.method("onInitRendered", function()
 });
 
 
-ClaferModel.method("onFormatChange", function()
+CompiledFormats.method("onFormatChange", function()
 {
     $("#format_views").children().each(function(){
         this.style.display = "none";

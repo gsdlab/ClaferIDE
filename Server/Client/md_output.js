@@ -46,12 +46,6 @@ Output.method("getInitContent", function(){
     return result;
 });
 
-Output.method("onDataLoaded", function(data){
-});
-
-Output.method("onRendered", function(){
-});
-
 Output.method("appendConsole", function(text){
     this.editor.setValue(this.editor.getValue() + text);
 

@@ -45,9 +45,6 @@ function Input(host)
     this.editorHeight = this.height - 90;
 }
 
-Input.method("onDataLoaded", function(data){
-});
-
 Input.method("onInitRendered", function()
 {
     this.optimizeFlag = 1;
@@ -79,7 +76,7 @@ Input.method("onInitRendered", function()
     this.editor.getSession().setMode("ace/mode/text");
     this.editor.setShowPrintMargin(false);
 
-    // $('#myform').submit(); MOVED TO md_output.js    
+    // $('#myform').submit(); MOVED TO another location
 });
 
 /*
@@ -121,14 +118,6 @@ Input.method("endQuery", function()  {
 	
 	return true;
 });
-
-/* Not used. We don't need it anymore
-// pre-submit callback 
-Input.method("showRequest", function(formData, jqForm, options) {
-    var queryString = $.param(formData); 
-    return true; 
-});
-*/
 
 Input.method("onPoll", function(responseObject)
 {
@@ -172,8 +161,8 @@ Input.method("poll", function()
 });
 
 Input.method("setClaferModelHTML", function(html){
-    this.host.findModule("mdClaferModel").lastModel = this.host.findModule("mdClaferModel").model;
-    this.host.findModule("mdClaferModel").model = html;
+    this.host.findModule("mdCompiledFormats").lastModel = this.host.findModule("mdCompiledFormats").model;
+    this.host.findModule("mdCompiledFormats").model = html;
     var iframe = $("#html_format")[0];
     iframe.src = iframe.src; // reloads the window
 });
@@ -197,13 +186,12 @@ Input.method("fileSent", function(responseText, statusText, xhr, $form)  {
 
         var data = new Object();
         data.message = responseText;
-        this.host.updateData(data);
         this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
     }
     else
     {
         this.endQuery(); // else enable the form anyways
-        this.setClaferModelHTML(this.host.findModule("mdClaferModel").lastModel);
+        this.setClaferModelHTML(this.host.findModule("mdCompiledFormats").lastModel);
     }
 });
 
