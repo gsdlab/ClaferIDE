@@ -129,14 +129,16 @@ Input.method("onPoll", function(responseObject)
     else
     {
         if (responseObject.message != "Working") 
+        {
             this.processToolResult(responseObject);
+            this.endQuery();
+        }
 
         if (responseObject.message.length >= 5 && responseObject.message.substring(0,5) == "Error")
         {
             this.host.findModule("mdControl").disableAll(); // if exited IG, then disable controls
-            // stop polling
         }
-        else if (responseObject.message != "Success")
+        else if (responseObject.message == "Working")
         {
             this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
         }
@@ -304,8 +306,11 @@ Input.method("processToolResult", function(result)
                 $("#" + result.compiled_formats[i].id + "_format").val(result.compiled_formats[i].result); 
             }
         }
-        
-        this.endQuery();
+    }
+    else
+    {
+        this.setClaferModelHTML(this.host.findModule("mdCompiledFormats").lastModel);
+        // do not need to restore other formats, because they are not modified
     }
 
     if (result.model != "")

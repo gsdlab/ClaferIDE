@@ -145,11 +145,7 @@ server.post('/control', function(req, res){
                     }
 
                     console.log(backend.id + " ==> " + format.id);
-
                     processes[i].mode_completed = false;
-
-//                    processes[i].executionTimeoutObject = setTimeout(executionTimeoutFunc, config.executionTimeout, processes[i]);
-//                    processes[i].pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, processes[i]);
 
                     var fileAndPathReplacement = [
                             {
@@ -175,7 +171,7 @@ server.post('/control', function(req, res){
                             if (processes[i].windowKey == req.body.windowKey)
                             {
                                 processes[i].result = '{"message": "' + escapeJSON("Error: Cannot run claferIG") + '"}';
-                                processes[i].code = 0;
+//                                processes[i].code = 0;
                                 processes[i].completed = true;
                                 processes[i].tool = null;
                             }
@@ -216,6 +212,7 @@ server.post('/control', function(req, res){
                             {
 //                                cleanupOldFiles(processes[i].file, processes[i].folder);
                                 processes[i].mode_completed = true;
+                                processes[i].tool = null;
                             }
                         }
                         
@@ -233,8 +230,7 @@ server.post('/control', function(req, res){
                 processes[i].mode_completed = true;
                 resultMessage = "stopped";
                 isError = false;
-//                clearTimeout(processes[i].pingTimeoutObject);                
-//                clearTimeout(processes[i].executionTimeoutObject);
+                clearTimeout(processes[i].pingTimeoutObject);                
             }
             else if (req.body.operation == "setGlobalScope")
             {
@@ -424,28 +420,20 @@ server.post('/poll', function(req, res, next)
     var found = false;
     for (var i = 0; i < processes.length; i++)
     {
-//        if (processes[i].pingTimeout)
-//        {
-//            processes[i].toRemoveCompletely = true;   
-//            console.log("pingTimeout");
-//        }
- //       else
-//        {
+        if (processes[i].pingTimeout)
+        {
+            processes[i].toRemoveCompletely = true;   
+            console.log("pingTimeout");
+        }
+        else
+        {
             if (processes[i].windowKey == req.body.windowKey)
             {
+                found = true;
                 if (req.body.command == "ping") // normal ping
                 {                
-/*
+
                     clearTimeout(processes[i].pingTimeoutObject);
-                    processes[i].pingTimeoutObject = setTimeout(function(process){
-                        process.result = '{"message": "' + escapeJSON('Error: Ping Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.pingTimeout + ' millisecond(s).') + '"}';
-                        process.code = 9004;
-                        process.completed = true;
-                        process.pingTimeout = true;
-                        process.toKill = true;
-                    }, config.pingTimeout, processes[i]);
-*/                      
-                    found = true;
 
                     if (processes[i].mode_completed) // the execution of the current mode is completed
                     {
@@ -458,12 +446,6 @@ server.post('/poll', function(req, res, next)
                             jsonObj.model = processes[i].model;
                             jsonObj.compiler_message = processes[i].compiler_message;
                             res.end(JSON.stringify(jsonObj));
-
-//                            if (processes[i].pingTimeoutObject)
-//                            {
-//                                clearTimeout(processes[i].pingTimeoutObject);
-//                                clearTimeout(processes[i].executionTimeoutObject);                    
-//                            }
 
                             processes[i].mode = "ig";
                             processes[i].mode_completed = false;
@@ -494,6 +476,8 @@ server.post('/poll', function(req, res, next)
                     }	
                     else // still working
                     {
+                        processes[i].pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, processes[i]);                      
+
                         if (processes[i].mode == "compiler") // if the mode completed is compilation
                         {
                             res.writeHead(200, { "Content-Type": "application/json"});
@@ -527,15 +511,21 @@ server.post('/poll', function(req, res, next)
                 }
                 else // if it is cancel
                 {
-//                    processes[i].toKill = true;
-//                    clearTimeout(processes[i].pingTimeoutObject);                
-//                    clearTimeout(processes[i].executionTimeoutObject);
-//                    processes[i].toRemoveCompletely = true;
-//                    res.writeHead(200, { "Content-Type": "application/json"});
-//                    res.end('{"message": "Cancelled"}');
-                }
+                    processes[i].toKill = true;
+                    clearTimeout(processes[i].pingTimeoutObject);                
+                    res.writeHead(200, { "Content-Type": "application/json"});
+
+                    var jsonObj = new Object();
+                    jsonObj.message = "Cancelled";
+                    jsonObj.compiler_message = "Cancelled compilation";
+                    jsonObj.completed = true;
+                    res.end(JSON.stringify(jsonObj));
+
+                    console.log("Cancelled: " + processes[i].toKill);
+               }
+               break;
             }
- //       }    
+        }    
     }
     
     if (!found)
@@ -550,8 +540,6 @@ server.post('/poll', function(req, res, next)
     {
         if (processes[i].toKill)
         {
-//            clearTimeout(processes[i].pingTimeoutObject);
-//            clearTimeout(processes[i].executionTimeoutObject);                    
             killProcessTree(processes[i]);
             processes[i].toKill = false;
         }
@@ -559,8 +547,7 @@ server.post('/poll', function(req, res, next)
         if (processes[i].toRemoveCompletely)
         {
             cleanupOldFiles(processes[i].folder);            
-//            clearTimeout(processes[i].pingTimeoutObject);
-//            clearTimeout(processes[i].executionTimeoutObject);                    
+            clearTimeout(processes[i].pingTimeoutObject);
             processes.splice(i, 1);
         }
         else
@@ -755,13 +742,8 @@ server.post('/upload', function(req, res, next)
                     
                     console.log("Compiling...");
 
-                    var process = { windowKey: key, tool: null, folder: dlDir, path: uploadedFilePath, completed: false, code: 0, killed:false, contents: file_contents, toKill: false};
+                    var process = { windowKey: key, tool: null, folder: dlDir, path: uploadedFilePath, completed: false, killed:false, contents: file_contents, toKill: false};
 
-                    // temporary
-                    var clafer_compiler_CHOCO  = spawn("clafer", ["--mode=choco", "--ss=none", uploadedFilePath + ".cfr"]);
-                    // -------
-
-                    var clafer_compiler  = spawn("clafer", ["--mode=HTML", "--self-contained", "--add-comments", "--ss=none", uploadedFilePath + ".cfr"]);
 //                    clafer_compiler.on('error', function (err){
 //                        console.log('ERROR: Cannot find Clafer Compiler (clafer). Please check whether it is installed and accessible.');
 //                        res.writeHead(400, { "Content-Type": "text/html"});
@@ -769,18 +751,17 @@ server.post('/upload', function(req, res, next)
 //                    });
 
 
+                    // removing an older session
                     for (var i = 0; i < processes.length; i++)
                     {
                         if (processes[i].windowKey == req.body.windowKey)
                         {
                             processes[i].toKill = true;
-//                                clearTimeout(processes[i].pingTimeoutObject);                
-//                                clearTimeout(processes[i].executionTimeoutObject);
+                            clearTimeout(processes[i].pingTimeoutObject);                
                             processes[i].toRemoveCompletely = true;
                             processes[i].windowKey = "none";
 
                             break;
-                            // do some other stuff
                         }
                     }
 
@@ -791,10 +772,17 @@ server.post('/upload', function(req, res, next)
                         tool: null, 
                         freshData: "", 
                         folder: dlDir, 
+                        clafer_compiler: null,
                         file: uploadedFilePath, 
                         lastUsed: d,
                         mode : "compiler", 
                         freshError: ""};
+
+                    // temporary
+                    var clafer_compiler_CHOCO  = spawn("clafer", ["--mode=choco", "--ss=none", "-k", uploadedFilePath + ".cfr"]);
+                    // -------
+
+                    process.clafer_compiler  = spawn("clafer", ["--mode=HTML", "--self-contained", "-k", "--add-comments", "--ss=none", uploadedFilePath + ".cfr"]);
 
                     process.compiled_formats = new Array();
                     process.compiler_message = "";
@@ -804,9 +792,9 @@ server.post('/upload', function(req, res, next)
                     else
                         process.model = "";                                   
 
-                    processes.push(process);    
+                    process.pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, process);
 
-                    clafer_compiler.stdout.on("data", function (data){
+                    process.clafer_compiler.stdout.on("data", function (data){
                         for (var i = 0; i < processes.length; i++)
                         {
                             if (processes[i].windowKey == req.body.windowKey)
@@ -816,7 +804,7 @@ server.post('/upload', function(req, res, next)
                         }
                     });
 
-                    clafer_compiler.stderr.on("data", function (data){
+                    process.clafer_compiler.stderr.on("data", function (data){
                         for (var i = 0; i<processes.length; i++)
                         {
                             if (processes[i].windowKey == req.body.windowKey)
@@ -826,12 +814,13 @@ server.post('/upload', function(req, res, next)
                         }
                     });
                     
-                    clafer_compiler.on('exit', function (code)
+                    process.clafer_compiler.on('close', function (code)
                     {	
                         for (var i = 0; i < processes.length; i++)
                         {
                             if (processes[i].windowKey == req.body.windowKey)
                             {
+                                processes[i].clafer_compiler = null;
 
                                 if (code != 0) // if the result is non-zero, means compilation error
                                 {
@@ -908,6 +897,8 @@ server.post('/upload', function(req, res, next)
                         }
                     });
 
+                    processes.push(process);    
+
                     res.writeHead(200, { "Content-Type": "text/html"});
                     res.end("OK"); // we have to return a response right a way to avoid confusion.
                     
@@ -920,14 +911,6 @@ server.post('/upload', function(req, res, next)
 function onAllFormatsCompiled(process)
 {
     process.mode_completed = true;
-//for (var i = 0; i < processes.length; i++)
-//{
-//if (processes[i].windowKey == req.body.windowKey)
-//{
-
-//}
-//}
-
 }
 
 /*
@@ -996,21 +979,11 @@ function onAllFormatsCompiled(process)
 
 */
 
-function executionTimeoutFunc (process)
-{
-    console.log("Error: Execution Timeout.");
-    process.result = '{"message": "' + escapeJSON('Error: Execution Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.executionTimeout + ' millisecond(s).') + '"}';
-    process.code = 9003;
-    process.completed = true;
-    process.toKill = true;
-}
-
 function pingTimeoutFunc(process)
 {
     console.log("Error: Ping Timeout.");
     process.result = '{"message": "' + escapeJSON('Error: Ping Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.pingTimeout + ' millisecond(s).') + '"}';
-    process.code = 9004;
-    process.completed = true;
+//    process.code = 9004;
     process.pingTimeout = true;
     process.toKill = true;
 }
@@ -1092,16 +1065,38 @@ function killProcessTree(process)
     
     if (process.tool)
     {
-        console.log("Killing the process tree with Parent PID = " + process.tool.pid);
+        var pid = process.tool.pid;
+        process.tool.removeAllListeners("close");
+        process.tool = null;
+        console.log("Killing the backend tree with Parent PID = " + pid);
     
         // first, try a Windows command
-        var killer_win  = spawn("taskkill", ["/F", "/T", "/PID", process.tool.pid]);
+        var killer_win  = spawn("taskkill", ["/F", "/T", "/PID", pid]);
         
         killer_win.on('error', function (err){	// if error occurs, then we are on Linux
-            var killer_linux = spawn("pkill", ["-TERM", "-P", process.tool.pid]);                   
+            var killer_linux = spawn("pkill", ["-TERM", "-P", pid]);                   
 
             killer_linux.on('error', function(err){
-                console.log("Cannot terminate processes.");
+                console.log("Cannot terminate the backend.");
+            });
+        });                
+    }
+
+    if (process.clafer_compiler)
+    {
+        var pid = process.clafer_compiler.pid;
+        process.clafer_compiler.removeAllListeners("close");
+        process.clafer_compiler = null;
+        console.log("Killing the compiler tree with Parent PID = " + pid);
+    
+        // first, try a Windows command
+        var killer_win  = spawn("taskkill", ["/F", "/T", "/PID", pid]);
+        
+        killer_win.on('error', function (err){  // if error occurs, then we are on Linux
+            var killer_linux = spawn("pkill", ["-TERM", "-P", pid]);                   
+
+            killer_linux.on('error', function(err){
+                console.log("Cannot terminate the compiler.");
             });
         });                
     }
