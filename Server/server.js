@@ -1066,7 +1066,7 @@ function killProcessTree(process)
     if (process.tool)
     {
         var pid = process.tool.pid;
-        process.tool.removeAllListeners("close");
+        process.tool.removeAllListeners();
         process.tool = null;
         console.log("Killing the backend tree with Parent PID = " + pid);
     
@@ -1085,7 +1085,7 @@ function killProcessTree(process)
     if (process.clafer_compiler)
     {
         var pid = process.clafer_compiler.pid;
-        process.clafer_compiler.removeAllListeners("close");
+        process.clafer_compiler.removeAllListeners();
         process.clafer_compiler = null;
         console.log("Killing the compiler tree with Parent PID = " + pid);
     
