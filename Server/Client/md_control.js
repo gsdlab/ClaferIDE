@@ -57,9 +57,12 @@ Control.method("getInitContent", function(){
 
     ret += '<legend>Scopes</legend>';   
     ret += '<span>Global:</span><input type="text" size="2" value="1" id="globalScopeValue"/><button id="setGlobalScope">Set</button>';
-    ret += '<br/>Individual scopes:</span><br/><input type="text" style="width:190px;" id="individualClafer"></input><input type="text" size="2" id="individualScopeValue"/>';
+    ret += '<br/>Individual scopes:</span><br/><input type="text" style="width:140px;" id="individualClafer"></input>';
 
-    ret += '<button id="setIndividualScope">Set</button>';
+    ret += '<span id="ClaferListCont" style="width:30px"></span>';
+    ret += '<input type="text" size="2" id="individualScopeValue"/>';
+
+    ret += '<button id="setIndividualScope">Set</button><br/>';    
 
     ret += '</fieldset>';
    
@@ -130,6 +133,7 @@ Control.method("onInitRendered", function()
     options.success = this.showResponse.bind(this);
     options.error = this.handleError.bind(this);
     $('#ControlForm').ajaxForm(options); 
+
 });
 
 Control.method("resetControls", function(){
@@ -173,6 +177,7 @@ Control.method("enableRuntimeControls", function(){
     $("#setGlobalScope").removeAttr("disabled");
     $("#globalScopeValue").removeAttr("disabled");    
     $("#individualScopeValue").removeAttr("disabled");    
+    $("#individualClafer").removeAttr("disabled");    
 });
 
 Control.method("disableRuntimeControls", function(){
@@ -183,6 +188,7 @@ Control.method("disableRuntimeControls", function(){
     $("#setGlobalScope").attr("disabled", "disabled");
     $("#globalScopeValue").attr("disabled", "disabled");    
     $("#individualScopeValue").attr("disabled", "disabled");    
+    $("#individualClafer").attr("disabled", "disabled");    
 });
 
 Control.method("disableAll", function(){
@@ -193,6 +199,7 @@ Control.method("disableAll", function(){
     $("#setGlobalScope").attr("disabled", "disabled");
     $("#globalScopeValue").attr("disabled", "disabled");    
     $("#individualScopeValue").attr("disabled", "disabled");    
+    $("#individualClafer").attr("disabled", "disabled");    
 });
 
 Control.method("beginQuery", function(formData, jqForm, options){
@@ -309,6 +316,57 @@ Control.method("processToolResult", function(result)
         this.host.print(result.message);
     }
 
+    if (result.scopes != "")
+    {
+        this.updateClaferList(JSON.parse(result.scopes));    
+    }
+
+});
+
+Control.method("updateClaferList", function(jsonList){
+
+
+//$( "#backend option:selected" ).val()
+
+    var options = "";
+
+    if (!jsonList.list)
+        return;
+
+    for (var i = 0; i < jsonList.list.length; i++)
+    {
+        var hierarchy = "";
+        if (jsonList.list[i].hierarchy)
+            hierarchy = " [" + jsonList.list[i].hierarchy + "]";
+
+        options += '<option value="' + jsonList.list[i].name + "|" + jsonList.list[i].value + '">' + jsonList.list[i].name + ": " + jsonList.list[i].value + "" + hierarchy + '</option>';
+    }
+
+    $("#ClaferListCont").html('<select id="ClaferList"></select>');
+    $("#ClaferList").html(options);
+
+    $('#ClaferList').on('change', function(event, params) {
+        var s = params.selected;
+        var parts = s.split("|");
+        $('#individualClafer').val(parts[0]);
+        $('#individualScopeValue').val(parts[1]);
+        $('#individualScopeValue').focus();
+        $('#individualScopeValue').select();
+    });
+
+    $('#ClaferList').chosen({"search_contains": "true", "width": "30px"});
+
+    var left = this.posx + "px";
+    var top = 0 + "px";
+
+    var height = this.host.findModule("mdCompiledFormats").height + "px";
+    var width = this.host.findModule("mdCompiledFormats").width + "px";
+
+    $("#ClaferListCont .chosen-drop")[0].style.left = left;    
+    $("#ClaferListCont .chosen-drop")[0].style.top = top;    
+    $("#ClaferListCont .chosen-drop")[0].style.width = width;    
+    $("#ClaferListCont .chosen-results")[0].style.maxHeight = height;    
+
 });
 
 Control.method("onBackendChange", function()
@@ -317,5 +375,7 @@ Control.method("onBackendChange", function()
         this.style.display = "none";
     });
 
-    $("#backendButtons").children("#" + $( "#backend option:selected" ).val() + "_buttons")[0].style.display = "block";
+    var selectedId = $( "#backend option:selected" ).val();
+
+    $("#backendButtons").children("#" + selectedId + "_buttons")[0].style.display = "block";
 });

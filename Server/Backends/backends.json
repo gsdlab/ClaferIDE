@@ -24,6 +24,7 @@
             "tool": "java",
             "tool_args": ["-jar", "$dirname$/ChocoIG/claferchocoig-0.0.1-SNAPSHOT-jar-with-dependencies.jar", "$filepath$"],            
             "scope_options": {
+                "clafer_scope_list" : {"command": "list\n"}, 
                 "global_scope" : {"command": "globalScope $value$\n"}, 
                 "individual_scope": {"command": "individualScope $clafer$ $value$\n"} 
             },

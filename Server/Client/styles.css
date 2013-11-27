@@ -131,3 +131,15 @@ fieldset{
     bottom: 0;
     left: 0;
 }
+
+#ClaferListCont .chosen-with-drop .chosen-drop {
+    visibility: visible;
+}
+
+#ClaferListCont .chosen-drop {
+    border-bottom: 0;
+    border-top: 1px solid #aaa;
+    z-index: 3000;
+    position: fixed;
+    visibility: hidden;
+}
