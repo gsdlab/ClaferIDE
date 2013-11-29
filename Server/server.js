@@ -856,11 +856,25 @@ server.post('/upload', function(req, res, next)
                         mode : "compiler", 
                         freshError: ""};
 
+
+                    var ss = "--ss=none";
+
+                    console.log(req.body.ss);
+
+                    if (req.body.ss == "simple")
+                    {
+                        ss = "--ss=simple";
+                    }
+                    else if (req.body.ss == "full")
+                    {
+                        ss = "--ss=full";
+                    }
+
                     // temporary
-                    var clafer_compiler_CHOCO  = spawn("clafer", ["--mode=choco", "--ss=none", "-k", uploadedFilePath + ".cfr"]);
+                    var clafer_compiler_CHOCO  = spawn("clafer", ["--mode=choco", ss, "-k", uploadedFilePath + ".cfr"]);
                     // -------
 
-                    process.clafer_compiler  = spawn("clafer", ["--mode=HTML", "--self-contained", "-k", "--add-comments", "--ss=none", uploadedFilePath + ".cfr"]);
+                    process.clafer_compiler  = spawn("clafer", ["--mode=HTML", "--self-contained", "-k", "--add-comments", ss, uploadedFilePath + ".cfr"]);
 
                     process.compiled_formats = new Array();
                     process.compiler_message = "";

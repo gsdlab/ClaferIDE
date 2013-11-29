@@ -332,7 +332,7 @@ Input.method("getInitContent", function()
 {
     result = '<div id = "load_area">';
     result += '<form id="myform" action="' + this.serverAction + '" method="post" enctype="multipart/form-data" style="display: block;">';
-    result += '<fieldset>';
+//    result += '<fieldset>';
     result += '<input type="file" size="25" name="claferFile" id="claferFile" style="width: 230px;">';
     result += '<input type="hidden" name="claferFileURL" value="' + window.location + '">';
     result += '<input type="hidden" name="exampleFlag" id="exampleFlag" value="0">';
@@ -371,10 +371,21 @@ Input.method("getInitContent", function()
     
     result += '</select>';
     result += '<input id="submitExample" type="submit" value="Compile"></input>';
-    result += '<input id="loadExampleInEditor" type="checkbox" name="loadExampleInEditor" value="unchecked">load in editor</input>';
-    result += '</fieldset><div style="height:8px">&nbsp;</div>';
+    result += '<div style="display:inline-block"><input id="loadExampleInEditor" type="checkbox" name="loadExampleInEditor" value="unchecked">Load in editor below</input></div>';
+//    result += '</fieldset>';
+//    result += '<br/>';
+    result += '<div style="height: 1px; border-bottom: 2px groove threedface"></div>';
 
-    result += 'Or enter your model below: <input id="submitText" type="submit" value="Compile"/>';
+    result += 'Or enter your model: <input id="submitText" type="submit" value="Compile"/>';
+
+    result += '&nbsp;&nbsp;&nbsp;&nbsp;<div style="display: inline-block; border: 2px groove threedface; float:right">Scope computing: <select id="ss" name="ss">';
+
+    result += '<option value="none">Disabled</option>';
+    result += '<option value="simple" selected="selected">Fast</option>';
+    result += '<option value="full">Full</option>';
+
+    result += '</select></div>';
+
     result += '<input id="claferText" name="claferText" type="hidden"/>';
 
     result += '<div style="height:' + this.editorHeight + 'px; width: ' + this.editorWidth + 'px;" name="clafer_editor" id="clafer_editor">';
