@@ -37,7 +37,13 @@ $(document).ready(function()
     modules.push("Output");
     
     host = new Host(modules);
+
+    window.onbeforeunload = exitConfirmation;
 });
+
+function exitConfirmation() {
+    return 'Are you sure you want to quit? ClaferIDE does not save any of results, so you are responsible for saving your results.';
+}
 
 function Host(modules)
 {

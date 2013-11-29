@@ -623,9 +623,9 @@ function cleanProcesses()
 
         if (processes[i].toRemoveCompletely)
         {
-            cleanupOldFiles(processes[i].folder);            
             clearTimeout(processes[i].pingTimeoutObject);
             clearTimeout(processes[i].inactivityTimeoutObject);
+            cleanupOldFiles(processes[i].folder);            
             processes.splice(i, 1);
         }
         else
