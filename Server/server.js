@@ -357,6 +357,62 @@ server.post('/control', function(req, res){
                 resultMessage = "individual_scope_set";
                 isError = false;
             }
+            else if (req.body.operation == "setIntScope")
+            {
+                console.log("Control: setIntScope");
+
+                var backendId = req.body.backend;
+                var found = false;
+                var backend = null;
+                // looking for a backend
+
+                for (var j = 0; j < backendConfig.backends.length; j++)
+                {
+                    if (backendConfig.backends[j].id == backendId)
+                    {
+                        found = true;
+                        backend = backendConfig.backends[j]; 
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    console.log("Error: Backend was not found");
+                    resultMessage = "Error: Could not find the backend by its submitted id.";
+                    isError = true;
+                    break;
+                }
+
+                console.log(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2);
+
+                var replacements = [
+                        {
+                            "needle": "$low$", 
+                            "replacement": req.body.operation_arg1
+                        },
+                        {
+                            "needle": "$high$", 
+                            "replacement": req.body.operation_arg2
+                        }
+                    ];
+
+                var command = replaceTemplate(backend.scope_options.int_scope.command, replacements);
+                processes[i].tool.stdin.write(command);
+                    
+                if (backend.scope_options.clafer_scope_list)
+                {
+                    processes[i].tool.stdin.write(backend.scope_options.clafer_scope_list.command);
+                    processes[i].producedScopes = false;
+                }
+                else
+                {
+                    processes[i].producedScopes = true;
+                }
+
+                resultMessage = "int_scope_set";
+                isError = false;
+            }
             else
             {
                 var parts = req.body.operation.split("-");
@@ -610,6 +666,9 @@ server.post('/poll', function(req, res, next)
     
 });
 
+
+
+
 function cleanProcesses()
 {
     var i = 0;
@@ -625,11 +684,11 @@ function cleanProcesses()
         {
             clearTimeout(processes[i].pingTimeoutObject);
             clearTimeout(processes[i].inactivityTimeoutObject);
-            cleanupOldFiles(processes[i].folder);            
+            setTimeout(cleanupOldFiles, config.cleaningTimeout, processes[i].folder);
             processes.splice(i, 1);
         }
         else
-            i++;
+            i++;   
     }
 
     console.log("Cleaning complete. #Processes = " + processes.length);

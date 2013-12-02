@@ -1,5 +1,6 @@
 {
 	"port": "8194",
 	"inactivityTimeout": "60000",
-	"pingTimeout": "10000"        
+	"pingTimeout": "10000",
+	"cleaningTimeout": "5000"        
 }

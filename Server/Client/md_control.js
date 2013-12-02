@@ -55,9 +55,10 @@ Control.method("getInitContent", function(){
 
     ret += '<br/><fieldset id="scopeControl">';
 
-    ret += '<legend>Scopes</legend>';   
-    ret += '<span>Global:</span><input type="text" size="2" value="1" id="globalScopeValue"/><button id="setGlobalScope">Set</button>';
-    ret += '<br/>Individual scopes:</span><br/><input type="text" style="width:140px;" id="individualClafer"></input>';
+    ret += '<legend>Scope Settings</legend>';   
+    ret += '<span>Default (or Global):</span><input type="text" size="2" value="1" id="globalScopeValue"/><button id="setGlobalScope">Set</button>';
+    ret += '<br/><span>Integers:</span> from <input type="text" size="2" value="-128" id="intLowScopeValue"/> to <input type="text" size="2" value="127" id="intHighScopeValue"/><button id="setIntScope">Set</button>';
+    ret += '<br/>Clafers:</span><input type="text" style="width:120px;" id="individualClafer"></input>';
 
     ret += '<span id="ClaferListCont" style="width:30px"></span>';
     ret += '<input type="text" size="2" id="individualScopeValue"/>';
@@ -127,6 +128,7 @@ Control.method("onInitRendered", function()
 
     $("#setGlobalScope")[0].onclick = this.setGlobalScopeClick.bind(this);
     $("#setIndividualScope")[0].onclick = this.setIndividualScopeClick.bind(this);
+    $("#setIntScope")[0].onclick = this.setIntScopeClick.bind(this);
 
     var options = new Object();
     options.beforeSubmit = this.beginQuery.bind(this);
@@ -169,6 +171,13 @@ Control.method("setIndividualScopeClick", function(){
 //    $("#ControlForm").submit();
 });
 
+Control.method("setIntScopeClick", function(){
+    $("#ControlOp").val("setIntScope");
+    $("#ControlOpArg1").val($ ("#intLowScopeValue").val());
+    $("#ControlOpArg2").val($ ("#intHighScopeValue").val());
+//    $("#ControlForm").submit();
+});
+
 Control.method("enableRuntimeControls", function(){
     $("#" + $( "#backend option:selected" ).val() + "_buttons").children("button").removeAttr("disabled");
     $("#RunStop").val("Stop");
@@ -177,7 +186,12 @@ Control.method("enableRuntimeControls", function(){
     $("#setGlobalScope").removeAttr("disabled");
     $("#globalScopeValue").removeAttr("disabled");    
     $("#individualScopeValue").removeAttr("disabled");    
-    $("#individualClafer").removeAttr("disabled");    
+    $("#individualClafer").removeAttr("disabled");   
+
+    $("#intLowScopeValue").removeAttr("disabled");    
+    $("#intHighScopeValue").removeAttr("disabled");   
+    $("#setIntScope").removeAttr("disabled");   
+
 });
 
 Control.method("disableRuntimeControls", function(){
@@ -189,6 +203,11 @@ Control.method("disableRuntimeControls", function(){
     $("#globalScopeValue").attr("disabled", "disabled");    
     $("#individualScopeValue").attr("disabled", "disabled");    
     $("#individualClafer").attr("disabled", "disabled");    
+
+    $("#intLowScopeValue").attr("disabled", "disabled");    
+    $("#intHighScopeValue").attr("disabled", "disabled");   
+    $("#setIntScope").attr("disabled", "disabled");   
+
 });
 
 Control.method("disableAll", function(){
@@ -200,6 +219,10 @@ Control.method("disableAll", function(){
     $("#globalScopeValue").attr("disabled", "disabled");    
     $("#individualScopeValue").attr("disabled", "disabled");    
     $("#individualClafer").attr("disabled", "disabled");    
+
+    $("#intLowScopeValue").attr("disabled", "disabled");    
+    $("#intHighScopeValue").attr("disabled", "disabled");   
+    $("#setIntScope").attr("disabled", "disabled");   
 });
 
 Control.method("beginQuery", function(formData, jqForm, options){

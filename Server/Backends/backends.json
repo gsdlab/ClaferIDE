@@ -8,6 +8,7 @@
             "tool_args": ["$filepath$"],
             "scope_options": {
                 "global_scope" : {"command": "setscope $value$\n"}, 
+                "int_scope" : {"command": "intScope $low$ $high$\n"},                 
                 "individual_scope": {"command": "setscope $clafer$ $value$\n"} 
             },
             "control_buttons": [
@@ -24,9 +25,10 @@
             "tool": "java",
             "tool_args": ["-jar", "$dirname$/ChocoIG/claferchocoig-0.0.1-SNAPSHOT-jar-with-dependencies.jar", "$filepath$"],            
             "scope_options": {
-                "clafer_scope_list" : {"command": "list\n"}, 
                 "global_scope" : {"command": "globalScope $value$\n"}, 
-                "individual_scope": {"command": "individualScope $clafer$ $value$\n"} 
+                "int_scope" : {"command": "intScope $low$ $high$\n"},                 
+                "individual_scope": {"command": "individualScope $clafer$ $value$\n"}, 
+                "clafer_scope_list" : {"command": "list\n"}
             },
             "control_buttons": [
                 {"id": "next", "command": "n\n", "label" : "Next"}, 
