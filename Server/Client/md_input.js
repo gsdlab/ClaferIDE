@@ -273,6 +273,7 @@ Input.method("inputChange", function(){
     {
         if (filename.substring(filename.length-4) == ".cfr"){
             $("#submitFile").removeAttr("disabled");                    
+            $("#submitFile").val("Compile");            
         }  
         else{ // unknown file
             $("#submitFile").val("Unknown File");
@@ -281,6 +282,7 @@ Input.method("inputChange", function(){
     }
     else{ // no file
         $("#submitFile").attr("disabled", "disabled");       
+        $("#submitFile").val("Compile");            
     }
     
 });

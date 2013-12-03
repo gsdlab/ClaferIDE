@@ -930,10 +930,10 @@ server.post('/upload', function(req, res, next)
                     }
 
                     // temporary
-                    var clafer_compiler_CHOCO  = spawn("clafer", ["--mode=choco", ss, "-k", uploadedFilePath + ".cfr"]);
+                    process.clafer_compiler = spawn("clafer", ["--mode=choco", ss, "-k", uploadedFilePath + ".cfr"]);
                     // -------
 
-                    process.clafer_compiler  = spawn("clafer", ["--mode=HTML", "--self-contained", "-k", "--add-comments", ss, uploadedFilePath + ".cfr"]);
+                    clafer_compiler_HTML  = spawn("clafer", ["--mode=HTML", "--self-contained", "-k", "--add-comments", ss, uploadedFilePath + ".cfr"]);
 
                     process.compiled_formats = new Array();
                     process.compiler_message = "";
