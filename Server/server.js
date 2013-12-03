@@ -79,7 +79,7 @@ server.post('/control', function(req, res){
     console.log("Control: Enter");
 
     var isError = true;
-    var resultMessage = "Error: Could not find the process"; // default message
+    var resultMessage = "process_not_found"; // default message
 
     for (var i = 0; i < processes.length; i++)
     {

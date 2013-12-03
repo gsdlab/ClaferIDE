@@ -268,8 +268,13 @@ Control.method("handleError", function(response, statusText, xhr)  {
     er.style.display = "block"; 
     var caption;
 
+//    alert(statusText);
+//    alert(response);
+
     if (statusText == "timeout")
         caption = "<b>Request Timeout.</b><br>Please check whether the server is available.";
+    else if (response && response.responseText == "process_not_found")
+        caption = "<b>Session not found.</b><br>Looks like your session has been closed due to inactivity. Please recompile your model to start a new session";
     else if (statusText == "error" && response.responseText == "")
         caption = "<b>Request Error.</b><br>Please check whether the server is available.";        
     else
