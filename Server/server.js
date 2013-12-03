@@ -30,6 +30,18 @@ var crypto = require('crypto'); // for getting hashes
 var backendConfig = require('./Backends/backends.json');
 var formatConfig = require('./Formats/formats.json');
 
+/*  Rate Limiter */
+var rate            = require('express-rate/lib/rate'),
+  redis     = require('redis'),
+  client      = redis.createClient();
+
+var redisHandler = new rate.Redis.RedisRateHandler({client: client});
+var commandMiddleware = rate.middleware({handler: redisHandler, interval: config.commandLimitingRate.interval, limit: config.commandLimitingRate.limit}); // limiting command sending
+var pollingMiddleware = rate.middleware({handler: redisHandler, interval: config.pollingLimitingRate.interval, limit: config.pollingLimitingRate.limit}); // limiting polling
+var fileMiddleware = rate.middleware({handler: redisHandler, interval: config.fileRequestLimitingRate.interval, limit: config.fileRequestLimitingRate.limit}); // limiting requesting files
+
+/* ----- */
+
 var port = config.port;
 
 var server = express();
@@ -46,19 +58,21 @@ server.use(express.bodyParser({ keepExtensions: true, uploadDir: __dirname + '/u
 var URLs = [];
 var processes = [];
 
-server.get('/Examples/:file', function(req, res) {
+/*  File Requests */
+
+server.get('/Examples/:file', fileMiddleware, function(req, res) {
     res.sendfile('Examples/' + req.params.file);
 });
 
-server.get('/Backends/:file', function(req, res) {
+server.get('/Backends/:file', fileMiddleware, function(req, res) {
     res.sendfile('Backends/' + req.params.file);
 });
 
-server.get('/Formats/:file', function(req, res) {
+server.get('/Formats/:file', fileMiddleware, function(req, res) {
     res.sendfile('Formats/' + req.params.file);
 });
 
-server.get('/', function(req, res) {
+server.get('/', fileMiddleware, function(req, res) {
 //uploads now and runs once app.html is fully loaded
 //works because client currently sends one empty post upon completion of loading
 	if (req.query.claferFileURL) {
@@ -71,11 +85,13 @@ server.get('/', function(req, res) {
     res.sendfile("Client/app.html");
 });
 
-server.get('/htmlwrapper', function(req, res) {
+server.get('/htmlwrapper', fileMiddleware, function(req, res) {
     res.sendfile("Client/compiler_html_wrapper.html");
 });
 
-server.post('/control', function(req, res){
+/*  Control Requests */
+
+server.post('/control', commandMiddleware, function(req, res){
     console.log("Control: Enter");
 
     var isError = true;
@@ -500,204 +516,11 @@ server.post('/control', function(req, res){
     res.end(resultMessage);        
 });
 
-/*
- * Handle Polling
- * The client will poll the server to get the latest updates or the final result
- * Polling is implemented to solve the browser timeout problem.
- * Moreover, this helps to control the execution of ClaferMoo: to stop, or to get intermediate results.
- * An alternative way might be to create a web socket
- */
-
-server.post('/poll', function(req, res, next)
-{
-    var found = false;
-    for (var i = 0; i < processes.length; i++)
-    {
-        if (processes[i].windowKey == req.body.windowKey)
-        {
-            found = true;
-            if (req.body.command == "ping") // normal ping
-            {                
-                clearTimeout(processes[i].pingTimeoutObject);
-
-                if (processes[i].mode_completed) // the execution of the current mode is completed
-                {
-                    if (processes[i].mode == "compiler") // if the mode completed is compilation
-                    {       
-
-                        res.writeHead(200, { "Content-Type": "application/json"});
-                        var jsonObj = JSON.parse(processes[i].compiler_result);
-                        jsonObj.compiled_formats = processes[i].compiled_formats;
-                        jsonObj.scopes = "";
-                        jsonObj.model = processes[i].model;
-                        jsonObj.compiler_message = processes[i].compiler_message;
-                        res.end(JSON.stringify(jsonObj));
-
-                        processes[i].mode = "ig";
-                        processes[i].mode_completed = false;
-                    }
-                    else
-                    {
-                        var currentResult = "";
-
-                        if (processes[i].freshData != "")
-                        {
-                            currentResult += processes[i].freshData;
-                            processes[i].freshData = "";
-                        }
-
-                        if (processes[i].freshError != "")
-                        {
-                            currentResult += processes[i].freshError;
-                            processes[i].freshError = "";
-                        }                    
-
-                        res.writeHead(200, { "Content-Type": "application/json"});
-
-                        var jsonObj = new Object();
-                        jsonObj.message = currentResult;
-                        jsonObj.scopes = "";
-                        jsonObj.completed = true;
-                        res.end(JSON.stringify(jsonObj));
-                    }
-
-                    // if mode is completed, then the tool is not busy anymore, so now it's time to 
-                    // set inactivity timeout
-
-                    clearTimeout(processes[i].inactivityTimeoutObject);
-                    processes[i].inactivityTimeoutObject = setTimeout(inactivityTimeoutFunc, config.inactivityTimeout, processes[i]);
-
-                }	
-                else // still working
-                {
-                    processes[i].pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, processes[i]);                      
-
-                    if (processes[i].mode == "compiler") // if the mode completed is compilation
-                    {
-                        res.writeHead(200, { "Content-Type": "application/json"});
-                        res.end('{"message": "Working"}');
-                    }
-                    else
-                    {
-                        if (!processes[i].producedScopes)
-                        {
-                            var scopesFileName = processes[i].file + ".scopes.json";
-                            fs.readFile(scopesFileName, function (err, data) {
-                                if (!err)
-                                {
-                                    for (var i = 0; i < processes.length; i++)
-                                    {
-                                        if (processes[i].windowKey == req.body.windowKey)
-                                        {
-                                            processes[i].scopes = data.toString();    
-                                            processes[i].producedScopes = true;                                    
-                                        }
-                                    }
-
-                                    // removing the file from the system. 
-                                    fs.unlink(scopesFileName, function (err){
-                                        // nothing
-                                    });
-                                }
-                            });
-                        }
-
-                        var currentResult = "";
-
-                        if (processes[i].freshData != "")
-                        {
-                            currentResult += processes[i].freshData;
-                            processes[i].freshData = "";
-                        }
-
-                        if (processes[i].freshError != "")
-                        {
-                            currentResult += processes[i].freshError;
-                            processes[i].freshError = "";
-                        }                    
-
-                        res.writeHead(200, { "Content-Type": "application/json"});
-
-                        var jsonObj = new Object();
-                        jsonObj.message = currentResult;
-                        jsonObj.scopes = processes[i].scopes;
-
-                        processes[i].scopes = "";
-
-                        jsonObj.completed = false;
-                        res.end(JSON.stringify(jsonObj));
-                    }
-                }
-            }
-            else // if it is cancel
-            {
-                processes[i].toKill = true;
-                clearTimeout(processes[i].pingTimeoutObject);                
-
-                // starting inactivity timer
-                clearTimeout(processes[i].inactivityTimeoutObject);
-                processes[i].inactivityTimeoutObject = setTimeout(inactivityTimeoutFunc, config.inactivityTimeout, processes[i]);
-
-                res.writeHead(200, { "Content-Type": "application/json"});
-
-                var jsonObj = new Object();
-                jsonObj.message = "Cancelled";
-                jsonObj.scopes = "";
-                jsonObj.compiler_message = "Cancelled compilation";
-                jsonObj.completed = true;
-                res.end(JSON.stringify(jsonObj));
-
-                console.log("Cancelled: " + processes[i].toKill);
-           }
-           break;
-        }
-    }
-    
-    if (!found)
-    {
-        res.writeHead(404, { "Content-Type": "application/json"});
-        res.end('{"message": "Error: the requested process is not found."}');
-    }
-
-    // clearing part
-    cleanProcesses();
-
-    console.log("Polled client " + req.body.windowKey);
-    
-});
-
-
-
-
-function cleanProcesses()
-{
-    var i = 0;
-    while (i < processes.length)
-    {
-        if (processes[i].toKill)
-        {
-            killProcessTree(processes[i]);
-            processes[i].toKill = false;
-        }
-
-        if (processes[i].toRemoveCompletely)
-        {
-            clearTimeout(processes[i].pingTimeoutObject);
-            clearTimeout(processes[i].inactivityTimeoutObject);
-            setTimeout(cleanupOldFiles, config.cleaningTimeout, processes[i].folder);
-            processes.splice(i, 1);
-        }
-        else
-            i++;   
-    }
-
-    console.log("Cleaning complete. #Processes = " + processes.length);
-}
 
 /*
  * Handle file upload
  */
-server.post('/upload', function(req, res, next) 
+server.post('/upload', commandMiddleware, function(req, res, next) 
 {
 	console.log("---------------------------");
 	console.log("/Upload request initiated.");
@@ -1059,10 +882,189 @@ server.post('/upload', function(req, res, next)
     }
 });
 
-function onAllFormatsCompiled(process)
+/* =============================================== */
+// POLLING Requests
+/* ------------------------------------------*/
+
+/*
+ * Handle Polling
+ * The client will poll the server to get the latest updates or the final result
+ * Polling is implemented to solve the browser timeout problem.
+ * Moreover, this helps to control the execution of ClaferMoo: to stop, or to get intermediate results.
+ * An alternative way might be to create a web socket
+ */
+
+server.post('/poll', pollingMiddleware, function(req, res, next)
 {
-    process.mode_completed = true;
-}
+    var found = false;
+    for (var i = 0; i < processes.length; i++)
+    {
+        if (processes[i].windowKey == req.body.windowKey)
+        {
+            found = true;
+            if (req.body.command == "ping") // normal ping
+            {                
+                clearTimeout(processes[i].pingTimeoutObject);
+
+                if (processes[i].mode_completed) // the execution of the current mode is completed
+                {
+                    if (processes[i].mode == "compiler") // if the mode completed is compilation
+                    {       
+
+                        res.writeHead(200, { "Content-Type": "application/json"});
+                        var jsonObj = JSON.parse(processes[i].compiler_result);
+                        jsonObj.compiled_formats = processes[i].compiled_formats;
+                        jsonObj.scopes = "";
+                        jsonObj.model = processes[i].model;
+                        jsonObj.compiler_message = processes[i].compiler_message;
+                        res.end(JSON.stringify(jsonObj));
+
+                        processes[i].mode = "ig";
+                        processes[i].mode_completed = false;
+                    }
+                    else
+                    {
+                        var currentResult = "";
+
+                        if (processes[i].freshData != "")
+                        {
+                            currentResult += processes[i].freshData;
+                            processes[i].freshData = "";
+                        }
+
+                        if (processes[i].freshError != "")
+                        {
+                            currentResult += processes[i].freshError;
+                            processes[i].freshError = "";
+                        }                    
+
+                        res.writeHead(200, { "Content-Type": "application/json"});
+
+                        var jsonObj = new Object();
+                        jsonObj.message = currentResult;
+                        jsonObj.scopes = "";
+                        jsonObj.completed = true;
+                        res.end(JSON.stringify(jsonObj));
+                    }
+
+                    // if mode is completed, then the tool is not busy anymore, so now it's time to 
+                    // set inactivity timeout
+
+                    clearTimeout(processes[i].inactivityTimeoutObject);
+                    processes[i].inactivityTimeoutObject = setTimeout(inactivityTimeoutFunc, config.inactivityTimeout, processes[i]);
+
+                }   
+                else // still working
+                {
+                    processes[i].pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, processes[i]);                      
+
+                    if (processes[i].mode == "compiler") // if the mode completed is compilation
+                    {
+                        res.writeHead(200, { "Content-Type": "application/json"});
+                        res.end('{"message": "Working"}');
+                    }
+                    else
+                    {
+                        if (!processes[i].producedScopes)
+                        {
+                            var scopesFileName = processes[i].file + ".scopes.json";
+                            fs.readFile(scopesFileName, function (err, data) {
+                                if (!err)
+                                {
+                                    for (var i = 0; i < processes.length; i++)
+                                    {
+                                        if (processes[i].windowKey == req.body.windowKey)
+                                        {
+                                            processes[i].scopes = data.toString();    
+                                            processes[i].producedScopes = true;                                    
+                                        }
+                                    }
+
+                                    // removing the file from the system. 
+                                    fs.unlink(scopesFileName, function (err){
+                                        // nothing
+                                    });
+                                }
+                            });
+                        }
+
+                        var currentResult = "";
+
+                        if (processes[i].freshData != "")
+                        {
+                            currentResult += processes[i].freshData;
+                            processes[i].freshData = "";
+                        }
+
+                        if (processes[i].freshError != "")
+                        {
+                            currentResult += processes[i].freshError;
+                            processes[i].freshError = "";
+                        }                    
+
+                        res.writeHead(200, { "Content-Type": "application/json"});
+
+                        var jsonObj = new Object();
+                        jsonObj.message = currentResult;
+                        jsonObj.scopes = processes[i].scopes;
+
+                        processes[i].scopes = "";
+
+                        jsonObj.completed = false;
+                        res.end(JSON.stringify(jsonObj));
+                    }
+                }
+            }
+            else // if it is cancel
+            {
+                processes[i].toKill = true;
+                clearTimeout(processes[i].pingTimeoutObject);                
+
+                // starting inactivity timer
+                clearTimeout(processes[i].inactivityTimeoutObject);
+                processes[i].inactivityTimeoutObject = setTimeout(inactivityTimeoutFunc, config.inactivityTimeout, processes[i]);
+
+                res.writeHead(200, { "Content-Type": "application/json"});
+
+                var jsonObj = new Object();
+                jsonObj.message = "Cancelled";
+                jsonObj.scopes = "";
+                jsonObj.compiler_message = "Cancelled compilation";
+                jsonObj.completed = true;
+                res.end(JSON.stringify(jsonObj));
+
+                console.log("Cancelled: " + processes[i].toKill);
+           }
+           break;
+        }
+    }
+    
+    if (!found)
+    {
+        res.writeHead(404, { "Content-Type": "application/json"});
+        res.end('{"message": "Error: the requested process is not found."}');
+    }
+
+    // clearing part
+    cleanProcesses();
+
+    console.log("Polled client " + req.body.windowKey);
+    
+});
+
+
+/*
+ * Catch all. error reporting for unknown routes
+ */
+server.use(function(req, res, next)
+{
+    console.log(req.url);
+    res.send(404, "Sorry can't find that!");
+});
+
+//====================================================
+// Libraries and misc functions
+//====================================================
 
 function pingTimeoutFunc(process)
 {
@@ -1080,6 +1082,36 @@ function inactivityTimeoutFunc(process)
     process.toKill = true;   
     process.toRemoveCompletely = true;   
     cleanProcesses();
+}
+
+function cleanProcesses()
+{
+    var i = 0;
+    while (i < processes.length)
+    {
+        if (processes[i].toKill)
+        {
+            killProcessTree(processes[i]);
+            processes[i].toKill = false;
+        }
+
+        if (processes[i].toRemoveCompletely)
+        {
+            clearTimeout(processes[i].pingTimeoutObject);
+            clearTimeout(processes[i].inactivityTimeoutObject);
+            setTimeout(cleanupOldFiles, config.cleaningTimeout, processes[i].folder);
+            processes.splice(i, 1);
+        }
+        else
+            i++;   
+    }
+
+    console.log("Cleaning complete. #Processes = " + processes.length);
+}
+
+function onAllFormatsCompiled(process)
+{
+    process.mode_completed = true;
 }
 
 function finishCleanup(dir, results){
@@ -1198,20 +1230,32 @@ function killProcessTree(process)
 }
 
 
-/*
- * Catch all. error reporting for unknown routes
- */
-server.use(function(req, res, next){
+function replaceTemplate(input_string, replacement_map)
+{
+    var result = input_string;
 
-    console.log(req.url);
-    
-    if (req.url.substring(0, "/Examples/".length) == "/Examples/") // allow only Examples folder
+    for (var j = 0; j < replacement_map.length; j++)
     {
-        res.sendFile(req.url.substring(1));
+        result = result.replace(replacement_map[j].needle, replacement_map[j].replacement);
     }
-    else
-        res.send(404, "Sorry can't find that!");
-});
+
+    return result;
+}
+
+function replaceTemplateList(input_list, replacement_map)
+{
+    var result = new Array();
+    for (var i = 0; i < input_list.length; i++)
+    {
+        result.push(replaceTemplate(input_list[i], replacement_map));
+    }
+    
+    return result;
+}                            
+
+//================================================================
+// Initialization Code
+//================================================================
 
 var dependency_count = 2; // the number of tools to be checked before the Visualizer starts
 console.log('===============================');
@@ -1249,27 +1293,6 @@ java.on('exit', function (code){
     if (code == 0) dependency_ok();
 });
 
-/* uncommented this check, since we have many backends now 
-var claferMoo  = spawn(pythonPath, [tool_path + python_file_name, "--version"]);
-var claferMoo_version = "";
-// 'error' would mean that there is no python, which has been checked already
-claferMoo.on('error', function (err){
-    console.log('ERROR: Cannot run ClaferMoo (' + tool_path + python_file_name + '). Please check whether it is installed and accessible.');
-});
-claferMoo.stdout.on('data', function (data){	
-    claferMoo_version += data;
-});
-claferMoo.stderr.on('data', function (data){	
-    claferMoo_version += data;
-});
-claferMoo.on('exit', function (code){	
-    if (code != 0)
-        console.log('ERROR: Cannot run ClaferMoo (' + tool_path + python_file_name + '). Please check whether it is installed and accessible.');
-    
-    console.log(claferMoo_version.trim());
-    if (code == 0) dependency_ok();
-});
-*/
 var node_version = process.version + ", " + JSON.stringify(process.versions);
 console.log("Node.JS: " + node_version);
 
@@ -1284,26 +1307,3 @@ function dependency_ok()
         console.log('Ready. Listening on port ' + port);        
     }
 }
-
-function replaceTemplate(input_string, replacement_map)
-{
-    var result = input_string;
-
-    for (var j = 0; j < replacement_map.length; j++)
-    {
-        result = result.replace(replacement_map[j].needle, replacement_map[j].replacement);
-    }
-
-    return result;
-}
-
-function replaceTemplateList(input_list, replacement_map)
-{
-    var result = new Array();
-    for (var i = 0; i < input_list.length; i++)
-    {
-        result.push(replaceTemplate(input_list[i], replacement_map));
-    }
-    
-    return result;
-}                            
