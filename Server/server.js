@@ -55,10 +55,29 @@ server.use(express.static(__dirname + '/Client'));
 //server.use(express.static(__dirname + '/Client/'));
 server.use(express.bodyParser({ keepExtensions: true, uploadDir: __dirname + '/uploads' }));
 
-var URLs = [];
-var processes = [];
+var URLs = []; // for temporary storage of URLs passed through the GET string
+var processes = []; // for storing sessions
 
-/*  File Requests */
+//-------------------------------------------------
+// Standard GET request
+//-------------------------------------------------
+// Response: File contents
+server.get('/', fileMiddleware, function(req, res) {
+    if (req.query.claferFileURL) // if there is a file in GET string (clafer file passed by the URL)
+    {
+        // works because client currently sends one empty post upon completion of loading
+        var sessionURL = new Object
+        sessionURL.session = req.sessionID;
+        sessionURL.url = req.query.claferFileURL;
+        URLs.push(sessionURL);
+        console.log(req.sessionID);
+    }
+    res.sendfile("Client/app.html");
+});
+
+//-------------------------------------------------
+// File requests
+//-------------------------------------------------
 
 server.get('/Examples/:file', fileMiddleware, function(req, res) {
     res.sendfile('Examples/' + req.params.file);
@@ -72,25 +91,15 @@ server.get('/Formats/:file', fileMiddleware, function(req, res) {
     res.sendfile('Formats/' + req.params.file);
 });
 
-server.get('/', fileMiddleware, function(req, res) {
-//uploads now and runs once app.html is fully loaded
-//works because client currently sends one empty post upon completion of loading
-	if (req.query.claferFileURL) {
-		var sessionURL = new Object
-		sessionURL.session = req.sessionID;
-		sessionURL.url = req.query.claferFileURL;
-		URLs.push(sessionURL);
-		console.log(req.sessionID);
-	}
-    res.sendfile("Client/app.html");
-});
-
 server.get('/htmlwrapper', fileMiddleware, function(req, res) {
     res.sendfile("Client/compiler_html_wrapper.html");
 });
 
-/*  Control Requests */
+//-------------------------------------------------
+//  Command Requests
+//-------------------------------------------------
 
+/* Controlling Instance Generators */
 server.post('/control', commandMiddleware, function(req, res){
     console.log("Control: Enter");
 
@@ -101,7 +110,7 @@ server.post('/control', commandMiddleware, function(req, res){
     {
         if (processes[i].windowKey == req.body.windowKey)
         {
-            if (req.body.operation == "run")
+            if (req.body.operation == "run") // "Run" operation
             {
                 console.log("Control: Run");
 
@@ -256,7 +265,7 @@ server.post('/control', commandMiddleware, function(req, res){
 
                 }
             }
-            else if (req.body.operation == "stop")
+            else if (req.body.operation == "stop") // "Stop" operation
             {
                 console.log("Control: Stop");
                 processes[i].toKill = true;
@@ -265,7 +274,7 @@ server.post('/control', commandMiddleware, function(req, res){
                 isError = false;
 //                clearTimeout(processes[i].pingTimeoutObject);                
             }
-            else if (req.body.operation == "setGlobalScope")
+            else if (req.body.operation == "setGlobalScope") // "Set Global Scope" operation
             {
                 console.log("Control: setGlobalScope");
 
@@ -317,7 +326,7 @@ server.post('/control', commandMiddleware, function(req, res){
                 resultMessage = "global_scope_set";
                 isError = false;
             }
-            else if (req.body.operation == "setIndividualScope")
+            else if (req.body.operation == "setIndividualScope") // "Set Clafer Scope" operation
             {
                 console.log("Control: setIndividualScope");
 
@@ -373,7 +382,7 @@ server.post('/control', commandMiddleware, function(req, res){
                 resultMessage = "individual_scope_set";
                 isError = false;
             }
-            else if (req.body.operation == "setIntScope")
+            else if (req.body.operation == "setIntScope") // "Set Integer Scope" operation
             {
                 console.log("Control: setIntScope");
 
@@ -429,7 +438,7 @@ server.post('/control', commandMiddleware, function(req, res){
                 resultMessage = "int_scope_set";
                 isError = false;
             }
-            else
+            else // else look for custom commands defined by backend config
             {
                 var parts = req.body.operation.split("-");
                 if (parts.length != 2)
@@ -492,17 +501,13 @@ server.post('/control', commandMiddleware, function(req, res){
                 isError = false;
             }
 
-            // resetting the execution timeout
-//            if (processes[i].executionTimeoutObject)
-//            {
-//                clearTimeout(processes[i].executionTimeoutObject);
-//                processes[i].executionTimeoutObject = setTimeout(executionTimeoutFunc, config.executionTimeout, processes[i]);
-//            }
-
             break;
 
         }
     }
+
+    /* Send the response */
+    // The function should produce the response anyway, and within reasonable time
 
     if (!isError)
     {
@@ -518,7 +523,8 @@ server.post('/control', commandMiddleware, function(req, res){
 
 
 /*
- * Handle file upload
+ * "Compile" command
+ * This is related to any time of submissions done using the Input view: compiling a file, example or text, etc.
  */
 server.post('/upload', commandMiddleware, function(req, res, next) 
 {
@@ -701,15 +707,6 @@ server.post('/upload', commandMiddleware, function(req, res, next)
                     
                     console.log("Compiling...");
 
-//                    var process = { windowKey: key, tool: null, folder: dlDir, path: uploadedFilePath, completed: false, killed:false, contents: file_contents, toKill: false};
-
-//                    clafer_compiler.on('error', function (err){
-//                        console.log('ERROR: Cannot find Clafer Compiler (clafer). Please check whether it is installed and accessible.');
-//                        res.writeHead(400, { "Content-Type": "text/html"});
-//                        res.end("error");
-//                    });
-
-
                     // removing an older session
                     for (var i = 0; i < processes.length; i++)
                     {
@@ -890,7 +887,7 @@ server.post('/upload', commandMiddleware, function(req, res, next)
  * Handle Polling
  * The client will poll the server to get the latest updates or the final result
  * Polling is implemented to solve the browser timeout problem.
- * Moreover, this helps to control the execution of ClaferMoo: to stop, or to get intermediate results.
+ * Moreover, this helps to control the execution of a tool: to stop, or to get intermediate results.
  * An alternative way might be to create a web socket
  */
 
@@ -1052,9 +1049,8 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
     
 });
 
-
 /*
- * Catch all. error reporting for unknown routes
+ * Catch all the rest. Error reporting for unknown routes
  */
 server.use(function(req, res, next)
 {
@@ -1172,15 +1168,6 @@ function escapeJSON(unsafe)
         .replace(/[\n]/g, '\\n')
         .replace(/[\r]/g, '\\r')
         .replace(/[\t]/g, '\\t');
-}
-
-function changeFileExt(name, ext, newExt)
-{
-	var ending = name.toLowerCase().substring(name.length - 4);
-	if (ending == ext.toLowerCase())
-		return name.substring(0, name.length - 4) + newExt;
-
-	return name;
 }
 
 function killProcessTree(process)
