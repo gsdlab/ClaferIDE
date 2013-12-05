@@ -46,7 +46,7 @@ Control.method("getInitContent", function(){
     ret += '<input type="hidden" id="ControlOpArg1" name="operation_arg1" value=""/>';
     ret += '<input type="hidden" id="ControlOpArg2" name="operation_arg2" value=""/>';
 
-    ret += '<select id="backend" name="backend">';       
+    ret += '<select id="backend" name="backend" title="Choose an instance generator backend">';       
     ret += '</select>';
 
     ret += '<input type="hidden" id="windowKey" name="windowKey" value="' + this.host.key + '">';
@@ -56,14 +56,14 @@ Control.method("getInitContent", function(){
     ret += '<br/><fieldset id="scopeControl">';
 
     ret += '<legend>Scope Settings</legend>';   
-    ret += '<span>Default (or Global):</span><input type="text" size="2" value="1" id="globalScopeValue"/><button id="setGlobalScope">Set</button>';
-    ret += '<br/><span>Integers:</span> from <input type="text" size="2" value="-128" id="intLowScopeValue"/> to <input type="text" size="2" value="127" id="intHighScopeValue"/><button id="setIntScope">Set</button>';
-    ret += '<br/>Clafers:</span><input type="text" style="width:120px;" id="individualClafer"></input>';
+    ret += '<span>Default (or Global):</span><input type="text" title="Enter the scope (an integer from 0 up to a number the backend can handle)" size="2" value="1" id="globalScopeValue"/><button id="setGlobalScope" title="Set the global (or default) scope">Set</button>';
+    ret += '<br/><span>Integers:</span> from <input type="text" size="2" value="-128" id="intLowScopeValue" title="Enter the lower bound for unknown integers (can be negative)"/> to <input type="text" size="2" value="127" id="intHighScopeValue" title="Enter the upper bound for unknown integers (normally positive)"/><button id="setIntScope" title="Set the selected scope for integers">Set</button>';
+    ret += '<br/>Clafers:</span><input type="text" style="width:120px;" id="individualClafer" placeholder="Clafer name(s)" title="Enter the clafer name, namespace, path or choose ones from a drop down, depending on the backend"></input>';
 
     ret += '<span id="ClaferListCont" style="width:30px"></span>';
-    ret += '<input type="text" size="2" id="individualScopeValue"/>';
+    ret += '<input type="text" size="2" value="1" id="individualScopeValue" title="Enter the scope value (an integer from 0 up to a number the backend can handle)"/>';
 
-    ret += '<button id="setIndividualScope">Set</button><br/>';    
+    ret += '<button id="setIndividualScope" title="Set the scope of the specified clafer(s)">Set</button><br/>';    
 
     ret += '</fieldset>';
    
@@ -81,14 +81,14 @@ Control.method("getInitContent", function(){
 
             for (var i = 0; i < backends.length; i++)
             {
-                options += '<option value="' + backends[i].id + '">' + backends[i].label + '</option>';
+                options += '<option value="' + backends[i].id + '" title="' + backends[i].tooltip + '">' + backends[i].label + '</option>';
 
                 backendButtons += '<div id="' + backends[i].id + '_buttons" style="display:' + display + ';">';
                 display = "none";
 
                 for (var j = 0; j < backends[i].control_buttons.length; j++)
                 {
-                    backendButtons += '<button class="control_button" disabled="disabled" id="' + backends[i].id + "-" + backends[i].control_buttons[j].id + '" name="' + backends[i].control_buttons[j].id + '">' + backends[i].control_buttons[j].label + "</button>";
+                    backendButtons += '<button class="control_button" disabled="disabled" id="' + backends[i].id + "-" + backends[i].control_buttons[j].id + '" name="' + backends[i].control_buttons[j].id + '" title="' + backends[i].control_buttons[j].tooltip + '">' + backends[i].control_buttons[j].label + "</button>";
                 }
 
                 backendButtons += '</div>';
@@ -141,6 +141,7 @@ Control.method("onInitRendered", function()
 Control.method("resetControls", function(){
     $("#RunStop").removeAttr("disabled");
     $("#RunStop").val("Run");
+    $("#RunStop").attr("title", "Run the selected backend");
 });
 
 Control.method("runStopClick", function(){
@@ -181,6 +182,7 @@ Control.method("setIntScopeClick", function(){
 Control.method("enableRuntimeControls", function(){
     $("#" + $( "#backend option:selected" ).val() + "_buttons").children("button").removeAttr("disabled");
     $("#RunStop").val("Stop");
+    $("#RunStop").attr("title", "Force the running backend to stop");
 
     $("#setIndividualScope").removeAttr("disabled");
     $("#setGlobalScope").removeAttr("disabled");
@@ -197,6 +199,7 @@ Control.method("enableRuntimeControls", function(){
 Control.method("disableRuntimeControls", function(){
     $("#" + $( "#backend option:selected" ).val() + "_buttons").children("button").attr("disabled", "disabled");
     $("#RunStop").val("Run");
+    $("#RunStop").attr("title", "Run the selected backend");
 
     $("#setIndividualScope").attr("disabled", "disabled");
     $("#setGlobalScope").attr("disabled", "disabled");

@@ -52,7 +52,7 @@ CompiledFormats.method("onDocLoad", function(){
 CompiledFormats.method("getInitContent", function()
 {
     var result = "";
-    result += '<span>Show:</span><select id="formats">';   
+    result += '<span>Show:</span><select id="formats" title="Select a format to show">';   
     result += '</select>';   
     result += '<div id="format_views">';
     result += '<iframe id="html_format" scrolling="yes" height = "' + (this.height - 30) + '" src="' + this.ajaxUrl + '" frameborder="0" width="' + (this.width - 5) + '"></iframe>';
@@ -95,7 +95,7 @@ CompiledFormats.method("onInitRendered", function()
                     style = "display:none;";                    
                 }
 
-                options += '<option value="' + formats[i].id + '">' + formats[i].label + '</option>';
+                options += '<option value="' + formats[i].id + '" title="' + formats[i].tooltip + '">' + formats[i].label + '</option>';
                 
                 if (formats[i].display_element == "iframe") // all iframes have to be put in advance
                 {

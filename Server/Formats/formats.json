@@ -3,6 +3,7 @@
         {
             "id": "clafer_source", 
             "label": "Source", 
+            "tooltip": "Clafer source model (RESERVED)", 
             "file_extension": ".cfr",             
             "compiler_mode": "none",
             "compiler_args": [],
@@ -12,6 +13,7 @@
         {
             "id": "html", 
             "label": "HTML", 
+            "tooltip": "HTML rendering of the model", 
             "file_extension": ".html",             
             "compiler_mode": "HTML",
             "compiler_args": ["--self-contained"],
@@ -21,6 +23,7 @@
         {
             "id": "choco", 
             "label": "Choco JS", 
+            "tooltip": "Choco solver file format (Javascript)", 
             "file_extension": ".js",             
             "compiler_mode": "choco",
             "compiler_args": [],
