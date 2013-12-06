@@ -115,6 +115,8 @@ Input.method("beginQuery", function(formData, jqForm, options) {
 Input.method("endQuery", function()  { 
 	$("#preloader").remove();
 	$("#load_area #myform").show();
+
+    $("#claferFileURL").val(""); // empty the URL
 	
 	return true;
 });
@@ -335,7 +337,7 @@ Input.method("getInitContent", function()
     result = '<div id = "load_area">';
     result += '<form id="myform" action="' + this.serverAction + '" method="post" enctype="multipart/form-data" style="display: block;">';
     result += '<input type="file" size="25" name="claferFile" id="claferFile" style="width: 230px;" title="If you want to upload your clafer file, select one here "/>';
-    result += '<input type="hidden" name="claferFileURL" value="' + window.location + '">';
+    result += '<input type="hidden" name="claferFileURL" id="claferFileURL" value="' + this.host.claferFileURL + '">';
     result += '<input type="hidden" name="exampleFlag" id="exampleFlag" value="0">';
     result += '<input id="submitFile" type="submit" value="Compile" title="Compile the chosen file with Clafer Compiler">';
 

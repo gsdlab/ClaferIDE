@@ -45,11 +45,40 @@ function exitConfirmation() {
     return 'Are you sure you want to quit? ClaferIDE does not save any of results, so you are responsible for saving your results.';
 }
 
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
 function Host(modules)
 {
-    this.key = Math.floor(Math.random()*1000000000).toString(16);
-    this.instanceCounterArg = "?special_counter?"; 
-    this.instanceCounterLabel = "#instance"
+    /* GUID for each browser tab */
+    /* Note that page refresh is supposed to create a new session */
+
+    var GUID = function () {
+                //------------------
+                var S4 = function () {
+                    return(
+                            Math.floor(
+                                    Math.random() * 0x10000 /* 65536 */
+                                ).toString(16)
+                        );
+                };
+                //------------------
+
+                return (
+                        S4() + S4() + "-" +
+                        S4() + "-" +
+                        S4() + "-" +
+                        S4() + "-" +
+                        S4() + S4() + S4()
+                    );
+            };
+
+    this.key = GUID();
+    this.claferFileURL = getParameterByName("claferFileURL");
     this.modules = new Array();
     this.helpGetter = new helpGetter(this);
 
@@ -114,7 +143,7 @@ function Host(modules)
         $("#" + this.modules[i].id + " .window-titleBar").append(helpButton);   
     }
 
-    this.print("ClaferIDE> Welcome!\n");
+    this.print("ClaferIDE> Welcome! Session ID: " + this.key + "\n");
     
     var displayHelp=getCookie("startHelpMooViz")
     if(displayHelp==null){

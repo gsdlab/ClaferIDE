@@ -46,16 +46,10 @@ var port = config.port;
 
 var server = express();
 
-//support for sessions - used for url uploads
-server.use(express.cookieParser('asasdhf89adfhj0dfjask'));
-var store = new express.session.MemoryStore;
-server.use(express.session({secret: 'supersecretstring', store: store}));
-
 server.use(express.static(__dirname + '/Client'));
 //server.use(express.static(__dirname + '/Client/'));
 server.use(express.bodyParser({ keepExtensions: true, uploadDir: __dirname + '/uploads' }));
 
-var URLs = []; // for temporary storage of URLs passed through the GET string
 var processes = []; // for storing sessions
 
 //-------------------------------------------------
@@ -63,15 +57,6 @@ var processes = []; // for storing sessions
 //-------------------------------------------------
 // Response: File contents
 server.get('/', fileMiddleware, function(req, res) {
-    if (req.query.claferFileURL) // if there is a file in GET string (clafer file passed by the URL)
-    {
-        // works because client currently sends one empty post upon completion of loading
-        var sessionURL = new Object
-        sessionURL.session = req.sessionID;
-        sessionURL.url = req.query.claferFileURL;
-        URLs.push(sessionURL);
-        console.log(req.sessionID);
-    }
     res.sendfile("Client/app.html");
 });
 
@@ -101,7 +86,7 @@ server.get('/htmlwrapper', fileMiddleware, function(req, res) {
 
 /* Controlling Instance Generators */
 server.post('/control', commandMiddleware, function(req, res){
-    console.log("Control: Enter");
+    logSpecific("Control: Enter", req.body.windowKey);
 
     var isError = true;
     var resultMessage = "process_not_found"; // default message
@@ -112,13 +97,13 @@ server.post('/control', commandMiddleware, function(req, res){
         {
             if (req.body.operation == "run") // "Run" operation
             {
-                console.log("Control: Run");
+                logSpecific("Control: Run", req.body.windowKey);
 
                 var backendId = req.body.backend;
-                console.log("Backend: " + backendId);
+                logSpecific("Backend: " + backendId, req.body.windowKey);
                 if (processes[i].mode != "ig")
                 {
-                    console.log("Error: Not compiled yet");
+                    logSpecific("Error: Not compiled yet", req.body.windowKey);
                     resultMessage = "Error: The mode is not IG: the compilation is still running";
                     isError = true;
                     break;
@@ -144,7 +129,7 @@ server.post('/control', commandMiddleware, function(req, res){
 
                     if (!found)
                     {
-                        console.log("Error: Backend was not found");
+                        logSpecific("Error: Backend was not found", req.body.windowKey);
                         resultMessage = "Error: Could not find the backend by its submitted id.";
                         isError = true;
                         break;
@@ -165,13 +150,13 @@ server.post('/control', commandMiddleware, function(req, res){
 
                     if (!found)
                     {
-                        console.log("Error: Required format was not found");
+                        logSpecific("Error: Required format was not found", req.body.windowKey);
                         resultMessage = "Error: Could not find the required file format.";
                         isError = true;
                         break;
                     }
 
-                    console.log(backend.id + " ==> " + format.id);
+                    logSpecific(backend.id + " ==> " + format.id, req.body.windowKey);
                     processes[i].mode_completed = false;
 
                     var fileAndPathReplacement = [
@@ -187,18 +172,17 @@ server.post('/control', commandMiddleware, function(req, res){
 
                     var args = replaceTemplateList(backend.tool_args, fileAndPathReplacement);
 
-                    console.log(args);
+                    logSpecific(args, req.body.windowKey);
                     
                     processes[i].tool = spawn(replaceTemplate(backend.tool, fileAndPathReplacement), args);
 
                     processes[i].tool.on('error', function (err){
-                        console.log('ERROR: Cannot find Clafer Instance Generator (claferIG). Please check whether it is installed and accessible.');
+                        logSpecific('ERROR: Cannot run the chosen instance generator. Please check whether it is installed and accessible.', req.body.windowKey);
                         for (var i = 0; i < processes.length; i++)
                         {
                             if (processes[i].windowKey == req.body.windowKey)
                             {
                                 processes[i].result = '{"message": "' + escapeJSON("Error: Cannot run claferIG") + '"}';
-//                                processes[i].code = 0;
                                 processes[i].completed = true;
                                 processes[i].tool = null;
                             }
@@ -231,13 +215,12 @@ server.post('/control', commandMiddleware, function(req, res){
                     });
 
                     processes[i].tool.on("close", function (code){
-                        console.log("CLAFERIG: On Exit");
+                        logSpecific("IG: On Exit", req.body.windowKey);
 
                         for (var i = 0; i<processes.length; i++){
 
                             if (processes[i].windowKey == req.body.windowKey)
                             {
-//                                cleanupOldFiles(processes[i].file, processes[i].folder);
                                 processes[i].mode_completed = true;
                                 processes[i].tool = null;
                             }
@@ -267,16 +250,15 @@ server.post('/control', commandMiddleware, function(req, res){
             }
             else if (req.body.operation == "stop") // "Stop" operation
             {
-                console.log("Control: Stop");
+                logSpecific("Control: Stop", req.body.windowKey);
                 processes[i].toKill = true;
                 processes[i].mode_completed = true;
                 resultMessage = "stopped";
                 isError = false;
-//                clearTimeout(processes[i].pingTimeoutObject);                
             }
             else if (req.body.operation == "setGlobalScope") // "Set Global Scope" operation
             {
-                console.log("Control: setGlobalScope");
+                logSpecific("Control: setGlobalScope", req.body.windowKey);
 
                 var backendId = req.body.backend;
                 var found = false;
@@ -295,13 +277,13 @@ server.post('/control', commandMiddleware, function(req, res){
 
                 if (!found)
                 {
-                    console.log("Error: Backend was not found");
+                    logSpecific("Error: Backend was not found", req.body.windowKey);
                     resultMessage = "Error: Could not find the backend by its submitted id.";
                     isError = true;
                     break;
                 }
 
-                console.log(backend.id + " " + req.body.operation_arg1);
+                logSpecific(backend.id + " " + req.body.operation_arg1, req.body.windowKey);
 
                 var replacements = [
                         {
@@ -328,7 +310,7 @@ server.post('/control', commandMiddleware, function(req, res){
             }
             else if (req.body.operation == "setIndividualScope") // "Set Clafer Scope" operation
             {
-                console.log("Control: setIndividualScope");
+                logSpecific("Control: setIndividualScope", req.body.windowKey);
 
                 var backendId = req.body.backend;
                 var found = false;
@@ -347,13 +329,13 @@ server.post('/control', commandMiddleware, function(req, res){
 
                 if (!found)
                 {
-                    console.log("Error: Backend was not found");
+                    logSpecific("Error: Backend was not found", req.body.windowKey);
                     resultMessage = "Error: Could not find the backend by its submitted id.";
                     isError = true;
                     break;
                 }
 
-                console.log(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2);
+                logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
 
                 var replacements = [
                         {
@@ -384,7 +366,7 @@ server.post('/control', commandMiddleware, function(req, res){
             }
             else if (req.body.operation == "setIntScope") // "Set Integer Scope" operation
             {
-                console.log("Control: setIntScope");
+                logSpecific("Control: setIntScope", req.body.windowKey);
 
                 var backendId = req.body.backend;
                 var found = false;
@@ -403,13 +385,13 @@ server.post('/control', commandMiddleware, function(req, res){
 
                 if (!found)
                 {
-                    console.log("Error: Backend was not found");
+                    logSpecific("Error: Backend was not found", req.body.windowKey);
                     resultMessage = "Error: Could not find the backend by its submitted id.";
                     isError = true;
                     break;
                 }
 
-                console.log(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2);
+                logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
 
                 var replacements = [
                         {
@@ -443,7 +425,7 @@ server.post('/control', commandMiddleware, function(req, res){
                 var parts = req.body.operation.split("-");
                 if (parts.length != 2)
                 {
-                    console.log('Control: Command does not follow pattern "backend-opreration": "' + req.body.operation + '"');
+                    logSpecific('Control: Command does not follow pattern "backend-opreration": "' + req.body.operation + '"', req.body.windowKey);
                     resultMessage = "Error: Command does not follow the 'backend-operation' pattern.";
                     isError = true;
                 }
@@ -468,7 +450,7 @@ server.post('/control', commandMiddleware, function(req, res){
 
                 if (!found)
                 {
-                    console.log("Error: Backend was not found");
+                    logSpecific("Error: Backend was not found", req.body.windowKey);
                     resultMessage = "Error: Could not find the backend specified in the command.";
                     isError = true;
                     break;
@@ -489,11 +471,11 @@ server.post('/control', commandMiddleware, function(req, res){
 
                 if (!found)
                 {
-                    console.log("Error: Required operation was not found");
+                    logSpecific("Error: Required operation was not found", req.body.windowKey);
                     resultMessage = "Error: Could not find the required operation.";
                     break;
                 }
-                console.log(backend.id + " ==> " + operation.id);
+                logSpecific(backend.id + " ==> " + operation.id, req.body.windowKey);
 
                 processes[i].tool.stdin.write(operation.command);
 
@@ -528,8 +510,7 @@ server.post('/control', commandMiddleware, function(req, res){
  */
 server.post('/upload', commandMiddleware, function(req, res, next) 
 {
-	console.log("---------------------------");
-	console.log("/Upload request initiated.");
+	logSpecific("---Upload request initiated.", req.body.windowKey);
 
     var key = req.body.windowKey;
     var loadExampleInEditor = req.body.loadExampleInEditor;
@@ -544,12 +525,12 @@ server.post('/upload', commandMiddleware, function(req, res, next)
     {
         if (req.body.exampleURL !== undefined && req.body.exampleURL !== "") // if example submitted
         {
-            console.log(req.headers.host);
+            logSpecific(req.headers.host, req.body.windowKey);
             currentURL = "http://" + req.headers.host + "/Examples/" + req.body.exampleURL;                
         }
         else
         {
-            console.log("No example submitted. Returning...");
+            logSpecific("No example submitted. Returning...", req.body.windowKey);
             res.writeHead(200, { "Content-Type": "text/html"});
             res.end("no clafer file submitted");
             return;
@@ -559,17 +540,12 @@ server.post('/upload', commandMiddleware, function(req, res, next)
     {    
         // first, check for the URL clafer file name. It happens only on clafer file submit, not the example file submit
         var found = false;
-        for (var x = 0; x < URLs.length; x++)
+
+        if (req.body.claferFileURL != "")
         {
-            if (URLs[x].session === req.sessionID && ("claferFileURL=" + URLs[x].url) === url.parse(req.body.claferFileURL).query)
-            {
-                currentURL = URLs[x].url;
-                URLs.splice(x,1);
-                found = true;
-                // files loaded by URL which are not examples should be loaded in editor by default
-                loadExampleInEditor = true;
-                break;
-            }
+            currentURL = req.body.claferFileURL;
+            found = true;
+            loadExampleInEditor = true;
         }
     
         if (!found) // if no URL was submitted
@@ -577,7 +553,7 @@ server.post('/upload', commandMiddleware, function(req, res, next)
             // then we have a series of checks, whether the file is submitted, exists, and non-empty
             if (!req.files.claferFile)
             {
-                console.log("No clafer file submitted. Returning...");
+                logSpecific("No clafer file submitted. Returning...", req.body.windowKey);
                 res.writeHead(200, { "Content-Type": "text/html"});
                 res.end("no clafer file submitted");
                 return;        
@@ -586,7 +562,7 @@ server.post('/upload', commandMiddleware, function(req, res, next)
             uploadedFilePath = req.files.claferFile.path;
             if (!fs.existsSync(uploadedFilePath))
             {
-                console.log("No Clafer file submitted. Returning...");
+                logSpecific("No Clafer file submitted. Returning...", req.body.windowKey);
                 res.writeHead(200, { "Content-Type": "text/html"});
                 res.end("no clafer file submitted");
                 return;
@@ -594,7 +570,7 @@ server.post('/upload', commandMiddleware, function(req, res, next)
             var pre_content = fs.readFileSync(uploadedFilePath);
             if (pre_content.length == 0)
             {
-                console.log("No Clafer file submitted. Returning...");
+                logSpecific("No Clafer file submitted. Returning...", req.body.windowKey);
                 res.writeHead(200, { "Content-Type": "text/html"});
                 res.end("no clafer file submitted");
                 return;
@@ -604,7 +580,7 @@ server.post('/upload', commandMiddleware, function(req, res, next)
     else // (req.body.exampleFlag == "2") submitted a text
     {    
         var i = 0;
-        uploadedFilePath = req.sessionID;
+        uploadedFilePath = req.body.windowKey;
         uploadedFilePath = uploadedFilePath.replace(/[\/\\]/g, "");
         uploadedFilePath = __dirname + "/uploads/" + uploadedFilePath;
         while(fs.existsSync(uploadedFilePath + i.toString() + ".cfr")){
@@ -612,15 +588,15 @@ server.post('/upload', commandMiddleware, function(req, res, next)
         }
         uploadedFilePath = uploadedFilePath + i.toString() + ".cfr";
         
-        console.log('Creating a file with the contents...');
+        logSpecific('Creating a file with the contents...', req.body.windowKey);
 
-        console.log(fileTextContents);
+        logSpecific(fileTextContents, req.body.windowKey);
 
         fs.writeFile(uploadedFilePath, fileTextContents, function(err) {
             if(err) {
-                console.log(err);
+                logSpecific(err, req.body.windowKey);
             } else {
-                console.log("The file was saved to ./uploads");
+                logSpecific("The file was saved to ./uploads", req.body.windowKey);
                 fileReady();
             }
         });
@@ -632,7 +608,7 @@ server.post('/upload', commandMiddleware, function(req, res, next)
     if (currentURL != "")
     {
         var i = 0;
-        uploadedFilePath = req.sessionID;
+        uploadedFilePath = req.body.windowKey;
         uploadedFilePath = uploadedFilePath.replace(/[\/\\]/g, "");
         uploadedFilePath = __dirname + "/uploads/" + uploadedFilePath;
         while(fs.existsSync(uploadedFilePath + i.toString() + ".cfr")){
@@ -640,14 +616,14 @@ server.post('/upload', commandMiddleware, function(req, res, next)
         }
         uploadedFilePath = uploadedFilePath + i.toString() + ".cfr";
         
-        console.log('Downloading file at "' + currentURL + '"...');
+        logSpecific('Downloading file at "' + currentURL + '"...', req.body.windowKey);
         var file = fs.createWriteStream(uploadedFilePath);
         http.get(currentURL, function(httpRes){
             httpRes.on('data', function (data) {
                 file.write(data);
             }).on('end', function(){
                 file.end();
-                console.log("File downloaded to ./uploads");
+                logSpecific("File downloaded to ./uploads", req.body.windowKey);
                 fileReady();
             });
         });
@@ -662,13 +638,13 @@ server.post('/upload', commandMiddleware, function(req, res, next)
     {
                     
         var i = 0;
-    //    console.log(resp);
+    //    logSpecific(resp);
         while(fs.existsSync("./uploads/" + i + "tempfolder/")){
             i++;
         }
-        console.log("Uploaded file: " + uploadedFilePath);
+        logSpecific("Uploaded file: " + uploadedFilePath, req.body.windowKey);
         var pathTokens = "." + uploadedFilePath.split("Server")[1];
-        console.log("Partial path: " + pathTokens);
+        logSpecific("Partial path: " + pathTokens, req.body.windowKey);
         
         var pathTokensLinux = pathTokens.split("/");
         var pathTokensWindows = pathTokens.split("\\");
@@ -678,7 +654,7 @@ server.post('/upload', commandMiddleware, function(req, res, next)
         else    
             pathTokens = pathTokensLinux;
         
-        console.log('Path tokens: "' + pathTokens.join('; ') + '"');
+        logSpecific('Path tokens: "' + pathTokens.join('; ') + '"', req.body.windowKey);
         var oldPath = uploadedFilePath;
         uploadedFilePath = __dirname + "/" + pathTokens[1] + "/" + i + "tempfolder/"; // this slash will work anyways
         fs.mkdir(uploadedFilePath, function (err){
@@ -689,7 +665,7 @@ server.post('/upload', commandMiddleware, function(req, res, next)
 
             fs.rename(oldPath, uploadedFilePath + ".cfr", function (err){
                 if (err) throw err;
-                console.log("Proceeding with " + uploadedFilePath);
+                logSpecific("Proceeding with " + uploadedFilePath, req.body.windowKey);
                 
                 // read the contents of the uploaded file
                 fs.readFile(uploadedFilePath + ".cfr", function (err, data) {
@@ -705,7 +681,7 @@ server.post('/upload', commandMiddleware, function(req, res, next)
                         return;
                     }
                     
-                    console.log("Compiling...");
+                    logSpecific("Compiling...", req.body.windowKey);
 
                     // removing an older session
                     for (var i = 0; i < processes.length; i++)
@@ -738,7 +714,7 @@ server.post('/upload', commandMiddleware, function(req, res, next)
 
                     var ss = "--ss=none";
 
-                    console.log(req.body.ss);
+                    logSpecific(req.body.ss, req.body.windowKey);
 
                     if (req.body.ss == "simple")
                     {
@@ -795,13 +771,13 @@ server.post('/upload', commandMiddleware, function(req, res, next)
 
                                 if (code != 0) // if the result is non-zero, means compilation error
                                 {
-                                    console.log("CC: Non-zero Return Value");
+                                    logSpecific("CC: Non-zero Return Value", req.body.windowKey);
                                     processes[i].compiler_result = '{"message": "' + escapeJSON("Error: Compilation Error") + '"}';
                                     processes[i].compiler_code = 1;
                                 }
                                 else
                                 {
-                                    console.log("CC: Zero Return Value");
+                                    logSpecific("CC: Zero Return Value", req.body.windowKey);
                                     processes[i].compiler_result = '{"message": "' + escapeJSON("Success") + '"}';
                                     processes[i].compiler_code = 0;
                                 }
@@ -832,7 +808,7 @@ server.post('/upload', commandMiddleware, function(req, res, next)
                                             obj.id = item.id;
                                             if (err) // error reading HTML, maybe it is not really present, means a fatal compilation error
                                             {
-                                                console.log('ERROR: Cannot read the compiled file.');
+                                                logSpecific('ERROR: Cannot read the compiled file.', req.body.windowKey);
                                                 obj.message = "compile_error";
                                                 obj.result = "";
                                             }
@@ -1030,7 +1006,7 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
                 jsonObj.completed = true;
                 res.end(JSON.stringify(jsonObj));
 
-                console.log("Cancelled: " + processes[i].toKill);
+                logSpecific("Cancelled: " + processes[i].toKill, req.body.windowKey);
            }
            break;
         }
@@ -1045,7 +1021,7 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
     // clearing part
     cleanProcesses();
 
-    console.log("Polled client " + req.body.windowKey);
+    logSpecific("Client polled", req.body.windowKey);
     
 });
 
@@ -1054,7 +1030,7 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
  */
 server.use(function(req, res, next)
 {
-    console.log(req.url);
+    logSpecific(req.url, null);
     res.send(404, "Sorry can't find that!");
 });
 
@@ -1064,7 +1040,7 @@ server.use(function(req, res, next)
 
 function pingTimeoutFunc(process)
 {
-    console.log("Error: Ping Timeout.");
+    logSpecific("Error: Ping Timeout", process.windowKey);
     process.result = '{"message": "' + escapeJSON('Error: Ping Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.pingTimeout + ' millisecond(s).') + '"}';
     process.toKill = true;   
     process.toRemoveCompletely = true;   
@@ -1073,7 +1049,7 @@ function pingTimeoutFunc(process)
 
 function inactivityTimeoutFunc(process)
 {
-    console.log("Error: Inactivity Timeout.");
+    logSpecific("Error: Inactivity Timeout", process.windowKey);
     process.result = '{"message": "' + escapeJSON('Error: Inactivity Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.inactivityTimeout + ' millisecond(s).') + '"}';
     process.toKill = true;   
     process.toRemoveCompletely = true;   
@@ -1102,7 +1078,7 @@ function cleanProcesses()
             i++;   
     }
 
-    console.log("Cleaning complete. #Processes = " + processes.length);
+    logSpecific("Cleaning complete. #Processes = " + processes.length, null);
 }
 
 function onAllFormatsCompiled(process)
@@ -1114,27 +1090,27 @@ function finishCleanup(dir, results){
 	if (fs.existsSync(dir)){
 		fs.rmdir(dir, function (err) {
   			if (err) {
-                console.log("Could not finish the cleanup: " + dir);
+                logSpecific("Could not finish the cleanup: " + dir, null);
                 return;
             };
- 			console.log("Successfully deleted " + dir + " along with contents:\n" + results);
+ 			logSpecific("Successfully deleted " + dir + " along with contents:\n" + results, null);
 		});
 	}
 }
  
 function cleanupOldFiles(dir) {
-    console.log("Cleaning temporary files...");                    
+    logSpecific("Cleaning temporary files...", null);                    
 	//cleanup old files
 	fs.readdir(dir, function(err, files){
 		//if (err) throw err;
         if (err) 
         {
-            console.log("Could not clear the folder: " + dir);
+            logSpecific("Could not clear the folder: " + dir, null);
             return; // cannot get the folder
         }
 		var results = "";
 		var numFiles = files.length;
-		console.log("#Files = " + numFiles);
+		logSpecific("#Files = " + numFiles, null);
 		if (!numFiles){
 			return finishCleanup(dir, results);
 		} else {
@@ -1181,7 +1157,7 @@ function killProcessTree(process)
         var pid = process.tool.pid;
         process.tool.removeAllListeners();
         process.tool = null;
-        console.log("Killing the backend tree with Parent PID = " + pid);
+        logSpecific("Killing the backend tree with Parent PID = " + pid, process.windowKey);
     
         // first, try a Windows command
         var killer_win  = spawn("taskkill", ["/F", "/T", "/PID", pid]);
@@ -1190,7 +1166,7 @@ function killProcessTree(process)
             var killer_linux = spawn("pkill", ["-TERM", "-P", pid]);                   
 
             killer_linux.on('error', function(err){
-                console.log("Cannot terminate the backend.");
+                logSpecific("Cannot terminate the backend.", process.windowKey);
             });
         });                
     }
@@ -1200,7 +1176,7 @@ function killProcessTree(process)
         var pid = process.clafer_compiler.pid;
         process.clafer_compiler.removeAllListeners();
         process.clafer_compiler = null;
-        console.log("Killing the compiler tree with Parent PID = " + pid);
+        logSpecific("Killing the compiler tree with Parent PID = " + pid, process.windowKey);
     
         // first, try a Windows command
         var killer_win  = spawn("taskkill", ["/F", "/T", "/PID", pid]);
@@ -1209,7 +1185,7 @@ function killProcessTree(process)
             var killer_linux = spawn("pkill", ["-TERM", "-P", pid]);                   
 
             killer_linux.on('error', function(err){
-                console.log("Cannot terminate the compiler.");
+                logSpecific("Cannot terminate the compiler.", process.windowKey);
             });
         });                
     }
@@ -1245,29 +1221,29 @@ function replaceTemplateList(input_list, replacement_map)
 //================================================================
 
 var dependency_count = 2; // the number of tools to be checked before the Visualizer starts
-console.log('===============================');
-console.log('| ClaferIDE v0.3.5.??-??-???? |');
-console.log('===============================');
+logNormal('===============================');
+logNormal('| ClaferIDE v0.3.5.??-??-???? |');
+logNormal('===============================');
 var spawn = require('child_process').spawn;
-console.log('Checking dependencies...');
+logNormal('Checking dependencies...');
 
 var clafer_compiler  = spawn("clafer", ["-V"]);
 var clafer_compiler_version = "";
 clafer_compiler.on('error', function (err){
-    console.log('ERROR: Cannot find Clafer Compiler (clafer). Please check whether it is installed and accessible.');
+    logNormal('ERROR: Cannot find Clafer Compiler (clafer). Please check whether it is installed and accessible.');
 });
 clafer_compiler.stdout.on('data', function (data){	
     clafer_compiler_version += data;
 });
 clafer_compiler.on('exit', function (code){	
-    console.log(clafer_compiler_version.trim());
+    logNormal(clafer_compiler_version.trim());
     if (code == 0) dependency_ok();
 });
 
 var java  = spawn("java", ["-version"]);
 var java_version = "";
 java.on('error', function (err){
-    console.log('ERROR: Cannot find Java (java). Please check whether it is installed and accessible.');
+    logNormal('ERROR: Cannot find Java (java). Please check whether it is installed and accessible.');
 });
 java.stdout.on('data', function (data){	
     java_version += data;
@@ -1276,12 +1252,12 @@ java.stderr.on('data', function (data){
     java_version += data;
 });
 java.on('exit', function (code){	
-    console.log(java_version.trim());
+    logNormal(java_version.trim());
     if (code == 0) dependency_ok();
 });
 
 var node_version = process.version + ", " + JSON.stringify(process.versions);
-console.log("Node.JS: " + node_version);
+logNormal("Node.JS: " + node_version);
 
 function dependency_ok()
 {
@@ -1289,8 +1265,23 @@ function dependency_ok()
     if (dependency_count == 0)
     {
         server.listen(port);
-        console.log('Dependencies found successfully. Please review their versions manually');        
-        console.log('======================================');
-        console.log('Ready. Listening on port ' + port);        
+        logNormal('Dependencies found successfully. Please review their versions manually');        
+        logNormal('======================================');
+        logNormal('Ready. Listening on port ' + port);        
     }
+}
+
+function logSpecific(message, key)
+{
+    if (key != null)
+    {
+        console.log(key + " | " + message);
+    }
+    else 
+        console.log("GLOBAL" + " | " + message);
+}
+
+function logNormal(message)
+{
+    console.log(message);
 }
