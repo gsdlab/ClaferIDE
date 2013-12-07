@@ -33,19 +33,27 @@ function CompiledFormats(host)
     
     this.host = host;
     this.goals = null;
-    this.model = "The compilation result will be here.";
-    this.lastModel = this.model;
+    this.compiled_formats = [];
+    this.docLoadCounter = 0;
+    this.docLoadCount = 0;
 }
 
 CompiledFormats.method("onDocLoad", function(){
-    if (this.model != "")
+    this.docLoadCounter = this.docLoadCounter + 1;
+    if (this.docLoadCounter == this.docLoadCount) // all iframes are reloaded
     {
-        var iframe = $("#html_format")[0];
+        for (var i = 0; i < this.compiled_formats.length; i++)
+        {
+            if (this.compiled_formats[i].displayElement == "iframe")
+            {
+                var iframe = $("#" + this.compiled_formats[i].id + "_format")[0];
 
-        if (iframe.contentWindow)
-            iframe.contentWindow.document.write(this.model);
-        else
-            iframe.document.write(this.model);
+                if (iframe.contentWindow)
+                    iframe.contentWindow.document.write(this.compiled_formats[i].result);
+                else
+                    iframe.document.write(this.compiled_formats[i].result);
+            }
+        }
     }
 });
 
@@ -55,7 +63,6 @@ CompiledFormats.method("getInitContent", function()
     result += '<span>Show:</span><select id="formats" title="Select a format to show">';   
     result += '</select>';   
     result += '<div id="format_views">';
-    result += '<iframe id="html_format" scrolling="yes" height = "' + (this.height - 30) + '" src="' + this.ajaxUrl + '" frameborder="0" width="' + (this.width - 5) + '"></iframe>';
     result += '</div>';
 
     return result;
@@ -64,11 +71,13 @@ CompiledFormats.method("getInitContent", function()
 
 CompiledFormats.method("onInitRendered", function()
 {
-    $("#html_format")[0].onload = this.onDocLoad.bind(this); // do it here.
     $("#formats")[0].onchange = this.onFormatChange.bind(this);        
 
     var height = (this.height - 35);
     var width = (this.width - 5);
+
+    var ajaxUrl = this.ajaxUrl;
+    var context = this;
 
     $.getJSON('/Formats/formats.json', 
         function(data)
@@ -99,6 +108,12 @@ CompiledFormats.method("onInitRendered", function()
                 
                 if (formats[i].display_element == "iframe") // all iframes have to be put in advance
                 {
+                    views += '<iframe id="' + formats[i].id + '_format" style="' + style + '" scrolling="yes" height = "' + height + '" src="' + ajaxUrl + '" frameborder="0" width="' + (width - 5) + '"></iframe>';
+                }
+                else if (formats[i].display_element == "xml") // TODO: customize for XML
+                {
+                    style += 'width: ' + (width - 10) + 'px; height: ' + height + 'px;' + 'white-space: nowrap; overflow: auto; resize: none;';
+                    views += '<textarea readonly="readonly" id="' + formats[i].id + '_format" height = "' + height+ '" width="' + width + '" style="' + style + '"></textarea>';
                 }
                 else // textarea
                 {
@@ -113,6 +128,13 @@ CompiledFormats.method("onInitRendered", function()
             $("#format_views textarea").remove();
             $("#format_views").append(views);
 
+            var iframes = $("#format_views iframe");
+
+            for (var i = 0; i < iframes.length; i++)
+            {
+                iframes[i].onload = context.onDocLoad.bind(context); 
+            }
+
         }
     ).error(function() 
         { 
@@ -123,6 +145,32 @@ CompiledFormats.method("onInitRendered", function()
 
 });
 
+CompiledFormats.method("setResult", function(data){
+
+    // resetting
+    this.compiled_formats = [];
+    this.docLoadCounter = 0;
+    this.docLoadCount = 0;
+    this.compiled_formats = data; // save the results
+
+    for (var i = 0; i < data.length; i++)
+    {
+        if (data[i].displayElement == "iframe")
+        {
+            this.docLoadCount = this.docLoadCount + 1;
+            // to iframe : reload, and then put whatever we need
+            $("#" + data[i].id + "_format")[0].src = $("#" + data[i].id + "_format")[0].src; // reloading
+        }
+        else if (data[i].displayElement == "xml") // to XML Display
+        {
+            $("#" + data[i].id + "_format").val(data[i].result); 
+        }
+        else // to textarea: copy directly
+        {
+            $("#" + data[i].id + "_format").val(data[i].result); 
+        }            
+    }
+});
 
 CompiledFormats.method("onFormatChange", function()
 {

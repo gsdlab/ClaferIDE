@@ -42,7 +42,7 @@ function Input(host)
 
     this.editor = null;
     this.editorWidth =this.width - 5;
-    this.editorHeight = this.height - 90;
+    this.editorHeight = this.height - 83;
 }
 
 Input.method("onInitRendered", function()
@@ -106,7 +106,7 @@ Input.method("beginQuery", function(formData, jqForm, options) {
     $("#cancel").click(this.cancelCall.bind(this));
     this.host.findModule("mdControl").disableAll();
 
-    this.setClaferModelHTML('<div id="preloader_compiler"><img id="preloader_img" src="/images/preloader.gif" alt="Compiling..."/><span id="status_label">Compiling...</span></div>');
+//    this.setClaferModelHTML('<div id="preloader_compiler"><img id="preloader_img" src="/images/preloader.gif" alt="Compiling..."/><span id="status_label">Compiling...</span></div>');
 
     return true; 
 });
@@ -164,13 +164,6 @@ Input.method("poll", function()
     $.ajax(options);
 });
 
-Input.method("setClaferModelHTML", function(html){
-    this.host.findModule("mdCompiledFormats").lastModel = this.host.findModule("mdCompiledFormats").model;
-    this.host.findModule("mdCompiledFormats").model = html;
-    var iframe = $("#html_format")[0];
-    iframe.src = iframe.src; // reloads the window
-});
-
 Input.method("setEditorModel", function(claferText){
     this.editor.setValue(claferText);
 });
@@ -195,7 +188,7 @@ Input.method("fileSent", function(responseText, statusText, xhr, $form)  {
     else
     {
         this.endQuery(); // else enable the form anyways
-        this.setClaferModelHTML(this.host.findModule("mdCompiledFormats").lastModel);
+//        this.setClaferModelHTML(this.host.findModule("mdCompiledFormats").lastModel);
     }
 });
 
@@ -299,22 +292,7 @@ Input.method("processToolResult", function(result)
 
     if (result.compiled_formats)
     {
-        for (var i = 0; i < result.compiled_formats.length; i++)
-        {
-            if (result.compiled_formats[i].id == "html")
-            {
-                this.setClaferModelHTML(result.compiled_formats[i].result);         
-            }
-            else // textarea
-            {
-                $("#" + result.compiled_formats[i].id + "_format").val(result.compiled_formats[i].result); 
-            }
-        }
-    }
-    else
-    {
-        this.setClaferModelHTML(this.host.findModule("mdCompiledFormats").lastModel);
-        // do not need to restore other formats, because they are not modified
+        this.host.findModule("mdCompiledFormats").setResult(result.compiled_formats);
     }
 
     if (result.model != "")

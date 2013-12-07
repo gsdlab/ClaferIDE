@@ -61,7 +61,7 @@ Output.method("onInitRendered", function(){
     this.editor.getSession().setMode("ace/mode/text");
     this.editor.setShowPrintMargin(false);
 
-	this.editor.getSession().setUseWrapMode(true);   
+	this.editor.getSession().setUseWrapMode(false);   
 	this.editor.setReadOnly(true); 
 	this.editor.setHighlightActiveLine(false);	 
 	this.editor.renderer.setShowGutter(false);

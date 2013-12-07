@@ -166,7 +166,7 @@ server.post('/control', commandMiddleware, function(req, res){
                             },
                             {
                                 "needle": "$filepath$", 
-                                "replacement": processes[i].file + format.file_extension
+                                "replacement": processes[i].file + format.file_suffix
                             }
                         ];
 
@@ -725,11 +725,24 @@ server.post('/upload', commandMiddleware, function(req, res, next)
                         ss = "--ss=full";
                     }
 
+                    var genericArgs = [ss, "-k", uploadedFilePath + ".cfr"];
+                    var formatModeArgs = [];
+
+                    for (var i = 1; i < formatConfig.formats.length; i++)
+                        // we skip the default source .CFR format, since it's already there
+                    {
+                        formatModeArgs.push("-m");
+                        formatModeArgs.push(formatConfig.formats[i].compiler_mode);
+                        formatModeArgs = formatModeArgs.concat(formatConfig.formats[i].compiler_args);
+                    }
+
+                    var finalArgs = formatModeArgs.concat(genericArgs);
+
                     // temporary
-                    process.clafer_compiler = spawn("clafer", ["--mode=choco", ss, "-k", uploadedFilePath + ".cfr"]);
+                    process.clafer_compiler = spawn("clafer", finalArgs);
                     // -------
 
-                    clafer_compiler_HTML  = spawn("clafer", ["--mode=HTML", "--self-contained", "-k", "--add-comments", ss, uploadedFilePath + ".cfr"]);
+//                    clafer_compiler_HTML  = spawn("clafer", ["-m", "HTML", "--self-contained", "-k", "--add-comments", ss, uploadedFilePath + ".cfr"]);
 
                     process.compiled_formats = new Array();
                     process.compiler_message = "";
@@ -792,7 +805,8 @@ server.post('/upload', commandMiddleware, function(req, res, next)
                                 {
                                     var format = new Object();
                                     format.id = formatConfig.formats[j].id;
-                                    format.file_extension = formatConfig.formats[j].file_extension;
+                                    format.file_suffix = formatConfig.formats[j].file_suffix;
+                                    format.display_element = formatConfig.formats[j].display_element;
                                     format.shows_compilation_errors = formatConfig.formats[j].shows_compilation_errors;
                                     format.process = processes[i];
                                     formats_for_process.push(format);
@@ -802,10 +816,12 @@ server.post('/upload', commandMiddleware, function(req, res, next)
                                 {
                                     if (item.shows_compilation_errors || (item.process.compiler_code == 0))
                                     {
-                                        fs.readFile(uploadedFilePath + item.file_extension, function (err, file_contents) 
+                                        fs.readFile(uploadedFilePath + item.file_suffix, function (err, file_contents) 
                                         {
                                             var obj = new Object();
                                             obj.id = item.id;
+//                                            obj.filePath = uploadedFilePath + item.file_suffix;
+                                            obj.displayElement = item.display_element;
                                             if (err) // error reading HTML, maybe it is not really present, means a fatal compilation error
                                             {
                                                 logSpecific('ERROR: Cannot read the compiled file.', req.body.windowKey);
