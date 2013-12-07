@@ -143,3 +143,7 @@ fieldset{
     position: fixed;
     visibility: hidden;
 }
+
+#clafer_editor .ace_search, #console_editor .ace_search {
+    z-index: 1000;
+}
