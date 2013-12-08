@@ -143,7 +143,7 @@ function Host(modules)
         $("#" + this.modules[i].id + " .window-titleBar").append(helpButton);   
     }
 
-    this.print("ClaferIDE> Welcome! Session ID: " + this.key + "\n");
+    this.print("ClaferIDE> Welcome! Session: " + this.key + "\n");
     
     var displayHelp=getCookie("startHelpMooViz")
     if(displayHelp==null){

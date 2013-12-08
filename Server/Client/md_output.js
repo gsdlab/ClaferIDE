@@ -58,7 +58,7 @@ Output.method("appendConsole", function(text){
 Output.method("onInitRendered", function(){
     this.editor = ace.edit("console_editor");
     this.editor.setTheme("ace/theme/terminal");
-    this.editor.getSession().setMode("ace/mode/text");
+    this.editor.getSession().setMode("ace/mode/console");
     this.editor.setShowPrintMargin(false);
 
 	this.editor.getSession().setUseWrapMode(false);   

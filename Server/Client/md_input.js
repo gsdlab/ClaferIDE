@@ -72,8 +72,9 @@ Input.method("onInitRendered", function()
     $('#myform').ajaxForm(options); 
 
     this.editor = ace.edit("clafer_editor");
-    this.editor.setTheme("ace/theme/monokai");
-    this.editor.getSession().setMode("ace/mode/text");
+    this.editor.setTheme("ace/theme/eclipse");
+    var ClaferMode = require("ace/mode/clafer").Mode;
+    this.editor.getSession().setMode(new ClaferMode());
     this.editor.setShowPrintMargin(false);
 
     // $('#myform').submit(); MOVED TO another location
