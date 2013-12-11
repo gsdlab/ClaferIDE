@@ -37,7 +37,7 @@ function CompiledFormats(host)
     this.docLoadCounter = 0;
     this.docLoadCount = 0;
 
-    this.saveFormatBasicQuery = "/saveformat?windowKey=" + this.host.key + "&id=";
+    this.saveFormatBasicQuery = "/saveformat?windowKey=" + this.host.key + "&fileid=";
 }
 
 CompiledFormats.method("onDocLoad", function(){

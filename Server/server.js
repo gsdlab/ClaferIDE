@@ -82,32 +82,64 @@ server.get('/htmlwrapper', fileMiddleware, function(req, res) {
 
 //------------------- save format request --------------------------
 server.get('/saveformat', fileMiddleware, function(req, res) {
-    console.log("saveformat get");
+    
+    if (!req.query.windowKey)
+        return;
 
-    var resultMessage = "process_not_found"; // default message
-    var isError = true;
+    logSpecific("Save format request", req.query.windowKey);
+
+    var errorMessage = "process_not_found"; // default message
 
     for (var i = 0; i < processes.length; i++)
     {
         if (processes[i].windowKey == req.query.windowKey)
         {
-            resultMessage = "Hello";
-            isError = false;
-            break;
+            var formatId = req.query.fileid;
+            var found = false;
+            var format = null;
+            // looking for a backend
+
+            for (var j = 0; j < formatConfig.formats.length; j++)
+            {
+                if (formatConfig.formats[j].id == formatId)
+                {
+                    found = true;
+                    format = formatConfig.formats[j]; 
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                logSpecific("Error: Format was not found", req.query.windowKey);
+                errorMessage = "Error: Could not find the format by its submitted id: " + formatId;
+                break;
+            }
+
+            var fileName = processes[i].file + format.file_suffix;
+
+            fs.readFile(fileName, function (err, data) {
+
+                if (data)
+                {
+                    res.writeHead(200, { "Content-Type": "text/html",
+                                 "Content-Disposition": "attachment; filename=compiled" + format.file_suffix});
+                    res.end(data.toString());
+                }
+                else
+                {
+                    logSpecific("Error: Could not read file", req.query.windowKey);
+                    res.writeHead(400, { "Content-Type": "text/html"});
+                    res.end("Could not read the file data");
+                }
+            });
+
+            return;
         }
     }
 
-    if (!isError)
-    {
-        res.writeHead(200, { "Content-Type": "text/html",
-                         "Content-Disposition": "attachment; filename=source.cfr"});
-    }
-    else
-    {
-        res.writeHead(400, { "Content-Type": "text/html"});
-    }
-    
-    res.end(resultMessage);        
+    res.writeHead(400, { "Content-Type": "text/html"});    
+    res.end(errorMessage);        
 });
 
 //-------------------------------------------------
