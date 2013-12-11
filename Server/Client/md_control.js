@@ -53,18 +53,23 @@ Control.method("getInitContent", function(){
 	ret += '<input type="button" class="inputRunStopButton" id="RunStop" value="Run" disabled="disabled"/><br>';
     ret += '<fieldset id="backendButtonsFieldset"><div id="backendButtons"></div></fieldset>';
 
-    ret += '<br/><fieldset id="scopeControl">';
+    ret += '<div style="height:5px;"></div><fieldset id="scopeControl">';
 
-    ret += '<legend>Scope Settings</legend>';   
-    ret += '<span>Default (or Global):</span><input type="text" title="Enter the scope (an integer from 0 up to a number the backend can handle)" size="2" value="1" id="globalScopeValue"/><button id="setGlobalScope" title="Set the global (or default) scope">Set</button>';
-    ret += '<br/><span>Integers:</span> from <input type="text" size="2" value="-128" id="intLowScopeValue" title="Enter the lower bound for unknown integers (can be negative)"/> to <input type="text" size="2" value="127" id="intHighScopeValue" title="Enter the upper bound for unknown integers (normally positive)"/><button id="setIntScope" title="Set the selected scope for integers">Set</button>';
-    ret += '<br/>Clafers:</span><input type="text" style="width:120px;" id="individualClafer" placeholder="Clafer name(s)" title="Enter the clafer name, namespace, path or choose ones from a drop down, depending on the backend"></input>';
+    ret += '<legend>Scope Settings</legend>';  
+    ret += '<table width="100%" border="0" cellspacing="0" cellpadding="0">'; 
+
+    var saveLink = '<td></td>';
+//    var saveLink = '<td style="padding-right:5px" align="right"><a href="">Download scopes</a></td>';
+
+    ret += '<tr><td style="padding-left:5px">Default:</td><td><input type="text" class="scopeInput" title="Enter the scope (an integer from 0 up to a number the backend can handle)" size="2" value="1" id="globalScopeValue"/><button id="setGlobalScope" title="Set the global (or default) scope">Set</button></td>' + saveLink + '</tr>';
+    ret += '<tr><td style="padding-left:5px">Integers:</td><td colspan="2"><input type="text" class="scopeInput" size="2" value="-128" id="intLowScopeValue" title="Enter the lower bound for unknown integers (can be negative)"/> to <input type="text" class="scopeInput" size="2" value="127" id="intHighScopeValue" title="Enter the upper bound for unknown integers (normally positive)"/><button id="setIntScope" title="Set the selected scope for integers">Set</button></td></tr>';
+    ret += '<tr><td style="padding-left:5px">Clafers:</td><td colspan="2"><input type="text" style="width:120px;" id="individualClafer" placeholder="Clafer name(s)" title="Enter the clafer name, namespace, path or choose ones from a drop down, depending on the backend"></input>';
 
     ret += '<span id="ClaferListCont" style="width:30px"></span>';
-    ret += '<input type="text" size="2" value="1" id="individualScopeValue" title="Enter the scope value (an integer from 0 up to a number the backend can handle)"/>';
+    ret += '<input type="text" size="2" value="1" class="scopeInput" id="individualScopeValue" title="Enter the scope value (an integer from 0 up to a number the backend can handle)"/>';
 
-    ret += '<button id="setIndividualScope" title="Set the scope of the specified clafer(s)">Set</button><br/>';    
-
+    ret += '<button id="setIndividualScope" title="Set the scope of the specified clafer(s)">Set</button></td></tr>';    
+    ret += '</table>';
     ret += '</fieldset>';
    
     ret += '</form>';

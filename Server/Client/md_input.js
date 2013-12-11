@@ -22,7 +22,7 @@ SOFTWARE.
 function Input(host)
 { 
     this.id = "mdInput";
-    this.title = "Input File or Example";
+    this.title = "Input Clafer Code";
 
     this.requestTimeout = 60000; // what is the timeout for response after sending a file
     this.pollingTimeout = 60000;  // what is the timeout when polling
@@ -54,14 +54,15 @@ Input.method("onInitRendered", function()
 
     $("#submitFile").click(this.submitFileCall.bind(this));
     $("#submitExample").click(this.submitExampleCall.bind(this));
-    $("#submitText").click(this.submitTextCall.bind(this));
-    
+    $("#submitText").click(this.submitTextCall.bind(this));    
     $("#submitExample").attr("disabled", "disabled");
+
     $("#submitFile").attr("disabled", "disabled");
-    
+
     $("#myform [type='file']").change(this.inputChange.bind(this));
     $("#exampleURL").change(this.exampleChange.bind(this));
     $("#loadExampleInEditor").change(this.exampleChange.bind(this));
+//    $("#saveSourceButton").click(this.saveSourceCall.bind(this));
 
     var options = new Object();
     options.beforeSubmit = this.beginQuery.bind(this);
@@ -70,6 +71,12 @@ Input.method("onInitRendered", function()
     options.timeout = this.requestTimeout;
 
     $('#myform').ajaxForm(options); 
+
+//    var optionsForFile = new Object();
+//    optionsForFile.success = this.saveSourceSuccess.bind(this);
+//    optionsForFile.error = this.handleError.bind(this);
+//    optionsForFile.timeout = this.requestTimeout;
+//    $('#saveSourceForm').ajaxForm(optionsForFile); 
 
     this.editor = ace.edit("clafer_editor");
     this.editor.setTheme("ace/theme/eclipse");
@@ -90,7 +97,7 @@ Input.method("cancelCall", function()
     $("#status_label").html("Cancelling...");
     this.toCancel = true;
 });
- 
+
 /*
  * Shows uploader and hides the form
 */
@@ -163,10 +170,6 @@ Input.method("poll", function()
     options.error = this.handleError.bind(this);
 
     $.ajax(options);
-});
-
-Input.method("setEditorModel", function(claferText){
-    this.editor.setValue(claferText);
 });
 
 Input.method("fileSent", function(responseText, statusText, xhr, $form)  { 
@@ -272,7 +275,7 @@ Input.method("inputChange", function(){
             $("#submitFile").val("Compile");            
         }  
         else{ // unknown file
-            $("#submitFile").val("Unknown File");
+            $("#submitFile").val("Unknown");
             $("#submitFile").attr("disabled", "disabled");       
         }
     }
@@ -315,14 +318,55 @@ Input.method("getInitContent", function()
 {
     result = '<div id = "load_area">';
     result += '<form id="myform" action="' + this.serverAction + '" method="post" enctype="multipart/form-data" style="display: block;">';
-    result += '<input type="file" size="25" name="claferFile" id="claferFile" style="width: 230px;" title="If you want to upload your clafer file, select one here "/>';
+
     result += '<input type="hidden" name="claferFileURL" id="claferFileURL" value="' + this.host.claferFileURL + '">';
     result += '<input type="hidden" name="exampleFlag" id="exampleFlag" value="0">';
-    result += '<input id="submitFile" type="submit" value="Compile" title="Compile the chosen file with Clafer Compiler">';
-
     result += '<input type="hidden" id="windowKey" name="windowKey" value="' + this.host.key + '">';
-    result += '<br>';
-    result += '<select id="exampleURL" name="exampleURL" style="width: 230px;" title="If you want, you can choose to compile an example clafer model from the list">';   
+    result += '<input id="claferText" name="claferText" type="hidden"/>';
+
+    result += '<table width="100%" cellspacing="0" cellpadding="0">';    
+    result += '<tr>';
+    result += '<td><input type="file" size="20" name="claferFile" id="claferFile" title="If you want to upload your clafer file, select one here "/></td>';
+    result += '<td><input id="submitFile" type="submit" value="Compile" title="Compile the chosen file with Clafer Compiler"/></td>';
+    result += '<td width="160"><input id="loadExampleInEditor" type="checkbox" name="loadExampleInEditor" value="unchecked" title="If checked, the editor window below will be loaded with a file or an example submitted">Load into editor</input></td>';
+    result += '</tr><tr>';
+    result += '<td><select id="exampleURL" style="width:240px" name="exampleURL" title="If you want, you can choose to compile an example clafer model from the list">';   
+    
+    result += '</select></td>';
+    result += '<td><input id="submitExample" type="submit" value="Compile" title="Compile the chosen example using Clafer Compiler"></input></td>';
+
+    result += '<td style="padding: 0px 2px 0px 2px; border-top: 2px groove threedface; border-left: 2px groove threedface">Scopes: <select id="ss" name="ss" title="Choose a scope computing strategy. Scopes are used for instantiation using bounded model checking">';
+
+    result += '<option value="none" title="Disable scope computing strategy. All scopes are to be set to 1">Disabled</option>';
+    result += '<option value="simple" selected="selected" title="Fast computation. Scopes are not precise, but this strategy works in most cases">Fast</option>';
+    result += '<option value="full" title="Full computation. This method is very slow, but for small models works relatively fast">Full</option>';
+
+    result += '</select></td>';
+
+    result += '</tr><tr>';
+    result += '<td style="border-top: 2px groove threedface;">';
+    result += 'Or enter your model:</td>';
+    result += '<td style="border-top: 2px groove threedface; "><input id="submitText" type="submit" value="Compile" title="Compile the contents of the editor below using Clafer Compiler"/></span></td>';
+
+//    result += '<span class="save_button" id="saveSourceButton"></span>';
+
+    result += '<td style="padding: 0px 2px 0px 2px;border-left: 2px groove threedface">Args: <input id="args" type="text" style="width:100px;" name="args" value="-k" title="Any additional compile arguments"></input></td>';
+
+//    result += '</div>';
+    result += '</tr><tr><td colspan = "3">';
+    result += '<div style="height: 1px; border-bottom: 2px groove threedface"></div>';
+
+    result += '<div style="height:' + this.editorHeight + 'px; width: ' + this.editorWidth + 'px;" name="clafer_editor" id="clafer_editor">';
+    result += '</div>';
+
+    result += '</td></tr></table>';
+
+    result += '</form>';
+
+//    result += '<form id="saveSourceForm" action="/savesource" method="post" enctype="multipart/form-data">';
+//    result += '<input type="hidden" name="windowKey" value="' + this.host.key + '"/>';
+//    result += '<input type="hidden" name="saveSourceField" id="saveSourceField" value=""></form>';
+
 
     $.getJSON('/Examples/examples.json', 
         function(data)
@@ -350,34 +394,10 @@ Input.method("getInitContent", function()
             $("#exampleURL").html(options);
             
         });
-    
-    result += '</select>';
-    result += '<input id="submitExample" type="submit" value="Compile" title="Compile the chosen example using Clafer Compiler"></input>';
-    result += '<div style="display:inline-block"><input id="loadExampleInEditor" type="checkbox" name="loadExampleInEditor" value="unchecked" title="If checked, the editor window below will be loaded with a file or an example submitted">Load in editor below</input></div>';
-//    result += '</fieldset>';
-//    result += '<br/>';
-    result += '<div style="height: 1px; border-bottom: 2px groove threedface"></div>';
 
-    result += 'Or enter your model: <input id="submitText" type="submit" value="Compile" title="Compile the contents of the editor below using Clafer Compiler"/>';
 
-    result += '&nbsp;&nbsp;&nbsp;&nbsp;<div style="display: inline-block; border: 2px groove threedface; float:right">Scope computing: <select id="ss" name="ss" title="Choose a scope computing strategy. Scopes are used for instantiation using bounded model checking">';
-
-    result += '<option value="none" title="Disable scope computing strategy. All scopes are to be set to 1">Disabled</option>';
-    result += '<option value="simple" selected="selected" title="Fast computation. Scopes are not precise, but this strategy works in most cases">Fast</option>';
-    result += '<option value="full" title="Full computation. This method is very slow, but for small models works relatively fast">Full</option>';
-
-    result += '</select></div>';
-
-    result += '<input id="claferText" name="claferText" type="hidden"/>';
-
-    result += '<div style="height:' + this.editorHeight + 'px; width: ' + this.editorWidth + 'px;" name="clafer_editor" id="clafer_editor">';
-    result += '</div>';
-
-    result += '</form></div>';
-    
     return result;
-// id="addInstances"    
-  
+
 });
 
 

@@ -80,6 +80,36 @@ server.get('/htmlwrapper', fileMiddleware, function(req, res) {
     res.sendfile("Client/compiler_html_wrapper.html");
 });
 
+//------------------- save format request --------------------------
+server.get('/saveformat', fileMiddleware, function(req, res) {
+    console.log("saveformat get");
+
+    var resultMessage = "process_not_found"; // default message
+    var isError = true;
+
+    for (var i = 0; i < processes.length; i++)
+    {
+        if (processes[i].windowKey == req.query.windowKey)
+        {
+            resultMessage = "Hello";
+            isError = false;
+            break;
+        }
+    }
+
+    if (!isError)
+    {
+        res.writeHead(200, { "Content-Type": "text/html",
+                         "Content-Disposition": "attachment; filename=source.cfr"});
+    }
+    else
+    {
+        res.writeHead(400, { "Content-Type": "text/html"});
+    }
+    
+    res.end(resultMessage);        
+});
+
 //-------------------------------------------------
 //  Command Requests
 //-------------------------------------------------

@@ -36,6 +36,8 @@ function CompiledFormats(host)
     this.compiled_formats = [];
     this.docLoadCounter = 0;
     this.docLoadCount = 0;
+
+    this.saveFormatBasicQuery = "/saveformat?windowKey=" + this.host.key + "&id=";
 }
 
 CompiledFormats.method("onDocLoad", function(){
@@ -60,10 +62,14 @@ CompiledFormats.method("onDocLoad", function(){
 CompiledFormats.method("getInitContent", function()
 {
     var result = "";
-    result += '<span>Show:</span><select id="formats" title="Select a format to show">';   
-    result += '</select>';   
+    result += '<table width="100%" cellspacing="0" cellpadding="0">';    
+    result += '<tr><td style="padding: 0px 2px 2px 5px"><span>Show:</span><select id="formats" title="Select a format to show">';   
+    result += '</select></td><td>';   
+    result += '<a id="saveFormat" href="" target="_blank">Download</a></td>';
+    result += '<tr><td colspan="2" style="border-top: 2px groove threedface">';    
     result += '<div id="format_views">';
-    result += '</div>';
+    result += '</td></tr></table>';
+
 
     return result;
 
@@ -98,6 +104,7 @@ CompiledFormats.method("onInitRendered", function()
                 if (counter == 0)
                 {
                     style = "display:block;";
+                    context.adjustSaveFormat(formats[i].id);
                 }
                 else
                 {
@@ -172,6 +179,11 @@ CompiledFormats.method("setResult", function(data){
     }
 });
 
+CompiledFormats.method("adjustSaveFormat", function(id)
+{
+    $("#saveFormat").attr("href", this.saveFormatBasicQuery + id);
+});
+
 CompiledFormats.method("onFormatChange", function()
 {
     $("#format_views").children().each(function(){
@@ -179,4 +191,6 @@ CompiledFormats.method("onFormatChange", function()
     });
 
     $("#format_views").children("#" + $( "#formats option:selected" ).val() + "_format")[0].style.display = "block";
+    this.adjustSaveFormat($( "#formats option:selected" ).val());
+
 });

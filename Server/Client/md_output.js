@@ -33,15 +33,20 @@ function Output(host)
     this.content = "";
 
     this.editor = null;
-    this.editorWidth =this.width - 5;
-    this.editorHeight = this.height;    
+    this.editorWidth = this.width - 5;
+    this.editorHeight = this.height - 28;    
 }
 
 Output.method("getInitContent", function(){
 	var result = "";
 
+    result += '<table width="100%" cellspacing="0" cellpadding="0">';
+    result += '<tr><td style="border-bottom: 2px groove threedface"><button>Clear</button></td></tr>';
+    result += '</table>';
     result += '<div style="height:' + this.editorHeight + 'px; width: ' + this.editorWidth + 'px;" name="clafer_editor" id="console_editor">';
     result += '</div>';
+
+
 
     return result;
 });
