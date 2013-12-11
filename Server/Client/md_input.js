@@ -138,6 +138,11 @@ Input.method("onPoll", function(responseObject)
     }
     else
     {
+        if (responseObject.args)
+        {
+            this.host.print("Compiler> clafer " + responseObject.args + "\n");
+        }
+
         if (responseObject.message != "Working") 
         {
             this.processToolResult(responseObject);

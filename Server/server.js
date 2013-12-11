@@ -755,7 +755,9 @@ server.post('/upload', commandMiddleware, function(req, res, next)
                         ss = "--ss=full";
                     }
 
-                    var genericArgs = [ss, "-k", uploadedFilePath + ".cfr"];
+                    var specifiedArgs = filterArgs(req.body.args);
+
+                    var genericArgs = [ss, uploadedFilePath + ".cfr"];
                     var formatModeArgs = [];
 
                     for (var i = 1; i < formatConfig.formats.length; i++)
@@ -766,13 +768,10 @@ server.post('/upload', commandMiddleware, function(req, res, next)
                         formatModeArgs = formatModeArgs.concat(formatConfig.formats[i].compiler_args);
                     }
 
-                    var finalArgs = formatModeArgs.concat(genericArgs);
+                    var finalArgs = genericArgs.concat(specifiedArgs).concat(formatModeArgs);
 
-                    // temporary
+                    process.compiler_args = finalArgs.join(" ").replace(uploadedFilePath, "file");
                     process.clafer_compiler = spawn("clafer", finalArgs);
-                    // -------
-
-//                    clafer_compiler_HTML  = spawn("clafer", ["-m", "HTML", "--self-contained", "-k", "--add-comments", ss, uploadedFilePath + ".cfr"]);
 
                     process.compiled_formats = new Array();
                     process.compiler_message = "";
@@ -933,6 +932,8 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
                         res.writeHead(200, { "Content-Type": "application/json"});
                         var jsonObj = JSON.parse(processes[i].compiler_result);
                         jsonObj.compiled_formats = processes[i].compiled_formats;
+                        jsonObj.args = processes[i].compiler_args;
+                        processes[i].compiler_args = "";
                         jsonObj.scopes = "";
                         jsonObj.model = processes[i].model;
                         jsonObj.compiler_message = processes[i].compiler_message;
@@ -979,8 +980,11 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
 
                     if (processes[i].mode == "compiler") // if the mode completed is compilation
                     {
-                        res.writeHead(200, { "Content-Type": "application/json"});
-                        res.end('{"message": "Working"}');
+                        var jsonObj = new Object();
+                        jsonObj.message = "Working";
+                        jsonObj.args = processes[i].compiler_args;
+                        processes[i].compiler_args = "";
+                        res.end(JSON.stringify(jsonObj));
                     }
                     else
                     {
@@ -1261,6 +1265,27 @@ function replaceTemplateList(input_list, replacement_map)
     
     return result;
 }                            
+
+// filter input command line arguments for safety purposes
+function filterArgs(argString)
+{
+    var args = argString.split(" ");
+    var resultArgs = new Array();
+    for (var i = 0; i < args.length; i++)
+    {
+        var arg = args[i].trim();
+
+        if (arg.length == 0)
+            continue;
+
+        if (!arg.match(/-[A-Za-z-]+/))
+            continue;
+
+        resultArgs.push(arg);
+    }
+
+    return resultArgs;
+}
 
 //================================================================
 // Initialization Code
