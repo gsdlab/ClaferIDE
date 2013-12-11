@@ -355,7 +355,7 @@ Input.method("getInitContent", function()
 
 //    result += '<span class="save_button" id="saveSourceButton"></span>';
 
-    result += '<td style="padding: 0px 2px 0px 2px;border-left: 2px groove threedface">Args: <input id="args" type="text" style="width:100px;" name="args" value="-k" title="Any additional compile arguments"></input></td>';
+    result += '<td style="padding: 0px 2px 0px 2px;border-left: 2px groove threedface">Flags: <input id="args" type="text" style="width:100px;" name="args" value="-k" title="You can specify any additional compilation flags supported by the compiler"></input></td>';
 
 //    result += '</div>';
     result += '</tr><tr><td colspan = "3">';
