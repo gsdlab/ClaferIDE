@@ -792,6 +792,8 @@ server.post('/upload', commandMiddleware, function(req, res, next)
                     var genericArgs = [ss, uploadedFilePath + ".cfr"];
                     var formatModeArgs = [];
 
+                    process.compiler_args = genericArgs.concat(specifiedArgs).join(" ").replace(uploadedFilePath, "file") + " {mode args}";
+
                     for (var i = 1; i < formatConfig.formats.length; i++)
                         // we skip the default source .CFR format, since it's already there
                     {
@@ -802,7 +804,6 @@ server.post('/upload', commandMiddleware, function(req, res, next)
 
                     var finalArgs = genericArgs.concat(specifiedArgs).concat(formatModeArgs);
 
-                    process.compiler_args = finalArgs.join(" ").replace(uploadedFilePath, "file");
                     process.clafer_compiler = spawn("clafer", finalArgs);
 
                     process.compiled_formats = new Array();

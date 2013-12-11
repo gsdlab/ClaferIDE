@@ -140,7 +140,7 @@ Input.method("onPoll", function(responseObject)
     {
         if (responseObject.args)
         {
-            this.host.print("Compiler> clafer " + responseObject.args + "\n");
+            this.host.print("ClaferIDE> clafer " + responseObject.args + "\n");
         }
 
         if (responseObject.message != "Working") 

@@ -41,7 +41,7 @@ Output.method("getInitContent", function(){
 	var result = "";
 
     result += '<table width="100%" cellspacing="0" cellpadding="0">';
-    result += '<tr><td style="border-bottom: 2px groove threedface"><button>Clear</button></td></tr>';
+    result += '<tr><td style="border-bottom: 2px groove threedface"><button id="clearOutput">Clear output</button></td></tr>';
     result += '</table>';
     result += '<div style="height:' + this.editorHeight + 'px; width: ' + this.editorWidth + 'px;" name="clafer_editor" id="console_editor">';
     result += '</div>';
@@ -60,11 +60,20 @@ Output.method("appendConsole", function(text){
 
 });
 
+Output.method("onClearClick", function(){
+    if (confirm("Are you sure you want to clear the output window?"))
+    {
+        this.editor.setValue("");
+    }
+});
+
 Output.method("onInitRendered", function(){
     this.editor = ace.edit("console_editor");
     this.editor.setTheme("ace/theme/terminal");
     this.editor.getSession().setMode("ace/mode/console");
     this.editor.setShowPrintMargin(false);
+
+    $("#clearOutput")[0].onclick = this.onClearClick.bind(this);
 
 	this.editor.getSession().setUseWrapMode(false);   
 	this.editor.setReadOnly(true); 
