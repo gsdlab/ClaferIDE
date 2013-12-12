@@ -25,9 +25,9 @@ function CompiledFormats(host)
     this.id = "mdCompiledFormats";
     this.title = "Compiled Formats";
     
-    this.width = (window.parent.innerWidth-30) * (0.24);
-    this.height = window.parent.innerHeight - 50 - 245;
-    this.posx = (window.parent.innerWidth-30) * 0.38;
+    this.width = (window.parent.innerWidth-40) * (0.24);
+    this.height = window.parent.innerHeight - 60 - 245;
+    this.posx = (window.parent.innerWidth-40) * 0.38;
     this.posy = 0;
     this.ajaxUrl = "/htmlwrapper";
     
@@ -62,13 +62,15 @@ CompiledFormats.method("onDocLoad", function(){
 CompiledFormats.method("getInitContent", function()
 {
     var result = "";
-    result += '<table width="100%" cellspacing="0" cellpadding="0">';    
-    result += '<tr><td style="padding: 0px 2px 2px 5px"><span>Show:</span><select id="formats" title="Select a format to show">';   
+    result += '<div style="height:100%;overflow:hidden">';
+
+    result += '<table width="100%" height="100%" cellspacing="0" cellpadding="0">';    
+    result += '<tr height="1em"><td style="padding: 0px 2px 2px 5px"><span>Show:</span><select id="formats" title="Select a format to show">';   
     result += '</select></td><td>';   
     result += '<a id="saveFormat" href="" target="_blank">Download</a></td>';
-    result += '<tr><td colspan="2" style="border-top: 2px groove threedface">';    
-    result += '<div id="format_views">';
-    result += '</td></tr></table>';
+    result += '<tr height="100%"><td colspan="2" style="border-top: 2px groove threedface; height:100%">';    
+    result += '<div id="format_views" style="height:100%;overflow:hidden;padding:0px 5px 5px 0px">';
+    result += '</td></tr></table></div>';
 
 
     return result;
@@ -111,21 +113,23 @@ CompiledFormats.method("onInitRendered", function()
                     style = "display:none;";                    
                 }
 
+                style += 'border:0;';
+
                 options += '<option value="' + formats[i].id + '" title="' + formats[i].tooltip + '">' + formats[i].label + '</option>';
                 
                 if (formats[i].display_element == "iframe") // all iframes have to be put in advance
                 {
-                    views += '<iframe id="' + formats[i].id + '_format" style="' + style + '" scrolling="yes" height = "' + height + '" src="' + ajaxUrl + '" frameborder="0" width="' + (width - 5) + '"></iframe>';
+                    views += '<iframe id="' + formats[i].id + '_format" style="' + style + '" scrolling="yes" height = "' + '100%' + '" src="' + ajaxUrl + '" frameborder="0" width="' + '100%' + '"></iframe>';
                 }
                 else if (formats[i].display_element == "xml") // TODO: customize for XML
                 {
-                    style += 'width: ' + (width - 10) + 'px; height: ' + height + 'px;' + 'white-space: nowrap; overflow: auto; resize: none;';
-                    views += '<textarea readonly="readonly" id="' + formats[i].id + '_format" height = "' + height+ '" width="' + width + '" style="' + style + '"></textarea>';
+                    style += 'width: ' + '100%' + '; height: ' + '100%' + ';' + 'white-space: nowrap; overflow: auto; resize: none;';
+                    views += '<textarea readonly="readonly" id="' + formats[i].id + '_format" height = "' + '100%' + '" width="' + '100%' + '" style="' + style + '"></textarea>';
                 }
                 else // textarea
                 {
-                    style += 'width: ' + (width - 10) + 'px; height: ' + height + 'px;' + 'white-space: nowrap; overflow: auto; resize: none;';
-                    views += '<textarea readonly="readonly" id="' + formats[i].id + '_format" height = "' + height+ '" width="' + width + '" style="' + style + '"></textarea>';
+                    style += 'width: ' + '100%' + '; height: ' + '100%' + ';' + 'white-space: nowrap; overflow: auto; resize: none;';
+                    views += '<textarea readonly="readonly" id="' + formats[i].id + '_format" height = "' + '100%' + '" width="' + '100%' + '" style="' + style + '"></textarea>';
                 }
 
                 counter++;

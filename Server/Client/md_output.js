@@ -25,29 +25,38 @@ function Output(host)
     this.id = "mdOutput";
     this.title = "Output";
 
-    this.width = (window.parent.innerWidth+45) * 0.38;
-    this.height = window.parent.innerHeight-50;
-    this.posx = (window.parent.innerWidth-30) * (1 - 0.38);
+    this.width = (window.parent.innerWidth+65) * 0.38;
+    this.height = window.parent.innerHeight-60;
+    this.posx = (window.parent.innerWidth-40) * (1 - 0.38);
     this.posy = 0;
     this.host = host;
     this.content = "";
 
     this.editor = null;
     this.editorWidth = this.width - 5;
-    this.editorHeight = this.height - 28;    
+    this.editorHeight = this.height - 28;   
+
+    this.resize = this.onResize.bind(this);     
 }
+
+Output.method("onResize", function() {
+    this.editor.resize();
+});
 
 Output.method("getInitContent", function(){
 	var result = "";
 
-    result += '<table width="100%" cellspacing="0" cellpadding="0">';
-    result += '<tr><td style="border-bottom: 2px groove threedface"><button id="clearOutput">Clear output</button></td></tr>';
-    result += '</table>';
-    result += '<div style="height:' + this.editorHeight + 'px; width: ' + this.editorWidth + 'px;" name="clafer_editor" id="console_editor">';
+    result += '<div style="height:100%;overflow:hidden">';
+    result += '<table cellspacing="0" width="100%" height="100%" cellpadding="0">';
+    result += '<tr height="1em"><td style="border-bottom: 2px groove threedface"><button id="clearOutput">Clear output</button></td></tr>';
+    result += '<tr height="100%"><td style="height:100%">';
+//    result += '<div style="display:inline-block;height:100%;">';
+    result += '<div style="height:100%; width:100%" name="clafer_editor" id="console_editor">';
+//    result += '</div>';
     result += '</div>';
-
-
-
+    result += '</td></tr>';
+    result += '</table>';
+    result += '</div>';
     return result;
 });
 

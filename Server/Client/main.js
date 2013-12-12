@@ -128,6 +128,8 @@ function Host(modules)
             resizeable: true
         });    
     
+//        this.modules[i].window = x;
+
         if (this.modules[i].getInitContent)
             $.updateWindowContent(this.modules[i].id, this.modules[i].getInitContent());
   

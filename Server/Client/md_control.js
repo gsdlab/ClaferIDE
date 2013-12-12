@@ -31,10 +31,10 @@ function Control(host)
     this.pollingTimeoutObject = null;
     this.toCancel = false;
 
-    this.width = (window.parent.innerWidth-30) * (0.24);
+    this.width = (window.parent.innerWidth-40) * (0.24);
     this.height = 200;
-    this.posx = (window.parent.innerWidth-30) * 0.38;
-    this.posy = window.parent.innerHeight - 50 - 200;
+    this.posx = (window.parent.innerWidth-40) * 0.38;
+    this.posy = window.parent.innerHeight - 60 - 200;
     this.host = host;
 
     this.sessionActive = false;
