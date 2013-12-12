@@ -131,32 +131,46 @@ Input.method("endQuery", function()  {
 
 Input.method("onPoll", function(responseObject)
 {
-//    console.log(responseObject);
-    if (responseObject.message === "Exited")
+    if (!responseObject)
     {
-        this.host.findModule("mdControl").disableAll(); // if exited IG, then disable controls
+        this.handleError(null, "empty_argument", null);
+        return;
     }
-    else
+
+    if (responseObject.args)
     {
-        if (responseObject.args)
+        this.host.print("ClaferIDE> clafer " + responseObject.args + "\n");
+    }
+
+    if (responseObject.message == "Working")
+    {
+        this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
+    }
+    else // finished 
+    {   
+        if (responseObject.compiled_formats)
         {
-            this.host.print("ClaferIDE> clafer " + responseObject.args + "\n");
+            this.host.findModule("mdCompiledFormats").setResult(responseObject.compiled_formats);
         }
 
-        if (responseObject.message != "Working") 
+        if (responseObject.model != "")
         {
-            this.processToolResult(responseObject);
-            this.endQuery();
+            this.editor.getSession().setValue(responseObject.model);
         }
 
-        if (responseObject.message.length >= 5 && responseObject.message.substring(0,5) == "Error")
+        this.host.print("Compiler> " + responseObject.message + "\n");
+        this.host.print(responseObject.compiler_message + "\n");    
+
+        if (responseObject.message == "Success")
+        {
+            this.host.findModule("mdControl").resetControls();
+        }
+        else
         {
             this.host.findModule("mdControl").disableAll(); // if exited IG, then disable controls
         }
-        else if (responseObject.message == "Working")
-        {
-            this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
-        }
+
+        this.endQuery();
     }
 });        
 
@@ -289,34 +303,6 @@ Input.method("inputChange", function(){
         $("#submitFile").val("Compile");            
     }
     
-});
-
-Input.method("processToolResult", function(result)
-{
-	if (!result)
-    {
-        this.handleError(null, "empty_argument", null);
-        return;
-    }
-
-    if (result.compiled_formats)
-    {
-        this.host.findModule("mdCompiledFormats").setResult(result.compiled_formats);
-    }
-
-    if (result.model != "")
-    {
-        this.editor.getSession().setValue(result.model);
-    }
-
-    if (result.message != "")
-    {
-        this.host.findModule("mdControl").resetControls();
-    }
-
-    this.host.print("Compiler> " + result.message + "\n");
-    this.host.print(result.compiler_message + "\n");    
-
 });
 
 Input.method("getInitContent", function()

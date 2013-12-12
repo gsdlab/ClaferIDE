@@ -96,43 +96,32 @@ server.get('/saveformat', fileMiddleware, function(req, res) {
         {
             var formatId = req.query.fileid;
             var found = false;
-            var format = null;
+            var result = null;
+            var suffix = "";
             // looking for a backend
 
-            for (var j = 0; j < formatConfig.formats.length; j++)
+            for (var j = 0; j < processes[i].compiled_formats.length; j++)
             {
-                if (formatConfig.formats[j].id == formatId)
+                if (processes[i].compiled_formats[j].id == formatId)
                 {
                     found = true;
-                    format = formatConfig.formats[j]; 
+                    result = processes[i].compiled_formats[j].result;
+                    suffix = processes[i].compiled_formats[j].fileSuffix;
                     break;
                 }
             }
 
             if (!found)
             {
-                logSpecific("Error: Format was not found", req.query.windowKey);
-                errorMessage = "Error: Could not find the format by its submitted id: " + formatId;
+                logSpecific("Error: Format was not found within the process", req.query.windowKey);
+                errorMessage = "Error: Could not find the format within a process data by its submitted id: " + formatId;
                 break;
             }
 
-            var fileName = processes[i].file + format.file_suffix;
-
-            fs.readFile(fileName, function (err, data) {
-
-                if (data)
-                {
-                    res.writeHead(200, { "Content-Type": "text/html",
-                                 "Content-Disposition": "attachment; filename=compiled" + format.file_suffix});
-                    res.end(data.toString());
-                }
-                else
-                {
-                    logSpecific("Error: Could not read file", req.query.windowKey);
-                    res.writeHead(400, { "Content-Type": "text/html"});
-                    res.end("Could not read the file data");
-                }
-            });
+        
+            res.writeHead(200, { "Content-Type": "text/html",
+                                 "Content-Disposition": "attachment; filename=compiled" + suffix});
+            res.end(result);
 
             return;
         }
@@ -882,7 +871,7 @@ server.post('/upload', commandMiddleware, function(req, res, next)
                                         {
                                             var obj = new Object();
                                             obj.id = item.id;
-//                                            obj.filePath = uploadedFilePath + item.file_suffix;
+                                            obj.fileSuffix = item.file_suffix;
                                             obj.displayElement = item.display_element;
                                             if (err) // error reading HTML, maybe it is not really present, means a fatal compilation error
                                             {
@@ -1377,12 +1366,15 @@ function dependency_ok()
 
 function logSpecific(message, key)
 {
+    var date = new Date();
+    var d = date.toUTCString();
+
     if (key != null)
     {
-        console.log(key + " | " + message);
+        console.log(d + " | " + key + " | " + message);
     }
     else 
-        console.log("GLOBAL" + " | " + message);
+        console.log(d + " | " + "GLOBAL" + " | " + message);
 }
 
 function logNormal(message)
