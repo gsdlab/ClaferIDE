@@ -19,7 +19,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-var http = require("http");
 var url = require("url");
 var sys = require("sys");
 var fs = require("fs");
@@ -29,6 +28,7 @@ var config = require('./config.json');
 var crypto = require('crypto'); // for getting hashes
 var backendConfig = require('./Backends/backends.json');
 var formatConfig = require('./Formats/formats.json');
+var lib = require("./server_lib");
 
 /*  Rate Limiter */
 var rate            = require('express-rate/lib/rate'),
@@ -86,7 +86,7 @@ server.get('/saveformat', fileMiddleware, function(req, res) {
     if (!req.query.windowKey)
         return;
 
-    logSpecific("Save format request", req.query.windowKey);
+    lib.logSpecific("Save format request", req.query.windowKey);
 
     var errorMessage = "process_not_found"; // default message
 
@@ -113,7 +113,7 @@ server.get('/saveformat', fileMiddleware, function(req, res) {
 
             if (!found)
             {
-                logSpecific("Error: Format was not found within the process", req.query.windowKey);
+                lib.logSpecific("Error: Format was not found within the process", req.query.windowKey);
                 errorMessage = "Error: Could not find the format within a process data by its submitted id: " + formatId;
                 break;
             }
@@ -136,8 +136,9 @@ server.get('/saveformat', fileMiddleware, function(req, res) {
 //-------------------------------------------------
 
 /* Controlling Instance Generators */
-server.post('/control', commandMiddleware, function(req, res){
-    logSpecific("Control: Enter", req.body.windowKey);
+server.post('/control', commandMiddleware, function(req, res)
+{
+    lib.logSpecific("Control: Enter", req.body.windowKey);
 
     var isError = true;
     var resultMessage = "process_not_found"; // default message
@@ -148,13 +149,13 @@ server.post('/control', commandMiddleware, function(req, res){
         {
             if (req.body.operation == "run") // "Run" operation
             {
-                logSpecific("Control: Run", req.body.windowKey);
+                lib.logSpecific("Control: Run", req.body.windowKey);
 
                 var backendId = req.body.backend;
-                logSpecific("Backend: " + backendId, req.body.windowKey);
+                lib.logSpecific("Backend: " + backendId, req.body.windowKey);
                 if (processes[i].mode != "ig")
                 {
-                    logSpecific("Error: Not compiled yet", req.body.windowKey);
+                    lib.logSpecific("Error: Not compiled yet", req.body.windowKey);
                     resultMessage = "Error: The mode is not IG: the compilation is still running";
                     isError = true;
                     break;
@@ -180,7 +181,7 @@ server.post('/control', commandMiddleware, function(req, res){
 
                     if (!found)
                     {
-                        logSpecific("Error: Backend was not found", req.body.windowKey);
+                        lib.logSpecific("Error: Backend was not found", req.body.windowKey);
                         resultMessage = "Error: Could not find the backend by its submitted id.";
                         isError = true;
                         break;
@@ -201,13 +202,13 @@ server.post('/control', commandMiddleware, function(req, res){
 
                     if (!found)
                     {
-                        logSpecific("Error: Required format was not found", req.body.windowKey);
+                        lib.logSpecific("Error: Required format was not found", req.body.windowKey);
                         resultMessage = "Error: Could not find the required file format.";
                         isError = true;
                         break;
                     }
 
-                    logSpecific(backend.id + " ==> " + format.id, req.body.windowKey);
+                    lib.logSpecific(backend.id + " ==> " + format.id, req.body.windowKey);
                     processes[i].mode_completed = false;
 
                     var fileAndPathReplacement = [
@@ -221,19 +222,19 @@ server.post('/control', commandMiddleware, function(req, res){
                             }
                         ];
 
-                    var args = replaceTemplateList(backend.tool_args, fileAndPathReplacement);
+                    var args = lib.replaceTemplateList(backend.tool_args, fileAndPathReplacement);
 
-                    logSpecific(args, req.body.windowKey);
+                    lib.logSpecific(args, req.body.windowKey);
                     
-                    processes[i].tool = spawn(replaceTemplate(backend.tool, fileAndPathReplacement), args);
+                    processes[i].tool = spawn(lib.replaceTemplate(backend.tool, fileAndPathReplacement), args);
 
                     processes[i].tool.on('error', function (err){
-                        logSpecific('ERROR: Cannot run the chosen instance generator. Please check whether it is installed and accessible.', req.body.windowKey);
+                        lib.logSpecific('ERROR: Cannot run the chosen instance generator. Please check whether it is installed and accessible.', req.body.windowKey);
                         for (var i = 0; i < processes.length; i++)
                         {
                             if (processes[i].windowKey == req.body.windowKey)
                             {
-                                processes[i].result = '{"message": "' + escapeJSON("Error: Cannot run claferIG") + '"}';
+                                processes[i].result = '{"message": "' + lib.escapeJSON("Error: Cannot run claferIG") + '"}';
                                 processes[i].completed = true;
                                 processes[i].tool = null;
                             }
@@ -266,7 +267,7 @@ server.post('/control', commandMiddleware, function(req, res){
                     });
 
                     processes[i].tool.on("close", function (code){
-                        logSpecific("IG: On Exit", req.body.windowKey);
+                        lib.logSpecific("IG: On Exit", req.body.windowKey);
 
                         for (var i = 0; i<processes.length; i++){
 
@@ -301,7 +302,7 @@ server.post('/control', commandMiddleware, function(req, res){
             }
             else if (req.body.operation == "stop") // "Stop" operation
             {
-                logSpecific("Control: Stop", req.body.windowKey);
+                lib.logSpecific("Control: Stop", req.body.windowKey);
                 processes[i].toKill = true;
                 processes[i].mode_completed = true;
                 resultMessage = "stopped";
@@ -309,7 +310,7 @@ server.post('/control', commandMiddleware, function(req, res){
             }
             else if (req.body.operation == "setGlobalScope") // "Set Global Scope" operation
             {
-                logSpecific("Control: setGlobalScope", req.body.windowKey);
+                lib.logSpecific("Control: setGlobalScope", req.body.windowKey);
 
                 var backendId = req.body.backend;
                 var found = false;
@@ -328,13 +329,13 @@ server.post('/control', commandMiddleware, function(req, res){
 
                 if (!found)
                 {
-                    logSpecific("Error: Backend was not found", req.body.windowKey);
+                    lib.logSpecific("Error: Backend was not found", req.body.windowKey);
                     resultMessage = "Error: Could not find the backend by its submitted id.";
                     isError = true;
                     break;
                 }
 
-                logSpecific(backend.id + " " + req.body.operation_arg1, req.body.windowKey);
+                lib.logSpecific(backend.id + " " + req.body.operation_arg1, req.body.windowKey);
 
                 var replacements = [
                         {
@@ -343,7 +344,7 @@ server.post('/control', commandMiddleware, function(req, res){
                         }
                     ];
 
-                var command = replaceTemplate(backend.scope_options.global_scope.command, replacements);
+                var command = lib.replaceTemplate(backend.scope_options.global_scope.command, replacements);
                 processes[i].tool.stdin.write(command);
                     
                 if (backend.scope_options.clafer_scope_list)
@@ -361,7 +362,7 @@ server.post('/control', commandMiddleware, function(req, res){
             }
             else if (req.body.operation == "setIndividualScope") // "Set Clafer Scope" operation
             {
-                logSpecific("Control: setIndividualScope", req.body.windowKey);
+                lib.logSpecific("Control: setIndividualScope", req.body.windowKey);
 
                 var backendId = req.body.backend;
                 var found = false;
@@ -380,13 +381,13 @@ server.post('/control', commandMiddleware, function(req, res){
 
                 if (!found)
                 {
-                    logSpecific("Error: Backend was not found", req.body.windowKey);
+                    lib.logSpecific("Error: Backend was not found", req.body.windowKey);
                     resultMessage = "Error: Could not find the backend by its submitted id.";
                     isError = true;
                     break;
                 }
 
-                logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
+                lib.logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
 
                 var replacements = [
                         {
@@ -399,7 +400,7 @@ server.post('/control', commandMiddleware, function(req, res){
                         }
                     ];
 
-                var command = replaceTemplate(backend.scope_options.individual_scope.command, replacements);
+                var command = lib.replaceTemplate(backend.scope_options.individual_scope.command, replacements);
                 processes[i].tool.stdin.write(command);
                     
                 if (backend.scope_options.clafer_scope_list)
@@ -417,7 +418,7 @@ server.post('/control', commandMiddleware, function(req, res){
             }
             else if (req.body.operation == "setIntScope") // "Set Integer Scope" operation
             {
-                logSpecific("Control: setIntScope", req.body.windowKey);
+                lib.logSpecific("Control: setIntScope", req.body.windowKey);
 
                 var backendId = req.body.backend;
                 var found = false;
@@ -436,13 +437,13 @@ server.post('/control', commandMiddleware, function(req, res){
 
                 if (!found)
                 {
-                    logSpecific("Error: Backend was not found", req.body.windowKey);
+                    lib.logSpecific("Error: Backend was not found", req.body.windowKey);
                     resultMessage = "Error: Could not find the backend by its submitted id.";
                     isError = true;
                     break;
                 }
 
-                logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
+                lib.logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
 
                 var replacements = [
                         {
@@ -455,7 +456,7 @@ server.post('/control', commandMiddleware, function(req, res){
                         }
                     ];
 
-                var command = replaceTemplate(backend.scope_options.int_scope.command, replacements);
+                var command = lib.replaceTemplate(backend.scope_options.int_scope.command, replacements);
                 processes[i].tool.stdin.write(command);
                     
                 if (backend.scope_options.clafer_scope_list)
@@ -476,7 +477,7 @@ server.post('/control', commandMiddleware, function(req, res){
                 var parts = req.body.operation.split("-");
                 if (parts.length != 2)
                 {
-                    logSpecific('Control: Command does not follow pattern "backend-opreration": "' + req.body.operation + '"', req.body.windowKey);
+                    lib.logSpecific('Control: Command does not follow pattern "backend-opreration": "' + req.body.operation + '"', req.body.windowKey);
                     resultMessage = "Error: Command does not follow the 'backend-operation' pattern.";
                     isError = true;
                 }
@@ -501,7 +502,7 @@ server.post('/control', commandMiddleware, function(req, res){
 
                 if (!found)
                 {
-                    logSpecific("Error: Backend was not found", req.body.windowKey);
+                    lib.logSpecific("Error: Backend was not found", req.body.windowKey);
                     resultMessage = "Error: Could not find the backend specified in the command.";
                     isError = true;
                     break;
@@ -522,11 +523,11 @@ server.post('/control', commandMiddleware, function(req, res){
 
                 if (!found)
                 {
-                    logSpecific("Error: Required operation was not found", req.body.windowKey);
+                    lib.logSpecific("Error: Required operation was not found", req.body.windowKey);
                     resultMessage = "Error: Could not find the required operation.";
                     break;
                 }
-                logSpecific(backend.id + " ==> " + operation.id, req.body.windowKey);
+                lib.logSpecific(backend.id + " ==> " + operation.id, req.body.windowKey);
 
                 processes[i].tool.stdin.write(operation.command);
 
@@ -561,363 +562,216 @@ server.post('/control', commandMiddleware, function(req, res){
  */
 server.post('/upload', commandMiddleware, function(req, res, next) 
 {
-	logSpecific("---Upload request initiated.", req.body.windowKey);
+    lib.handleUploads(req, res, next, fileReady);
 
-    var key = req.body.windowKey;
-    var loadExampleInEditor = req.body.loadExampleInEditor;
-    var fileTextContents = req.body.claferText;
-    var currentURL = "";
-    
-    var uploadedFilePath = "";
-    
-	//check if client has either a file directly uploaded or a url location of a file
-   	
-    if (req.body.exampleFlag == "1")
-    {
-        if (req.body.exampleURL !== undefined && req.body.exampleURL !== "") // if example submitted
-        {
-            logSpecific(req.headers.host, req.body.windowKey);
-            currentURL = "http://" + req.headers.host + "/Examples/" + req.body.exampleURL;                
-        }
-        else
-        {
-            logSpecific("No example submitted. Returning...", req.body.windowKey);
-            res.writeHead(200, { "Content-Type": "text/html"});
-            res.end("no clafer file submitted");
-            return;
-        }		
-	} 
-    else if (req.body.exampleFlag == "0")
-    {    
-        // first, check for the URL clafer file name. It happens only on clafer file submit, not the example file submit
-        var found = false;
+    function fileReady(uploadedFilePath, dlDir, loadedViaURL)
+    {        
 
-        if (req.body.claferFileURL != "")
+        var loadExampleInEditor = req.body.loadExampleInEditor;
+        if (loadedViaURL)
         {
-            currentURL = req.body.claferFileURL;
-            found = true;
             loadExampleInEditor = true;
         }
-    
-        if (!found) // if no URL was submitted
-        {
-            // then we have a series of checks, whether the file is submitted, exists, and non-empty
-            if (!req.files.claferFile)
+
+        var key = req.body.windowKey;
+
+        // read the contents of the uploaded file
+        fs.readFile(uploadedFilePath + ".cfr", function (err, data) {
+
+            var file_contents;
+            if(data)
+                file_contents = data.toString();
+            else
             {
-                logSpecific("No clafer file submitted. Returning...", req.body.windowKey);
-                res.writeHead(200, { "Content-Type": "text/html"});
-                res.end("no clafer file submitted");
-                return;        
-            }
-        
-            uploadedFilePath = req.files.claferFile.path;
-            if (!fs.existsSync(uploadedFilePath))
-            {
-                logSpecific("No Clafer file submitted. Returning...", req.body.windowKey);
-                res.writeHead(200, { "Content-Type": "text/html"});
-                res.end("no clafer file submitted");
+                res.writeHead(500, { "Content-Type": "text/html"});
+                res.end("No data has been read");
+                lib.cleanupOldFiles(dlDir);
                 return;
             }
-            var pre_content = fs.readFileSync(uploadedFilePath);
-            if (pre_content.length == 0)
+            
+            lib.logSpecific("Compiling...", req.body.windowKey);
+
+            // removing an older session
+            for (var i = 0; i < processes.length; i++)
             {
-                logSpecific("No Clafer file submitted. Returning...", req.body.windowKey);
-                res.writeHead(200, { "Content-Type": "text/html"});
-                res.end("no clafer file submitted");
-                return;
-            }        
-        }
-	}
-    else // (req.body.exampleFlag == "2") submitted a text
-    {    
-        var i = 0;
-        uploadedFilePath = req.body.windowKey;
-        uploadedFilePath = uploadedFilePath.replace(/[\/\\]/g, "");
-        uploadedFilePath = __dirname + "/uploads/" + uploadedFilePath;
-        while(fs.existsSync(uploadedFilePath + i.toString() + ".cfr")){
-            i = i+1;
-        }
-        uploadedFilePath = uploadedFilePath + i.toString() + ".cfr";
-        
-        logSpecific('Creating a file with the contents...', req.body.windowKey);
+                if (processes[i].windowKey == req.body.windowKey)
+                {
+                    processes[i].toKill = true;
+                    clearTimeout(processes[i].pingTimeoutObject);                
+                    processes[i].toRemoveCompletely = true;
+                    processes[i].windowKey = "none";
 
-        logSpecific(fileTextContents, req.body.windowKey);
-
-        fs.writeFile(uploadedFilePath, fileTextContents, function(err) {
-            if(err) {
-                logSpecific(err, req.body.windowKey);
-            } else {
-                logSpecific("The file was saved to ./uploads", req.body.windowKey);
-                fileReady();
+                    break;
+                }
             }
-        });
 
-    }
-    
-/* downloading the file, if required */ 
+            var d = new Date();
+            var process = { 
+                windowKey: req.body.windowKey, 
+                toRemoveCompletely: false, 
+                tool: null, 
+                freshData: "", 
+                scopes: "",
+                folder: dlDir, 
+                clafer_compiler: null,
+                file: uploadedFilePath, 
+                lastUsed: d,
+                mode : "compiler", 
+                freshError: ""};
 
-    if (currentURL != "")
-    {
-        var i = 0;
-        uploadedFilePath = req.body.windowKey;
-        uploadedFilePath = uploadedFilePath.replace(/[\/\\]/g, "");
-        uploadedFilePath = __dirname + "/uploads/" + uploadedFilePath;
-        while(fs.existsSync(uploadedFilePath + i.toString() + ".cfr")){
-            i = i+1;
-        }
-        uploadedFilePath = uploadedFilePath + i.toString() + ".cfr";
-        
-        logSpecific('Downloading file at "' + currentURL + '"...', req.body.windowKey);
-        var file = fs.createWriteStream(uploadedFilePath);
-        http.get(currentURL, function(httpRes){
-            httpRes.on('data', function (data) {
-                file.write(data);
-            }).on('end', function(){
-                file.end();
-                logSpecific("File downloaded to ./uploads", req.body.windowKey);
-                fileReady();
+
+            var ss = "--ss=none";
+
+            lib.logSpecific(req.body.ss, req.body.windowKey);
+
+            if (req.body.ss == "simple")
+            {
+                ss = "--ss=simple";
+            }
+            else if (req.body.ss == "full")
+            {
+                ss = "--ss=full";
+            }
+
+            var specifiedArgs = lib.filterArgs(req.body.args);
+
+            var genericArgs = [ss, uploadedFilePath + ".cfr"];
+            var formatModeArgs = [];
+
+            process.compiler_args = genericArgs.concat(specifiedArgs).join(" ").replace(uploadedFilePath, "file") + " {mode args}";
+
+            for (var i = 1; i < formatConfig.formats.length; i++)
+                // we skip the default source .CFR format, since it's already there
+            {
+                formatModeArgs.push("-m");
+                formatModeArgs.push(formatConfig.formats[i].compiler_mode);
+                formatModeArgs = formatModeArgs.concat(formatConfig.formats[i].compiler_args);
+            }
+
+            var finalArgs = genericArgs.concat(specifiedArgs).concat(formatModeArgs);
+
+            process.clafer_compiler = spawn("clafer", finalArgs);
+
+            process.compiled_formats = new Array();
+            process.compiler_message = "";
+
+            if (loadExampleInEditor)
+                process.model = file_contents;
+            else
+                process.model = "";                                   
+
+            process.pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, process);
+
+            process.clafer_compiler.stdout.on("data", function (data){
+                for (var i = 0; i < processes.length; i++)
+                {
+                    if (processes[i].windowKey == req.body.windowKey)
+                    {
+                        processes[i].compiler_message += data;
+                    }
+                }
             });
-        });
-    }
-    else
-    {
-        if (req.body.exampleFlag != "2") 
-            fileReady();
-    }
 
-    function fileReady()
-    {
-                    
-        var i = 0;
-    //    logSpecific(resp);
-        while(fs.existsSync("./uploads/" + i + "tempfolder/")){
-            i++;
-        }
-        logSpecific("Uploaded file: " + uploadedFilePath, req.body.windowKey);
-        var pathTokens = "." + uploadedFilePath.split("Server")[1];
-        logSpecific("Partial path: " + pathTokens, req.body.windowKey);
-        
-        var pathTokensLinux = pathTokens.split("/");
-        var pathTokensWindows = pathTokens.split("\\");
-        
-        if (pathTokensWindows.length > pathTokensLinux.length)
-            pathTokens = pathTokensWindows;
-        else    
-            pathTokens = pathTokensLinux;
-        
-        logSpecific('Path tokens: "' + pathTokens.join('; ') + '"', req.body.windowKey);
-        var oldPath = uploadedFilePath;
-        uploadedFilePath = __dirname + "/" + pathTokens[1] + "/" + i + "tempfolder/"; // this slash will work anyways
-        fs.mkdir(uploadedFilePath, function (err){
-            if (err) throw err;
-            var dlDir = uploadedFilePath;
-            uploadedFilePath += pathTokens[2];
-            uploadedFilePath = uploadedFilePath.substring(0, uploadedFilePath.length - 4); // to remove the extention
-
-            fs.rename(oldPath, uploadedFilePath + ".cfr", function (err){
-                if (err) throw err;
-                logSpecific("Proceeding with " + uploadedFilePath, req.body.windowKey);
-                
-                // read the contents of the uploaded file
-                fs.readFile(uploadedFilePath + ".cfr", function (err, data) {
-
-                    var file_contents;
-                    if(data)
-                        file_contents = data.toString();
-                    else
+            process.clafer_compiler.stderr.on("data", function (data){
+                for (var i = 0; i<processes.length; i++)
+                {
+                    if (processes[i].windowKey == req.body.windowKey)
                     {
-                        res.writeHead(500, { "Content-Type": "text/html"});
-                        res.end("No data has been read");
-                        cleanupOldFiles(dlDir);
-                        return;
+                        processes[i].compiler_message += data;
                     }
-                    
-                    logSpecific("Compiling...", req.body.windowKey);
-
-                    // removing an older session
-                    for (var i = 0; i < processes.length; i++)
+                }
+            });
+            
+            process.clafer_compiler.on('close', function (code)
+            {	
+                for (var i = 0; i < processes.length; i++)
+                {
+                    if (processes[i].windowKey == req.body.windowKey)
                     {
-                        if (processes[i].windowKey == req.body.windowKey)
-                        {
-                            processes[i].toKill = true;
-                            clearTimeout(processes[i].pingTimeoutObject);                
-                            processes[i].toRemoveCompletely = true;
-                            processes[i].windowKey = "none";
+                        processes[i].clafer_compiler = null;
 
-                            break;
+                        if (code != 0) // if the result is non-zero, means compilation error
+                        {
+                            lib.logSpecific("CC: Non-zero Return Value", req.body.windowKey);
+                            processes[i].compiler_result = '{"message": "' + lib.escapeJSON("Error: Compilation Error") + '"}';
+                            processes[i].compiler_code = 1;
                         }
-                    }
-
-                    var d = new Date();
-                    var process = { 
-                        windowKey: req.body.windowKey, 
-                        toRemoveCompletely: false, 
-                        tool: null, 
-                        freshData: "", 
-                        scopes: "",
-                        folder: dlDir, 
-                        clafer_compiler: null,
-                        file: uploadedFilePath, 
-                        lastUsed: d,
-                        mode : "compiler", 
-                        freshError: ""};
-
-
-                    var ss = "--ss=none";
-
-                    logSpecific(req.body.ss, req.body.windowKey);
-
-                    if (req.body.ss == "simple")
-                    {
-                        ss = "--ss=simple";
-                    }
-                    else if (req.body.ss == "full")
-                    {
-                        ss = "--ss=full";
-                    }
-
-                    var specifiedArgs = filterArgs(req.body.args);
-
-                    var genericArgs = [ss, uploadedFilePath + ".cfr"];
-                    var formatModeArgs = [];
-
-                    process.compiler_args = genericArgs.concat(specifiedArgs).join(" ").replace(uploadedFilePath, "file") + " {mode args}";
-
-                    for (var i = 1; i < formatConfig.formats.length; i++)
-                        // we skip the default source .CFR format, since it's already there
-                    {
-                        formatModeArgs.push("-m");
-                        formatModeArgs.push(formatConfig.formats[i].compiler_mode);
-                        formatModeArgs = formatModeArgs.concat(formatConfig.formats[i].compiler_args);
-                    }
-
-                    var finalArgs = genericArgs.concat(specifiedArgs).concat(formatModeArgs);
-
-                    process.clafer_compiler = spawn("clafer", finalArgs);
-
-                    process.compiled_formats = new Array();
-                    process.compiler_message = "";
-
-                    if (loadExampleInEditor)
-                        process.model = file_contents;
-                    else
-                        process.model = "";                                   
-
-                    process.pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, process);
-
-                    process.clafer_compiler.stdout.on("data", function (data){
-                        for (var i = 0; i < processes.length; i++)
+                        else
                         {
-                            if (processes[i].windowKey == req.body.windowKey)
-                            {
-                                processes[i].compiler_message += data;
-                            }
+                            lib.logSpecific("CC: Zero Return Value", req.body.windowKey);
+                            processes[i].compiler_result = '{"message": "' + lib.escapeJSON("Success") + '"}';
+                            processes[i].compiler_code = 0;
                         }
-                    });
 
-                    process.clafer_compiler.stderr.on("data", function (data){
-                        for (var i = 0; i<processes.length; i++)
+
+                        // it makes sense to get the compiled files for the models (e.g., HTML) 
+                        // that may show syntax errors
+
+                        var formats_for_process = [];
+
+                        for (var j = 0; j < formatConfig.formats.length; j++)
                         {
-                            if (processes[i].windowKey == req.body.windowKey)
-                            {
-                                processes[i].compiler_message += data;
-                            }
+                            var format = new Object();
+                            format.id = formatConfig.formats[j].id;
+                            format.file_suffix = formatConfig.formats[j].file_suffix;
+                            format.display_element = formatConfig.formats[j].display_element;
+                            format.shows_compilation_errors = formatConfig.formats[j].shows_compilation_errors;
+                            format.process = processes[i];
+                            formats_for_process.push(format);
                         }
-                    });
-                    
-                    process.clafer_compiler.on('close', function (code)
-                    {	
-                        for (var i = 0; i < processes.length; i++)
+
+                        formats_for_process.forEach(function(item) 
                         {
-                            if (processes[i].windowKey == req.body.windowKey)
+                            if (item.shows_compilation_errors || (item.process.compiler_code == 0))
                             {
-                                processes[i].clafer_compiler = null;
-
-                                if (code != 0) // if the result is non-zero, means compilation error
+                                fs.readFile(uploadedFilePath + item.file_suffix, function (err, file_contents) 
                                 {
-                                    logSpecific("CC: Non-zero Return Value", req.body.windowKey);
-                                    processes[i].compiler_result = '{"message": "' + escapeJSON("Error: Compilation Error") + '"}';
-                                    processes[i].compiler_code = 1;
-                                }
-                                else
-                                {
-                                    logSpecific("CC: Zero Return Value", req.body.windowKey);
-                                    processes[i].compiler_result = '{"message": "' + escapeJSON("Success") + '"}';
-                                    processes[i].compiler_code = 0;
-                                }
-
-
-                                // it makes sense to get the compiled files for the models (e.g., HTML) 
-                                // that may show syntax errors
-
-                                var formats_for_process = [];
-
-                                for (var j = 0; j < formatConfig.formats.length; j++)
-                                {
-                                    var format = new Object();
-                                    format.id = formatConfig.formats[j].id;
-                                    format.file_suffix = formatConfig.formats[j].file_suffix;
-                                    format.display_element = formatConfig.formats[j].display_element;
-                                    format.shows_compilation_errors = formatConfig.formats[j].shows_compilation_errors;
-                                    format.process = processes[i];
-                                    formats_for_process.push(format);
-                                }
-
-                                formats_for_process.forEach(function(item) 
-                                {
-                                    if (item.shows_compilation_errors || (item.process.compiler_code == 0))
+                                    var obj = new Object();
+                                    obj.id = item.id;
+                                    obj.fileSuffix = item.file_suffix;
+                                    obj.displayElement = item.display_element;
+                                    if (err) // error reading HTML, maybe it is not really present, means a fatal compilation error
                                     {
-                                        fs.readFile(uploadedFilePath + item.file_suffix, function (err, file_contents) 
-                                        {
-                                            var obj = new Object();
-                                            obj.id = item.id;
-                                            obj.fileSuffix = item.file_suffix;
-                                            obj.displayElement = item.display_element;
-                                            if (err) // error reading HTML, maybe it is not really present, means a fatal compilation error
-                                            {
-                                                logSpecific('ERROR: Cannot read the compiled file.', req.body.windowKey);
-                                                obj.message = "compile_error";
-                                                obj.result = "";
-                                            }
-                                            else
-                                            {
-                                                obj.message = "OK";
-                                                obj.result = file_contents.toString();
-                                            }
-
-                                            item.process.compiled_formats.push(obj);
-
-                                            if (formats_for_process.length == item.process.compiled_formats.length)
-                                            {
-                                                onAllFormatsCompiled(item.process);
-                                            }
-                                        });
-                                    }
-                                    else 
-                                    {
-                                        var obj = new Object();
-                                        obj.id = item.id;
+                                        lib.logSpecific('ERROR: Cannot read the compiled file.', req.body.windowKey);
                                         obj.message = "compile_error";
                                         obj.result = "";
-                                        item.process.compiled_formats.push(obj);
+                                    }
+                                    else
+                                    {
+                                        obj.message = "OK";
+                                        obj.result = file_contents.toString();
+                                    }
 
-                                        if (formats_for_process.length == item.process.compiled_formats.length)
-                                        {
-                                            onAllFormatsCompiled(item.process);
-                                        }
+                                    item.process.compiled_formats.push(obj);
+
+                                    if (formats_for_process.length == item.process.compiled_formats.length)
+                                    {
+                                        onAllFormatsCompiled(item.process);
                                     }
                                 });
                             }
-                        }
-                    });
+                            else 
+                            {
+                                var obj = new Object();
+                                obj.id = item.id;
+                                obj.message = "compile_error";
+                                obj.result = "";
+                                item.process.compiled_formats.push(obj);
 
-                    processes.push(process);    
-
-                    res.writeHead(200, { "Content-Type": "text/html"});
-                    res.end("OK"); // we have to return a response right a way to avoid confusion.
-                    
-                });
+                                if (formats_for_process.length == item.process.compiled_formats.length)
+                                {
+                                    onAllFormatsCompiled(item.process);
+                                }
+                            }
+                        });
+                    }
+                }
             });
+
+            processes.push(process);    
+
+            res.writeHead(200, { "Content-Type": "text/html"});
+            res.end("OK"); // we have to return a response right a way to avoid confusion.               
         });
     }
 });
@@ -1078,7 +932,7 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
                 jsonObj.completed = true;
                 res.end(JSON.stringify(jsonObj));
 
-                logSpecific("Cancelled: " + processes[i].toKill, req.body.windowKey);
+                lib.logSpecific("Cancelled: " + processes[i].toKill, req.body.windowKey);
            }
            break;
         }
@@ -1093,7 +947,7 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
     // clearing part
     cleanProcesses();
 
-    logSpecific("Client polled", req.body.windowKey);
+    lib.logSpecific("Client polled", req.body.windowKey);
     
 });
 
@@ -1102,18 +956,14 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
  */
 server.use(function(req, res, next)
 {
-    logSpecific(req.url, null);
+    lib.logSpecific(req.url, null);
     res.send(404, "Sorry can't find that!");
 });
 
-//====================================================
-// Libraries and misc functions
-//====================================================
-
 function pingTimeoutFunc(process)
 {
-    logSpecific("Error: Ping Timeout", process.windowKey);
-    process.result = '{"message": "' + escapeJSON('Error: Ping Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.pingTimeout + ' millisecond(s).') + '"}';
+    lib.logSpecific("Error: Ping Timeout", process.windowKey);
+    process.result = '{"message": "' + lib.escapeJSON('Error: Ping Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.pingTimeout + ' millisecond(s).') + '"}';
     process.toKill = true;   
     process.toRemoveCompletely = true;   
     cleanProcesses();
@@ -1121,8 +971,8 @@ function pingTimeoutFunc(process)
 
 function inactivityTimeoutFunc(process)
 {
-    logSpecific("Error: Inactivity Timeout", process.windowKey);
-    process.result = '{"message": "' + escapeJSON('Error: Inactivity Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.inactivityTimeout + ' millisecond(s).') + '"}';
+    lib.logSpecific("Error: Inactivity Timeout", process.windowKey);
+    process.result = '{"message": "' + lib.escapeJSON('Error: Inactivity Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.inactivityTimeout + ' millisecond(s).') + '"}';
     process.toKill = true;   
     process.toRemoveCompletely = true;   
     cleanProcesses();
@@ -1143,14 +993,14 @@ function cleanProcesses()
         {
             clearTimeout(processes[i].pingTimeoutObject);
             clearTimeout(processes[i].inactivityTimeoutObject);
-            setTimeout(cleanupOldFiles, config.cleaningTimeout, processes[i].folder);
+            setTimeout(lib.cleanupOldFiles, config.cleaningTimeout, processes[i].folder);
             processes.splice(i, 1);
         }
         else
             i++;   
     }
 
-    logSpecific("Cleaning complete. #Processes = " + processes.length, null);
+    lib.logSpecific("Cleaning complete. #Processes = " + processes.length, null);
 }
 
 function onAllFormatsCompiled(process)
@@ -1158,200 +1008,47 @@ function onAllFormatsCompiled(process)
     process.mode_completed = true;
 }
 
-function finishCleanup(dir, results){
-	fs.exists(dir, function(exists)
-    {		
-        if (exists)
-        {
-            fs.rmdir(dir, function (err) {
-  		        if (err) 
-                {
-                    logSpecific("Could not finish the cleanup: " + dir, null);
-                    return;
-                }
-                logSpecific("Successfully deleted " + dir + " along with contents:\n" + results, null);
-            });
-		}
-	});
-}
- 
-function cleanupOldFiles(dir) {
-    logSpecific("Cleaning temporary files...", null);                    
-	//cleanup old files
-	fs.readdir(dir, function(err, files){
-		//if (err) throw err;
-        if (err) 
-        {
-            logSpecific("Could not clear the folder: " + dir, null);
-            return; // cannot get the folder
-        }
-		var results = "";
-		var numFiles = files.length;
-		logSpecific("#Files = " + numFiles, null);
-		if (!numFiles){
-			return finishCleanup(dir, results);
-		} else {
-			files.forEach(function(file){
-				deleteOld(dir + "/" + file);
-				results += file + "\n";
-			});	
-			finishCleanup(dir, results);
-		}
-	});
-
-
-//done cleanup
-}
-
-function deleteOld(path)
-{
-	fs.exists(path, function(exists)
-    {
-        if (exists)
-        {
-    		fs.unlink(path, function (err) 
-            { 
-    			if (err)
-                {
-                    logNormal("Could not delete the file: " + path);              
-                    logNormal(err);                 
-                }
-            });
-        }
-	});
-}
-
-function escapeJSON(unsafe) 
-{
-    return unsafe.replace(/[\\]/g, '\\\\')
-        .replace(/[\"]/g, '\\\"')
-        .replace(/[\/]/g, '\\/')
-        .replace(/[\b]/g, '\\b')
-        .replace(/[\f]/g, '\\f')
-        .replace(/[\n]/g, '\\n')
-        .replace(/[\r]/g, '\\r')
-        .replace(/[\t]/g, '\\t');
-}
-
 function killProcessTree(process)
 {
     var spawn = require('child_process').spawn;
     
     process.killed = true;
-    
-    if (process.tool)
-    {
-        var pid = process.tool.pid;
-        process.tool.removeAllListeners();
-        process.tool = null;
-        logSpecific("Killing the backend tree with Parent PID = " + pid, process.windowKey);
-    
-        // first, try a Windows command
-        var killer_win  = spawn("taskkill", ["/F", "/T", "/PID", pid]);
-        
-        killer_win.on('error', function (err){	// if error occurs, then we are on Linux
-            var killer_linux = spawn("pkill", ["-TERM", "-P", pid]);                   
-
-            killer_linux.on('error', function(err){
-                logSpecific("Cannot terminate the backend.", process.windowKey);
-            });
-        });                
-    }
-
-    if (process.clafer_compiler)
-    {
-        var pid = process.clafer_compiler.pid;
-        process.clafer_compiler.removeAllListeners();
-        process.clafer_compiler = null;
-        logSpecific("Killing the compiler tree with Parent PID = " + pid, process.windowKey);
-    
-        // first, try a Windows command
-        var killer_win  = spawn("taskkill", ["/F", "/T", "/PID", pid]);
-        
-        killer_win.on('error', function (err){  // if error occurs, then we are on Linux
-            var killer_linux = spawn("pkill", ["-TERM", "-P", pid]);                   
-
-            killer_linux.on('error', function(err){
-                logSpecific("Cannot terminate the compiler.", process.windowKey);
-            });
-        });                
-    }
-                
+    lib.killProcessIfExists(process.tool);    
+    process.tool = null;
+    lib.killProcessIfExists(process.clafer_compiler);    
+    process.clafer_compiler = null;
+    lib.logSpecific("Killing the process tree...", process.windowKey);                
 }
 
-
-function replaceTemplate(input_string, replacement_map)
-{
-    var result = input_string;
-
-    for (var j = 0; j < replacement_map.length; j++)
-    {
-        result = result.replace(replacement_map[j].needle, replacement_map[j].replacement);
-    }
-
-    return result;
-}
-
-function replaceTemplateList(input_list, replacement_map)
-{
-    var result = new Array();
-    for (var i = 0; i < input_list.length; i++)
-    {
-        result.push(replaceTemplate(input_list[i], replacement_map));
-    }
-    
-    return result;
-}                            
-
-// filter input command line arguments for safety purposes
-function filterArgs(argString)
-{
-    var args = argString.split(" ");
-    var resultArgs = new Array();
-    for (var i = 0; i < args.length; i++)
-    {
-        var arg = args[i].trim();
-
-        if (arg.length == 0)
-            continue;
-
-        if (!arg.match(/-[A-Za-z-]+/))
-            continue;
-
-        resultArgs.push(arg);
-    }
-
-    return resultArgs;
-}
 
 //================================================================
 // Initialization Code
 //================================================================
 
 var dependency_count = 2; // the number of tools to be checked before the Visualizer starts
-logNormal('===============================');
-logNormal('| ClaferIDE v0.3.5.??-??-???? |');
-logNormal('===============================');
+lib.logNormal('===============================');
+lib.logNormal('| ClaferIDE v0.3.5.??-??-???? |');
+lib.logNormal('===============================');
 var spawn = require('child_process').spawn;
-logNormal('Checking dependencies...');
+lib.logNormal('Checking dependencies...');
 
 var clafer_compiler  = spawn("clafer", ["-V"]);
 var clafer_compiler_version = "";
 clafer_compiler.on('error', function (err){
-    logNormal('ERROR: Cannot find Clafer Compiler (clafer). Please check whether it is installed and accessible.');
+    lib.logNormal('ERROR: Cannot find Clafer Compiler (clafer). Please check whether it is installed and accessible.');
 });
 clafer_compiler.stdout.on('data', function (data){	
     clafer_compiler_version += data;
 });
 clafer_compiler.on('exit', function (code){	
-    logNormal(clafer_compiler_version.trim());
+    lib.logNormal(clafer_compiler_version.trim());
     if (code == 0) dependency_ok();
 });
 
 var java  = spawn("java", ["-version"]);
 var java_version = "";
 java.on('error', function (err){
-    logNormal('ERROR: Cannot find Java (java). Please check whether it is installed and accessible.');
+    lib.logNormal('ERROR: Cannot find Java (java). Please check whether it is installed and accessible.');
 });
 java.stdout.on('data', function (data){	
     java_version += data;
@@ -1360,12 +1057,12 @@ java.stderr.on('data', function (data){
     java_version += data;
 });
 java.on('exit', function (code){	
-    logNormal(java_version.trim());
+    lib.logNormal(java_version.trim());
     if (code == 0) dependency_ok();
 });
 
 var node_version = process.version + ", " + JSON.stringify(process.versions);
-logNormal("Node.JS: " + node_version);
+lib.logNormal("Node.JS: " + node_version);
 
 function dependency_ok()
 {
@@ -1373,26 +1070,8 @@ function dependency_ok()
     if (dependency_count == 0)
     {
         server.listen(port);
-        logNormal('Dependencies found successfully. Please review their versions manually');        
-        logNormal('======================================');
-        logNormal('Ready. Listening on port ' + port);        
+        lib.logNormal('Dependencies found successfully. Please review their versions manually');        
+        lib.logNormal('======================================');
+        lib.logNormal('Ready. Listening on port ' + port);        
     }
-}
-
-function logSpecific(message, key)
-{
-    var date = new Date();
-    var d = date.toUTCString();
-
-    if (key != null)
-    {
-        console.log(d + " | " + key + " | " + message);
-    }
-    else 
-        console.log(d + " | " + "GLOBAL" + " | " + message);
-}
-
-function logNormal(message)
-{
-    console.log(message);
 }
