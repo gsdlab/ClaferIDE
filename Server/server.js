@@ -24,11 +24,14 @@ var sys = require("sys");
 var fs = require("fs");
 var path = require('path');
 var express = require('express');
+var spawn = require('child_process').spawn;    
+
 var config = require('./config.json');
-var crypto = require('crypto'); // for getting hashes
 var backendConfig = require('./Backends/backends.json');
 var formatConfig = require('./Formats/formats.json');
-var lib = require("./basic_lib");
+
+var lib = require("./common_lib");
+var core = require("./core_lib");
 
 /*  Rate Limiter */
 var rate            = require('express-rate/lib/rate'),
@@ -49,8 +52,6 @@ var server = express();
 server.use(express.static(__dirname + '/Client'));
 //server.use(express.static(__dirname + '/Client/'));
 server.use(express.bodyParser({ keepExtensions: true, uploadDir: __dirname + '/uploads' }));
-
-var processes = []; // for storing sessions
 
 //-------------------------------------------------
 // Standard GET request
@@ -86,9 +87,9 @@ server.get('/saveformat', fileMiddleware, function(req, res) {
     if (!req.query.windowKey)
         return;
 
-    lib.logSpecific("Save format request", req.query.windowKey);
+    core.logSpecific("Save format request", req.query.windowKey);
 
-    var process = getProcess(req.query.windowKey);
+    var process = core.getProcess(req.query.windowKey);
     if (process == null)
     {
         res.writeHead(400, { "Content-Type": "text/html"});    
@@ -115,7 +116,7 @@ server.get('/saveformat', fileMiddleware, function(req, res) {
 
     if (!found)
     {
-        lib.logSpecific("Error: Format was not found within the process", req.query.windowKey);
+        core.logSpecific("Error: Format was not found within the process", req.query.windowKey);
         res.writeHead(400, { "Content-Type": "text/html"});    
         res.end("Error: Could not find the format within a process data by its submitted id: " + formatId);
         return;
@@ -133,12 +134,12 @@ server.get('/saveformat', fileMiddleware, function(req, res) {
 /* Controlling Instance Generators */
 server.post('/control', commandMiddleware, function(req, res)
 {
-    lib.logSpecific("Control: Enter", req.body.windowKey);
+    core.logSpecific("Control: Enter", req.body.windowKey);
 
     var isError = true;
     var resultMessage;
 
-    var process = getProcess(req.body.windowKey);
+    var process = core.getProcess(req.body.windowKey);
     if (process == null)
     {
         res.writeHead(400, { "Content-Type": "text/html"});
@@ -148,42 +149,42 @@ server.post('/control', commandMiddleware, function(req, res)
 
     if (req.body.operation == "run") // "Run" operation
     {
-        lib.logSpecific("Control: Run", req.body.windowKey);
+        core.logSpecific("Control: Run", req.body.windowKey);
 
         var backendId = req.body.backend;
-        lib.logSpecific("Backend: " + backendId, req.body.windowKey);
+        core.logSpecific("Backend: " + backendId, req.body.windowKey);
         if (process.mode != "ig")
         {
-            lib.logSpecific("Error: Not compiled yet", req.body.windowKey);
+            core.logSpecific("Error: Not compiled yet", req.body.windowKey);
             res.writeHead(400, { "Content-Type": "text/html"});
             res.end("Error: The mode is not IG: the compilation is still running");        
             return;
         }
         else
         {
-            timeoutProcessClearInactivity(process); // reset the inactivity timeout
+            core.timeoutProcessClearInactivity(process); // reset the inactivity timeout
 
             // looking for a backend
-            var backend = getBackend(backendId);
+            var backend = core.getBackend(backendId);
             if (!backend)
             {
-                lib.logSpecific("Error: Backend was not found", req.body.windowKey);
+                core.logSpecific("Error: Backend was not found", req.body.windowKey);
                 res.writeHead(400, { "Content-Type": "text/html"});
                 res.end("Error: Could not find the backend by its submitted id.");
                 return;
             }
 
             // looking for a format
-            var format = getFormat(backend.accepted_format);
+            var format = core.getFormat(backend.accepted_format);
             if (!format)
             {
-                lib.logSpecific("Error: Required format was not found", req.body.windowKey);
+                core.logSpecific("Error: Required format was not found", req.body.windowKey);
                 resultMessage = "Error: Could not find the required file format.";
                 isError = true;
                 return;
             }
 
-            lib.logSpecific(backend.id + " ==> " + format.id, req.body.windowKey);
+            core.logSpecific(backend.id + " ==> " + format.id, req.body.windowKey);
             process.mode_completed = false;
 
             var fileAndPathReplacement = [
@@ -197,15 +198,15 @@ server.post('/control', commandMiddleware, function(req, res)
                     }
                 ];
 
-            var args = lib.replaceTemplateList(backend.tool_args, fileAndPathReplacement);
+            var args = core.replaceTemplateList(backend.tool_args, fileAndPathReplacement);
 
-            lib.logSpecific(args, req.body.windowKey);
+            core.logSpecific(args, req.body.windowKey);
             
-            process.tool = spawn(lib.replaceTemplate(backend.tool, fileAndPathReplacement), args);
+            process.tool = spawn(core.replaceTemplate(backend.tool, fileAndPathReplacement), args);
 
             process.tool.on('error', function (err){
-                lib.logSpecific('ERROR: Cannot run the chosen instance generator. Please check whether it is installed and accessible.', req.body.windowKey);
-                process = getProcess(req.body.windowKey);
+                core.logSpecific('ERROR: Cannot run the chosen instance generator. Please check whether it is installed and accessible.', req.body.windowKey);
+                var process = core.getProcess(req.body.windowKey);
                 if (process != null)
                 {
                     process.result = '{"message": "' + lib.escapeJSON("Error: Cannot run claferIG") + '"}';
@@ -216,7 +217,7 @@ server.post('/control', commandMiddleware, function(req, res)
 
             process.tool.stdout.on("data", function (data)
             {
-                process = getProcess(req.body.windowKey);
+                var process = core.getProcess(req.body.windowKey);
                 if (process != null)
                 {
                     if (!process.completed)
@@ -228,7 +229,7 @@ server.post('/control', commandMiddleware, function(req, res)
 
             process.tool.stderr.on("data", function (data)
             {
-                process = getProcess(req.body.windowKey);
+                var process = core.getProcess(req.body.windowKey);
                 if (process != null)
                 {
                     if (!process.completed){
@@ -239,7 +240,7 @@ server.post('/control', commandMiddleware, function(req, res)
 
             process.tool.on("close", function (code)
             {
-                process = getProcess(req.body.windowKey);
+                var process = core.getProcess(req.body.windowKey);
                 if (process != null)
                 {
                     process.mode_completed = true;
@@ -269,7 +270,7 @@ server.post('/control', commandMiddleware, function(req, res)
     }
     else if (req.body.operation == "stop") // "Stop" operation
     {
-        lib.logSpecific("Control: Stop", req.body.windowKey);
+        core.logSpecific("Control: Stop", req.body.windowKey);
         process.toKill = true;
         process.mode_completed = true;
         res.writeHead(200, { "Content-Type": "text/html"});
@@ -277,19 +278,19 @@ server.post('/control', commandMiddleware, function(req, res)
     }
     else if (req.body.operation == "setGlobalScope") // "Set Global Scope" operation
     {
-        lib.logSpecific("Control: setGlobalScope", req.body.windowKey);
+        core.logSpecific("Control: setGlobalScope", req.body.windowKey);
 
         // looking for a backend
-        var backend = getBackend(req.body.backend);
+        var backend = core.getBackend(req.body.backend);
         if (!backend)
         {
-            lib.logSpecific("Error: Backend was not found", req.body.windowKey);
+            core.logSpecific("Error: Backend was not found", req.body.windowKey);
             res.writeHead(400, { "Content-Type": "text/html"});
             res.end("Error: Could not find the backend by its submitted id.");
             return;
         }
 
-        lib.logSpecific(backend.id + " " + req.body.operation_arg1, req.body.windowKey);
+        core.logSpecific(backend.id + " " + req.body.operation_arg1, req.body.windowKey);
 
         var replacements = [
                 {
@@ -298,7 +299,7 @@ server.post('/control', commandMiddleware, function(req, res)
                 }
             ];
 
-        var command = lib.replaceTemplate(backend.scope_options.global_scope.command, replacements);
+        var command = core.replaceTemplate(backend.scope_options.global_scope.command, replacements);
         process.tool.stdin.write(command);
             
         if (backend.scope_options.clafer_scope_list)
@@ -316,19 +317,19 @@ server.post('/control', commandMiddleware, function(req, res)
     }
     else if (req.body.operation == "setIndividualScope") // "Set Clafer Scope" operation
     {
-        lib.logSpecific("Control: setIndividualScope", req.body.windowKey);
+        core.logSpecific("Control: setIndividualScope", req.body.windowKey);
 
         // looking for a backend
-        var backend = getBackend(req.body.backend);
+        var backend = core.getBackend(req.body.backend);
         if (!backend)
         {
-            lib.logSpecific("Error: Backend was not found", req.body.windowKey);
+            core.logSpecific("Error: Backend was not found", req.body.windowKey);
             res.writeHead(400, { "Content-Type": "text/html"});
             res.end("Error: Could not find the backend by its submitted id.");
             return;
         }
 
-        lib.logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
+        core.logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
 
         var replacements = [
                 {
@@ -341,7 +342,7 @@ server.post('/control', commandMiddleware, function(req, res)
                 }
             ];
 
-        var command = lib.replaceTemplate(backend.scope_options.individual_scope.command, replacements);
+        var command = core.replaceTemplate(backend.scope_options.individual_scope.command, replacements);
         process.tool.stdin.write(command);
             
         if (backend.scope_options.clafer_scope_list)
@@ -359,19 +360,19 @@ server.post('/control', commandMiddleware, function(req, res)
     }
     else if (req.body.operation == "setIntScope") // "Set Integer Scope" operation
     {
-        lib.logSpecific("Control: setIntScope", req.body.windowKey);
+        core.logSpecific("Control: setIntScope", req.body.windowKey);
 
         // looking for a backend
-        var backend = getBackend(req.body.backend);
+        var backend = core.getBackend(req.body.backend);
         if (!backend)
         {
-            lib.logSpecific("Error: Backend was not found", req.body.windowKey);
+            core.logSpecific("Error: Backend was not found", req.body.windowKey);
             res.writeHead(400, { "Content-Type": "text/html"});
             res.end("Error: Could not find the backend by its submitted id.");
             return;
         }
 
-        lib.logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
+        core.logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
 
         var replacements = [
                 {
@@ -384,7 +385,7 @@ server.post('/control', commandMiddleware, function(req, res)
                 }
             ];
 
-        var command = lib.replaceTemplate(backend.scope_options.int_scope.command, replacements);
+        var command = core.replaceTemplate(backend.scope_options.int_scope.command, replacements);
         process.tool.stdin.write(command);
             
         if (backend.scope_options.clafer_scope_list)
@@ -405,7 +406,7 @@ server.post('/control', commandMiddleware, function(req, res)
         var parts = req.body.operation.split("-");
         if (parts.length != 2)
         {
-            lib.logSpecific('Control: Command does not follow pattern "backend-opreration": "' + req.body.operation + '"', req.body.windowKey, req.body.windowKey);
+            core.logSpecific('Control: Command does not follow pattern "backend-opreration": "' + req.body.operation + '"', req.body.windowKey, req.body.windowKey);
             res.writeHead(400, { "Content-Type": "text/html"});
             res.end("Error: Command does not follow the 'backend-operation' pattern.");
             return;
@@ -418,10 +419,10 @@ server.post('/control', commandMiddleware, function(req, res)
         var operation = null;
         // looking for a backend
 
-        var backend = getBackend(backendId);
+        var backend = core.getBackend(backendId);
         if (!backend)
         {
-            lib.logSpecific("Error: Backend was not found", req.body.windowKey);
+            core.logSpecific("Error: Backend was not found", req.body.windowKey);
             res.writeHead(400, { "Content-Type": "text/html"});
             res.end("Error: Could not find the backend by its submitted id.");
             return;
@@ -442,13 +443,13 @@ server.post('/control', commandMiddleware, function(req, res)
 
         if (!found)
         {
-            lib.logSpecific("Error: Required operation was not found", req.body.windowKey);
+            core.logSpecific("Error: Required operation was not found", req.body.windowKey);
             res.writeHead(400, { "Content-Type": "text/html"});
             res.end("Error: Could not find the required operation.");
             return;
         }
 
-        lib.logSpecific(backend.id + " ==> " + operation.id, req.body.windowKey);
+        core.logSpecific(backend.id + " ==> " + operation.id, req.body.windowKey);
 
         process.tool.stdin.write(operation.command);
 
@@ -491,24 +492,9 @@ server.post('/upload', commandMiddleware, function(req, res, next)
                 return;
             }
             
-            lib.logSpecific("Compiling...", req.body.windowKey);
+            core.logSpecific("Compiling...", req.body.windowKey);
 
-            // removing an older session
-            for (var i = 0; i < processes.length; i++)
-            {
-                if (processes[i].windowKey == req.body.windowKey)
-                {
-                    processes[i].toKill = true;
-                    timeoutProcessClearPing(processes[i]);                
-                    processes[i].toRemoveCompletely = true;
-                    processes[i].windowKey = "none";
-
-                    break;
-                }
-            }
-
-            var d = new Date();
-            var process = { 
+            core.addProcess({ 
                 windowKey: req.body.windowKey, 
                 toRemoveCompletely: false, 
                 tool: null, 
@@ -517,14 +503,13 @@ server.post('/upload', commandMiddleware, function(req, res, next)
                 folder: dlDir, 
                 clafer_compiler: null,
                 file: uploadedFilePath, 
-                lastUsed: d,
                 mode : "compiler", 
-                freshError: ""};
+                freshError: ""});    
 
 
             var ss = "--ss=none";
 
-            lib.logSpecific(req.body.ss, req.body.windowKey);
+            core.logSpecific(req.body.ss, req.body.windowKey);
 
             if (req.body.ss == "simple")
             {
@@ -535,141 +520,19 @@ server.post('/upload', commandMiddleware, function(req, res, next)
                 ss = "--ss=full";
             }
 
-            var specifiedArgs = lib.filterArgs(req.body.args);
-
+            var specifiedArgs = core.filterArgs(req.body.args);
             var genericArgs = [ss, uploadedFilePath + ".cfr"];
-            var formatModeArgs = [];
 
-            process.compiler_args = genericArgs.concat(specifiedArgs).join(" ").replace(uploadedFilePath, "file") + " {mode args}";
-
-            for (var i = 1; i < formatConfig.formats.length; i++)
-                // we skip the default source .CFR format, since it's already there
-            {
-                formatModeArgs.push("-m");
-                formatModeArgs.push(formatConfig.formats[i].compiler_mode);
-                formatModeArgs = formatModeArgs.concat(formatConfig.formats[i].compiler_args);
-            }
-
-            var finalArgs = genericArgs.concat(specifiedArgs).concat(formatModeArgs);
-
-            process.clafer_compiler = spawn("clafer", finalArgs);
-
-            process.compiled_formats = new Array();
-            process.compiler_message = "";
+            var process = core.getProcess(req.body.windowKey);
 
             if (loadExampleInEditor)
                 process.model = file_contents;
             else
                 process.model = "";                                   
 
-            process.clafer_compiler.stdout.on("data", function (data){
-                for (var i = 0; i < processes.length; i++)
-                {
-                    if (processes[i].windowKey == req.body.windowKey)
-                    {
-                        processes[i].compiler_message += data;
-                    }
-                }
-            });
-
-            process.clafer_compiler.stderr.on("data", function (data){
-                for (var i = 0; i<processes.length; i++)
-                {
-                    if (processes[i].windowKey == req.body.windowKey)
-                    {
-                        processes[i].compiler_message += data;
-                    }
-                }
-            });
-            
-            process.clafer_compiler.on('close', function (code)
-            {	
-                for (var i = 0; i < processes.length; i++)
-                {
-                    if (processes[i].windowKey == req.body.windowKey)
-                    {
-                        processes[i].clafer_compiler = null;
-
-                        if (code != 0) // if the result is non-zero, means compilation error
-                        {
-                            lib.logSpecific("CC: Non-zero Return Value", req.body.windowKey);
-                            processes[i].compiler_result = '{"message": "' + lib.escapeJSON("Error: Compilation Error") + '"}';
-                            processes[i].compiler_code = 1;
-                        }
-                        else
-                        {
-                            lib.logSpecific("CC: Zero Return Value", req.body.windowKey);
-                            processes[i].compiler_result = '{"message": "' + lib.escapeJSON("Success") + '"}';
-                            processes[i].compiler_code = 0;
-                        }
-
-
-                        // it makes sense to get the compiled files for the models (e.g., HTML) 
-                        // that may show syntax errors
-
-                        var formats_for_process = [];
-
-                        for (var j = 0; j < formatConfig.formats.length; j++)
-                        {
-                            var format = new Object();
-                            format.id = formatConfig.formats[j].id;
-                            format.file_suffix = formatConfig.formats[j].file_suffix;
-                            format.display_element = formatConfig.formats[j].display_element;
-                            format.shows_compilation_errors = formatConfig.formats[j].shows_compilation_errors;
-                            format.process = processes[i];
-                            formats_for_process.push(format);
-                        }
-
-                        formats_for_process.forEach(function(item) 
-                        {
-                            if (item.shows_compilation_errors || (item.process.compiler_code == 0))
-                            {
-                                fs.readFile(uploadedFilePath + item.file_suffix, function (err, file_contents) 
-                                {
-                                    var obj = new Object();
-                                    obj.id = item.id;
-                                    obj.fileSuffix = item.file_suffix;
-                                    obj.displayElement = item.display_element;
-                                    if (err) // error reading HTML, maybe it is not really present, means a fatal compilation error
-                                    {
-                                        lib.logSpecific('ERROR: Cannot read the compiled file.', req.body.windowKey);
-                                        obj.message = "compile_error";
-                                        obj.result = "";
-                                    }
-                                    else
-                                    {
-                                        obj.message = "OK";
-                                        obj.result = file_contents.toString();
-                                    }
-
-                                    item.process.compiled_formats.push(obj);
-
-                                    if (formats_for_process.length == item.process.compiled_formats.length)
-                                    {
-                                        onAllFormatsCompiled(item.process);
-                                    }
-                                });
-                            }
-                            else 
-                            {
-                                var obj = new Object();
-                                obj.id = item.id;
-                                obj.message = "compile_error";
-                                obj.result = "";
-                                item.process.compiled_formats.push(obj);
-
-                                if (formats_for_process.length == item.process.compiled_formats.length)
-                                {
-                                    onAllFormatsCompiled(item.process);
-                                }
-                            }
-                        });
-                    }
-                }
-            });
-
-            processes.push(process);    
-            timeoutProcessSetPing(process);
+            // if (process == null) assuming it is added
+            lib.runClaferCompiler(req.body.windowKey, specifiedArgs, genericArgs);
+            core.timeoutProcessSetPing(process);
 
             res.writeHead(200, { "Content-Type": "text/html"});
             res.end("OK"); // we have to return a response right a way to avoid confusion.               
@@ -691,20 +554,20 @@ server.post('/upload', commandMiddleware, function(req, res, next)
 
 server.post('/poll', pollingMiddleware, function(req, res, next)
 {
-    var process = getProcess(req.body.windowKey);
+    var process = core.getProcess(req.body.windowKey);
     if (process == null)
     {
         res.writeHead(404, { "Content-Type": "application/json"});
         res.end('{"message": "Error: the requested process is not found."}');     
         // clearing part
-        cleanProcesses();
-        lib.logSpecific("Client polled", req.body.windowKey);
+        core.cleanProcesses();
+        core.logSpecific("Client polled", req.body.windowKey);
         return;
     }
 
     if (req.body.command == "ping") // normal ping
     {               
-        timeoutProcessClearPing(process);
+        core.timeoutProcessClearPing(process);
 
         if (process.mode_completed) // the execution of the current mode is completed
         {
@@ -752,12 +615,12 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
             // if mode is completed, then the tool is not busy anymore, so now it's time to 
             // set inactivity timeout
 
-            timeoutProcessClearInactivity(process);
-            timeoutProcessSetInactivity(process);
+            core.timeoutProcessClearInactivity(process);
+            core.timeoutProcessSetInactivity(process);
         }   
         else // still working
         {
-            timeoutProcessSetPing(process);
+            core.timeoutProcessSetPing(process);
 
             if (process.mode == "compiler") // if the mode completed is compilation
             {
@@ -775,13 +638,11 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
                     fs.readFile(scopesFileName, function (err, data) {
                         if (!err)
                         {
-                            for (var i = 0; i < processes.length; i++)
+                            var process = core.getProcess(req.body.windowKey);
+                            if (process != null)
                             {
-                                if (process.windowKey == req.body.windowKey)
-                                {
-                                    process.scopes = data.toString();    
-                                    process.producedScopes = true;                                    
-                                }
+                                process.scopes = data.toString();    
+                                process.producedScopes = true;                                    
                             }
 
                             // removing the file from the system. 
@@ -822,11 +683,11 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
     else // if it is cancel
     {
         process.toKill = true;
-        timeoutProcessClearPing(process);
+        core.timeoutProcessClearPing(process);
 
         // starting inactivity timer
-        timeoutProcessClearInactivity(process);
-        timeoutProcessSetInactivity(process);
+        core.timeoutProcessClearInactivity(process);
+        core.timeoutProcessSetInactivity(process);
 
         res.writeHead(200, { "Content-Type": "application/json"});
 
@@ -837,12 +698,12 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
         jsonObj.completed = true;
         res.end(JSON.stringify(jsonObj));
 
-        lib.logSpecific("Cancelled: " + process.toKill, req.body.windowKey);
+        core.logSpecific("Cancelled: " + process.toKill, req.body.windowKey);
     }
     
     // clearing part
-    cleanProcesses();
-    lib.logSpecific("Client polled", req.body.windowKey);
+    core.cleanProcesses();
+    core.logSpecific("Client polled", req.body.windowKey);
     
 });
 
@@ -851,207 +712,22 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
  */
 server.use(function(req, res, next)
 {
-    lib.logSpecific(req.url, null);
+    core.logSpecific(req.url, null);
     res.send(404, "Sorry can't find that!");
 });
-
-function pingTimeoutFunc(process)
-{
-    lib.logSpecific("Error: Ping Timeout", process.windowKey);
-    process.result = '{"message": "' + lib.escapeJSON('Error: Ping Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.pingTimeout + ' millisecond(s).') + '"}';
-    process.toKill = true;   
-    process.toRemoveCompletely = true;   
-    cleanProcesses();
-}
-
-function inactivityTimeoutFunc(process)
-{
-    lib.logSpecific("Error: Inactivity Timeout", process.windowKey);
-    process.result = '{"message": "' + lib.escapeJSON('Error: Inactivity Timeout. Please consider increasing timeout values in the "config.json" file. Currently it equals ' + config.inactivityTimeout + ' millisecond(s).') + '"}';
-    process.toKill = true;   
-    process.toRemoveCompletely = true;   
-    cleanProcesses();
-}
-
-function cleanProcesses()
-{
-    var i = 0;
-    while (i < processes.length)
-    {
-        if (processes[i].toKill)
-        {
-            killProcessTree(processes[i]);
-            processes[i].toKill = false;
-        }
-
-        if (processes[i].toRemoveCompletely)
-        {
-            clearTimeout(processes[i].pingTimeoutObject);
-            clearTimeout(processes[i].inactivityTimeoutObject);
-            setTimeout(lib.cleanupOldFiles, config.cleaningTimeout, processes[i].folder);
-            processes.splice(i, 1);
-        }
-        else
-            i++;   
-    }
-
-    lib.logSpecific("Cleaning complete. #Processes = " + processes.length, null);
-}
-
-function onAllFormatsCompiled(process)
-{
-    process.mode_completed = true;
-}
-
-function killProcessTree(process)
-{
-    var spawn = require('child_process').spawn;
-    
-    process.killed = true;
-    lib.killProcessIfExists(process.tool);    
-    process.tool = null;
-    lib.killProcessIfExists(process.clafer_compiler);    
-    process.clafer_compiler = null;
-    lib.logSpecific("Killing the process tree...", process.windowKey);                
-}
-
 
 //================================================================
 // Initialization Code
 //================================================================
 
-var dependency_count = 2; // the number of tools to be checked before the Visualizer starts
-lib.logNormal('===============================');
-lib.logNormal('| ClaferIDE v0.3.5.??-??-???? |');
-lib.logNormal('===============================');
-var spawn = require('child_process').spawn;
-lib.logNormal('Checking dependencies...');
+core.logNormal('===============================');
+core.logNormal('| ClaferIDE v0.3.5.??-??-???? |');
+core.logNormal('===============================');
 
-var clafer_compiler  = spawn("clafer", ["-V"]);
-var clafer_compiler_version = "";
-clafer_compiler.on('error', function (err){
-    lib.logNormal('ERROR: Cannot find Clafer Compiler (clafer). Please check whether it is installed and accessible.');
+core.addDependency("clafer", ["-V"], "Clafer Compiler");
+core.addDependency("java", ["-version"], "Java");
+core.runWithDependencyCheck(function(){
+    server.listen(port);
+    core.logNormal('======================================');
+    core.logNormal('Ready. Listening on port ' + port);        
 });
-clafer_compiler.stdout.on('data', function (data){	
-    clafer_compiler_version += data;
-});
-clafer_compiler.on('exit', function (code){	
-    lib.logNormal(clafer_compiler_version.trim());
-    if (code == 0) dependency_ok();
-});
-
-var java  = spawn("java", ["-version"]);
-var java_version = "";
-java.on('error', function (err){
-    lib.logNormal('ERROR: Cannot find Java (java). Please check whether it is installed and accessible.');
-});
-java.stdout.on('data', function (data){	
-    java_version += data;
-});
-java.stderr.on('data', function (data){	
-    java_version += data;
-});
-java.on('exit', function (code){	
-    lib.logNormal(java_version.trim());
-    if (code == 0) dependency_ok();
-});
-
-var node_version = process.version + ", " + JSON.stringify(process.versions);
-lib.logNormal("Node.JS: " + node_version);
-
-function dependency_ok()
-{
-    dependency_count--;
-    if (dependency_count == 0)
-    {
-        server.listen(port);
-        lib.logNormal('Dependencies found successfully. Please review their versions manually');        
-        lib.logNormal('======================================');
-        lib.logNormal('Ready. Listening on port ' + port);        
-    }
-}
-
-function getProcess(key)
-{
-    for (var i = 0; i < processes.length; i++)
-    {
-        if (processes[i].windowKey == key)
-        {
-            return processes[i];
-        }
-    }
-
-    return null;
-}
-
-function timeoutProcessSetPing(process)
-{
-    for (var i = 0; i < processes.length; i++)
-    {
-        if (processes[i].windowKey == process.windowKey)
-        {
-            processes[i].pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, processes[i]);
-            return;
-        }
-    }
-}
-
-function timeoutProcessClearPing(process)
-{
-    for (var i = 0; i < processes.length; i++)
-    {
-        if (processes[i].windowKey == process.windowKey)
-        {
-            clearTimeout(processes[i].pingTimeoutObject);
-            return;
-        }
-    }
-}
-
-function timeoutProcessSetInactivity(process)
-{
-    for (var i = 0; i < processes.length; i++)
-    {
-        if (processes[i].windowKey == process.windowKey)
-        {
-            processes[i].inactivityTimeoutObject = setTimeout(inactivityTimeoutFunc, config.inactivityTimeout, processes[i]);
-            return;
-        }
-    }
-}
-
-function timeoutProcessClearInactivity(process)
-{
-    for (var i = 0; i < processes.length; i++)
-    {
-        if (processes[i].windowKey == process.windowKey)
-        {
-            clearTimeout(processes[i].inactivityTimeoutObject);
-            return;
-        }
-    }
-}
-
-function getBackend(backendId)
-{
-    for (var j = 0; j < backendConfig.backends.length; j++)
-    {
-        if (backendConfig.backends[j].id == backendId)
-        {
-            return backendConfig.backends[j]; 
-        }
-    }
-    return null;
-}
-
-function getFormat(formatId){
-    for (var j = 0; j < formatConfig.formats.length; j++)
-    {
-        if (formatConfig.formats[j].id == formatId)
-        {
-            return formatConfig.formats[j];
-        }
-    }
-
-    return null;
-}
