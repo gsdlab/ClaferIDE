@@ -28,7 +28,7 @@ var config = require('./config.json');
 var crypto = require('crypto'); // for getting hashes
 var backendConfig = require('./Backends/backends.json');
 var formatConfig = require('./Formats/formats.json');
-var lib = require("./server_lib");
+var lib = require("./basic_lib");
 
 /*  Rate Limiter */
 var rate            = require('express-rate/lib/rate'),
@@ -88,47 +88,42 @@ server.get('/saveformat', fileMiddleware, function(req, res) {
 
     lib.logSpecific("Save format request", req.query.windowKey);
 
-    var errorMessage = "process_not_found"; // default message
-
-    for (var i = 0; i < processes.length; i++)
+    var process = getProcess(req.query.windowKey);
+    if (process == null)
     {
-        if (processes[i].windowKey == req.query.windowKey)
-        {
-            var formatId = req.query.fileid;
-            var found = false;
-            var result = null;
-            var suffix = "";
+        res.writeHead(400, { "Content-Type": "text/html"});    
+        res.end("process_not_found");        
+        return;
+    }
+
+    var formatId = req.query.fileid;
+    var found = false;
+    var result = null;
+    var suffix = "";
             // looking for a backend
 
-            for (var j = 0; j < processes[i].compiled_formats.length; j++)
-            {
-                if (processes[i].compiled_formats[j].id == formatId)
-                {
-                    found = true;
-                    result = processes[i].compiled_formats[j].result;
-                    suffix = processes[i].compiled_formats[j].fileSuffix;
-                    break;
-                }
-            }
-
-            if (!found)
-            {
-                lib.logSpecific("Error: Format was not found within the process", req.query.windowKey);
-                errorMessage = "Error: Could not find the format within a process data by its submitted id: " + formatId;
-                break;
-            }
-
-        
-            res.writeHead(200, { "Content-Type": "text/html",
-                                 "Content-Disposition": "attachment; filename=compiled" + suffix});
-            res.end(result);
-
-            return;
+    for (var j = 0; j < process.compiled_formats.length; j++)
+    {
+        if (process.compiled_formats[j].id == formatId)
+        {
+            found = true;
+            result = process.compiled_formats[j].result;
+            suffix = process.compiled_formats[j].fileSuffix;
+            break;
         }
     }
 
-    res.writeHead(400, { "Content-Type": "text/html"});    
-    res.end(errorMessage);        
+    if (!found)
+    {
+        lib.logSpecific("Error: Format was not found within the process", req.query.windowKey);
+        res.writeHead(400, { "Content-Type": "text/html"});    
+        res.end("Error: Could not find the format within a process data by its submitted id: " + formatId);
+        return;
+    }
+        
+    res.writeHead(200, { "Content-Type": "text/html",
+                                 "Content-Disposition": "attachment; filename=compiled" + suffix});
+    res.end(result);
 });
 
 //-------------------------------------------------
@@ -141,418 +136,325 @@ server.post('/control', commandMiddleware, function(req, res)
     lib.logSpecific("Control: Enter", req.body.windowKey);
 
     var isError = true;
-    var resultMessage = "process_not_found"; // default message
+    var resultMessage;
 
-    for (var i = 0; i < processes.length; i++)
+    var process = getProcess(req.body.windowKey);
+    if (process == null)
     {
-        if (processes[i].windowKey == req.body.windowKey)
+        res.writeHead(400, { "Content-Type": "text/html"});
+        res.end("process_not_found");               
+        return;
+    }
+
+    if (req.body.operation == "run") // "Run" operation
+    {
+        lib.logSpecific("Control: Run", req.body.windowKey);
+
+        var backendId = req.body.backend;
+        lib.logSpecific("Backend: " + backendId, req.body.windowKey);
+        if (process.mode != "ig")
         {
-            if (req.body.operation == "run") // "Run" operation
+            lib.logSpecific("Error: Not compiled yet", req.body.windowKey);
+            res.writeHead(400, { "Content-Type": "text/html"});
+            res.end("Error: The mode is not IG: the compilation is still running");        
+            return;
+        }
+        else
+        {
+            timeoutProcessClearInactivity(process); // reset the inactivity timeout
+
+            // looking for a backend
+            var backend = getBackend(backendId);
+            if (!backend)
             {
-                lib.logSpecific("Control: Run", req.body.windowKey);
-
-                var backendId = req.body.backend;
-                lib.logSpecific("Backend: " + backendId, req.body.windowKey);
-                if (processes[i].mode != "ig")
-                {
-                    lib.logSpecific("Error: Not compiled yet", req.body.windowKey);
-                    resultMessage = "Error: The mode is not IG: the compilation is still running";
-                    isError = true;
-                    break;
-                }
-                else
-                {
-                    clearTimeout(processes[i].inactivityTimeoutObject); // reset the inactivity timeout
-
-                    var found = false;
-                    var backend = null;
-                    var format = null;
-                    // looking for a backend
-
-                    for (var j = 0; j < backendConfig.backends.length; j++)
-                    {
-                        if (backendConfig.backends[j].id == backendId)
-                        {
-                            found = true;
-                            backend = backendConfig.backends[j]; 
-                            break;
-                        }
-                    }
-
-                    if (!found)
-                    {
-                        lib.logSpecific("Error: Backend was not found", req.body.windowKey);
-                        resultMessage = "Error: Could not find the backend by its submitted id.";
-                        isError = true;
-                        break;
-                    }
-
-                    // looking for a format
-                    var found = false;
-
-                    for (var j = 0; j < formatConfig.formats.length; j++)
-                    {
-                        if (formatConfig.formats[j].id == backend.accepted_format)
-                        {
-                            format = formatConfig.formats[j];
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found)
-                    {
-                        lib.logSpecific("Error: Required format was not found", req.body.windowKey);
-                        resultMessage = "Error: Could not find the required file format.";
-                        isError = true;
-                        break;
-                    }
-
-                    lib.logSpecific(backend.id + " ==> " + format.id, req.body.windowKey);
-                    processes[i].mode_completed = false;
-
-                    var fileAndPathReplacement = [
-                            {
-                                "needle": "$dirname$", 
-                                "replacement": __dirname + "/Backends"
-                            },
-                            {
-                                "needle": "$filepath$", 
-                                "replacement": processes[i].file + format.file_suffix
-                            }
-                        ];
-
-                    var args = lib.replaceTemplateList(backend.tool_args, fileAndPathReplacement);
-
-                    lib.logSpecific(args, req.body.windowKey);
-                    
-                    processes[i].tool = spawn(lib.replaceTemplate(backend.tool, fileAndPathReplacement), args);
-
-                    processes[i].tool.on('error', function (err){
-                        lib.logSpecific('ERROR: Cannot run the chosen instance generator. Please check whether it is installed and accessible.', req.body.windowKey);
-                        for (var i = 0; i < processes.length; i++)
-                        {
-                            if (processes[i].windowKey == req.body.windowKey)
-                            {
-                                processes[i].result = '{"message": "' + lib.escapeJSON("Error: Cannot run claferIG") + '"}';
-                                processes[i].completed = true;
-                                processes[i].tool = null;
-                            }
-                        }
-                    });
-
-                    processes[i].tool.stdout.on("data", function (data){
-                        for (var i = 0; i < processes.length; i++)
-                        {
-                            if (processes[i].windowKey == req.body.windowKey)
-                            {
-                                if (!processes[i].completed)
-                                {
-                                    processes[i].freshData += data;
-                                }
-                            }
-                        }
-                    });
-
-                    processes[i].tool.stderr.on("data", function (data){
-                        for (var i = 0; i<processes.length; i++)
-                        {
-                            if (processes[i].windowKey == req.body.windowKey)
-                            {
-                                if (!processes[i].completed){
-                                    processes[i].freshError += data;
-                                }
-                            }
-                        }
-                    });
-
-                    processes[i].tool.on("close", function (code){
-                        lib.logSpecific("IG: On Exit", req.body.windowKey);
-
-                        for (var i = 0; i<processes.length; i++){
-
-                            if (processes[i].windowKey == req.body.windowKey)
-                            {
-                                processes[i].mode_completed = true;
-                                processes[i].tool = null;
-                            }
-                        }
-                        
-                    });
-
-
-                    // if the backend supports production of the scope file, then send this command
-                    // the command will be handled after the initial processing in any case
-
-
-                    if (backend.scope_options.clafer_scope_list)
-                    {
-                        processes[i].tool.stdin.write(backend.scope_options.clafer_scope_list.command);
-                        processes[i].producedScopes = false;
-                    }
-                    else
-                    {
-                        processes[i].producedScopes = true;
-                    }
-
-                    resultMessage = "started";
-                    isError = false;
-
-                }
-            }
-            else if (req.body.operation == "stop") // "Stop" operation
-            {
-                lib.logSpecific("Control: Stop", req.body.windowKey);
-                processes[i].toKill = true;
-                processes[i].mode_completed = true;
-                resultMessage = "stopped";
-                isError = false;
-            }
-            else if (req.body.operation == "setGlobalScope") // "Set Global Scope" operation
-            {
-                lib.logSpecific("Control: setGlobalScope", req.body.windowKey);
-
-                var backendId = req.body.backend;
-                var found = false;
-                var backend = null;
-                // looking for a backend
-
-                for (var j = 0; j < backendConfig.backends.length; j++)
-                {
-                    if (backendConfig.backends[j].id == backendId)
-                    {
-                        found = true;
-                        backend = backendConfig.backends[j]; 
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    lib.logSpecific("Error: Backend was not found", req.body.windowKey);
-                    resultMessage = "Error: Could not find the backend by its submitted id.";
-                    isError = true;
-                    break;
-                }
-
-                lib.logSpecific(backend.id + " " + req.body.operation_arg1, req.body.windowKey);
-
-                var replacements = [
-                        {
-                            "needle": "$value$", 
-                            "replacement": req.body.operation_arg1
-                        }
-                    ];
-
-                var command = lib.replaceTemplate(backend.scope_options.global_scope.command, replacements);
-                processes[i].tool.stdin.write(command);
-                    
-                if (backend.scope_options.clafer_scope_list)
-                {
-                    processes[i].tool.stdin.write(backend.scope_options.clafer_scope_list.command);
-                    processes[i].producedScopes = false;
-                }
-                else
-                {
-                    processes[i].producedScopes = true;
-                }
-
-                resultMessage = "global_scope_set";
-                isError = false;
-            }
-            else if (req.body.operation == "setIndividualScope") // "Set Clafer Scope" operation
-            {
-                lib.logSpecific("Control: setIndividualScope", req.body.windowKey);
-
-                var backendId = req.body.backend;
-                var found = false;
-                var backend = null;
-                // looking for a backend
-
-                for (var j = 0; j < backendConfig.backends.length; j++)
-                {
-                    if (backendConfig.backends[j].id == backendId)
-                    {
-                        found = true;
-                        backend = backendConfig.backends[j]; 
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    lib.logSpecific("Error: Backend was not found", req.body.windowKey);
-                    resultMessage = "Error: Could not find the backend by its submitted id.";
-                    isError = true;
-                    break;
-                }
-
-                lib.logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
-
-                var replacements = [
-                        {
-                            "needle": "$clafer$", 
-                            "replacement": req.body.operation_arg2
-                        },
-                        {
-                            "needle": "$value$", 
-                            "replacement": req.body.operation_arg1
-                        }
-                    ];
-
-                var command = lib.replaceTemplate(backend.scope_options.individual_scope.command, replacements);
-                processes[i].tool.stdin.write(command);
-                    
-                if (backend.scope_options.clafer_scope_list)
-                {
-                    processes[i].tool.stdin.write(backend.scope_options.clafer_scope_list.command);
-                    processes[i].producedScopes = false;
-                }
-                else
-                {
-                    processes[i].producedScopes = true;
-                }
-
-                resultMessage = "individual_scope_set";
-                isError = false;
-            }
-            else if (req.body.operation == "setIntScope") // "Set Integer Scope" operation
-            {
-                lib.logSpecific("Control: setIntScope", req.body.windowKey);
-
-                var backendId = req.body.backend;
-                var found = false;
-                var backend = null;
-                // looking for a backend
-
-                for (var j = 0; j < backendConfig.backends.length; j++)
-                {
-                    if (backendConfig.backends[j].id == backendId)
-                    {
-                        found = true;
-                        backend = backendConfig.backends[j]; 
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    lib.logSpecific("Error: Backend was not found", req.body.windowKey);
-                    resultMessage = "Error: Could not find the backend by its submitted id.";
-                    isError = true;
-                    break;
-                }
-
-                lib.logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
-
-                var replacements = [
-                        {
-                            "needle": "$low$", 
-                            "replacement": req.body.operation_arg1
-                        },
-                        {
-                            "needle": "$high$", 
-                            "replacement": req.body.operation_arg2
-                        }
-                    ];
-
-                var command = lib.replaceTemplate(backend.scope_options.int_scope.command, replacements);
-                processes[i].tool.stdin.write(command);
-                    
-                if (backend.scope_options.clafer_scope_list)
-                {
-                    processes[i].tool.stdin.write(backend.scope_options.clafer_scope_list.command);
-                    processes[i].producedScopes = false;
-                }
-                else
-                {
-                    processes[i].producedScopes = true;
-                }
-
-                resultMessage = "int_scope_set";
-                isError = false;
-            }
-            else // else look for custom commands defined by backend config
-            {
-                var parts = req.body.operation.split("-");
-                if (parts.length != 2)
-                {
-                    lib.logSpecific('Control: Command does not follow pattern "backend-opreration": "' + req.body.operation + '"', req.body.windowKey);
-                    resultMessage = "Error: Command does not follow the 'backend-operation' pattern.";
-                    isError = true;
-                }
-
-                var backendId = parts[0]; // it does not matter how to get backendid.
-                var operationId = parts[1];
-
-                var found = false;
-                var backend = null;
-                var operation = null;
-                // looking for a backend
-
-                for (var j = 0; j < backendConfig.backends.length; j++)
-                {
-                    if (backendConfig.backends[j].id == backendId)
-                    {
-                        found = true;
-                        backend = backendConfig.backends[j]; 
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    lib.logSpecific("Error: Backend was not found", req.body.windowKey);
-                    resultMessage = "Error: Could not find the backend specified in the command.";
-                    isError = true;
-                    break;
-                }
-
-                // looking for a format
-                var found = false;
-
-                for (var j = 0; j < backend.control_buttons.length; j++)
-                {
-                    if (backend.control_buttons[j].id == operationId)
-                    {
-                        operation = backend.control_buttons[j];
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    lib.logSpecific("Error: Required operation was not found", req.body.windowKey);
-                    resultMessage = "Error: Could not find the required operation.";
-                    break;
-                }
-                lib.logSpecific(backend.id + " ==> " + operation.id, req.body.windowKey);
-
-                processes[i].tool.stdin.write(operation.command);
-
-                resultMessage = "operation";
-                isError = false;
+                lib.logSpecific("Error: Backend was not found", req.body.windowKey);
+                res.writeHead(400, { "Content-Type": "text/html"});
+                res.end("Error: Could not find the backend by its submitted id.");
+                return;
             }
 
-            break;
+            // looking for a format
+            var format = getFormat(backend.accepted_format);
+            if (!format)
+            {
+                lib.logSpecific("Error: Required format was not found", req.body.windowKey);
+                resultMessage = "Error: Could not find the required file format.";
+                isError = true;
+                return;
+            }
+
+            lib.logSpecific(backend.id + " ==> " + format.id, req.body.windowKey);
+            process.mode_completed = false;
+
+            var fileAndPathReplacement = [
+                    {
+                        "needle": "$dirname$", 
+                        "replacement": __dirname + "/Backends"
+                    },
+                    {
+                        "needle": "$filepath$", 
+                        "replacement": process.file + format.file_suffix
+                    }
+                ];
+
+            var args = lib.replaceTemplateList(backend.tool_args, fileAndPathReplacement);
+
+            lib.logSpecific(args, req.body.windowKey);
+            
+            process.tool = spawn(lib.replaceTemplate(backend.tool, fileAndPathReplacement), args);
+
+            process.tool.on('error', function (err){
+                lib.logSpecific('ERROR: Cannot run the chosen instance generator. Please check whether it is installed and accessible.', req.body.windowKey);
+                process = getProcess(req.body.windowKey);
+                if (process != null)
+                {
+                    process.result = '{"message": "' + lib.escapeJSON("Error: Cannot run claferIG") + '"}';
+                    process.completed = true;
+                    process.tool = null;
+                }
+            });
+
+            process.tool.stdout.on("data", function (data)
+            {
+                process = getProcess(req.body.windowKey);
+                if (process != null)
+                {
+                    if (!process.completed)
+                    {
+                        process.freshData += data;
+                    }
+                }
+            });
+
+            process.tool.stderr.on("data", function (data)
+            {
+                process = getProcess(req.body.windowKey);
+                if (process != null)
+                {
+                    if (!process.completed){
+                        process.freshError += data;
+                    }
+                }
+            });
+
+            process.tool.on("close", function (code)
+            {
+                process = getProcess(req.body.windowKey);
+                if (process != null)
+                {
+                    process.mode_completed = true;
+                    process.tool = null;
+                }                
+            });
+
+
+            // if the backend supports production of the scope file, then send this command
+            // the command will be handled after the initial processing in any case
+
+
+            if (backend.scope_options.clafer_scope_list)
+            {
+                process.tool.stdin.write(backend.scope_options.clafer_scope_list.command);
+                process.producedScopes = false;
+            }
+            else
+            {
+                process.producedScopes = true;
+            }
+
+            res.writeHead(200, { "Content-Type": "text/html"});
+            res.end("started");
 
         }
     }
-
-    /* Send the response */
-    // The function should produce the response anyway, and within reasonable time
-
-    if (!isError)
+    else if (req.body.operation == "stop") // "Stop" operation
     {
+        lib.logSpecific("Control: Stop", req.body.windowKey);
+        process.toKill = true;
+        process.mode_completed = true;
         res.writeHead(200, { "Content-Type": "text/html"});
+        res.end("stopped");
     }
-    else
+    else if (req.body.operation == "setGlobalScope") // "Set Global Scope" operation
     {
-        res.writeHead(400, { "Content-Type": "text/html"});
+        lib.logSpecific("Control: setGlobalScope", req.body.windowKey);
+
+        // looking for a backend
+        var backend = getBackend(req.body.backend);
+        if (!backend)
+        {
+            lib.logSpecific("Error: Backend was not found", req.body.windowKey);
+            res.writeHead(400, { "Content-Type": "text/html"});
+            res.end("Error: Could not find the backend by its submitted id.");
+            return;
+        }
+
+        lib.logSpecific(backend.id + " " + req.body.operation_arg1, req.body.windowKey);
+
+        var replacements = [
+                {
+                    "needle": "$value$", 
+                    "replacement": req.body.operation_arg1
+                }
+            ];
+
+        var command = lib.replaceTemplate(backend.scope_options.global_scope.command, replacements);
+        process.tool.stdin.write(command);
+            
+        if (backend.scope_options.clafer_scope_list)
+        {
+            process.tool.stdin.write(backend.scope_options.clafer_scope_list.command);
+            process.producedScopes = false;
+        }
+        else
+        {
+            process.producedScopes = true;
+        }
+
+        res.writeHead(200, { "Content-Type": "text/html"});
+        res.end("global_scope_set");
     }
-    
-    res.end(resultMessage);        
+    else if (req.body.operation == "setIndividualScope") // "Set Clafer Scope" operation
+    {
+        lib.logSpecific("Control: setIndividualScope", req.body.windowKey);
+
+        // looking for a backend
+        var backend = getBackend(req.body.backend);
+        if (!backend)
+        {
+            lib.logSpecific("Error: Backend was not found", req.body.windowKey);
+            res.writeHead(400, { "Content-Type": "text/html"});
+            res.end("Error: Could not find the backend by its submitted id.");
+            return;
+        }
+
+        lib.logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
+
+        var replacements = [
+                {
+                    "needle": "$clafer$", 
+                    "replacement": req.body.operation_arg2
+                },
+                {
+                    "needle": "$value$", 
+                    "replacement": req.body.operation_arg1
+                }
+            ];
+
+        var command = lib.replaceTemplate(backend.scope_options.individual_scope.command, replacements);
+        process.tool.stdin.write(command);
+            
+        if (backend.scope_options.clafer_scope_list)
+        {
+            process.tool.stdin.write(backend.scope_options.clafer_scope_list.command);
+            process.producedScopes = false;
+        }
+        else
+        {
+            process.producedScopes = true;
+        }
+
+        res.writeHead(200, { "Content-Type": "text/html"});
+        res.end("individual_scope_set");
+    }
+    else if (req.body.operation == "setIntScope") // "Set Integer Scope" operation
+    {
+        lib.logSpecific("Control: setIntScope", req.body.windowKey);
+
+        // looking for a backend
+        var backend = getBackend(req.body.backend);
+        if (!backend)
+        {
+            lib.logSpecific("Error: Backend was not found", req.body.windowKey);
+            res.writeHead(400, { "Content-Type": "text/html"});
+            res.end("Error: Could not find the backend by its submitted id.");
+            return;
+        }
+
+        lib.logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
+
+        var replacements = [
+                {
+                    "needle": "$low$", 
+                    "replacement": req.body.operation_arg1
+                },
+                {
+                    "needle": "$high$", 
+                    "replacement": req.body.operation_arg2
+                }
+            ];
+
+        var command = lib.replaceTemplate(backend.scope_options.int_scope.command, replacements);
+        process.tool.stdin.write(command);
+            
+        if (backend.scope_options.clafer_scope_list)
+        {
+            process.tool.stdin.write(backend.scope_options.clafer_scope_list.command);
+            process.producedScopes = false;
+        }
+        else
+        {
+            process.producedScopes = true;
+        }
+
+        res.writeHead(200, { "Content-Type": "text/html"});
+        res.end("int_scope_set");
+    }
+    else // else look for custom commands defined by backend config
+    {
+        var parts = req.body.operation.split("-");
+        if (parts.length != 2)
+        {
+            lib.logSpecific('Control: Command does not follow pattern "backend-opreration": "' + req.body.operation + '"', req.body.windowKey, req.body.windowKey);
+            res.writeHead(400, { "Content-Type": "text/html"});
+            res.end("Error: Command does not follow the 'backend-operation' pattern.");
+            return;
+        }
+
+        var backendId = parts[0]; // it does not matter how to get backendid.
+        var operationId = parts[1];
+
+        var found = false;
+        var operation = null;
+        // looking for a backend
+
+        var backend = getBackend(backendId);
+        if (!backend)
+        {
+            lib.logSpecific("Error: Backend was not found", req.body.windowKey);
+            res.writeHead(400, { "Content-Type": "text/html"});
+            res.end("Error: Could not find the backend by its submitted id.");
+            return;
+        }
+
+        // looking for the operation
+        var found = false;
+
+        for (var j = 0; j < backend.control_buttons.length; j++)
+        {
+            if (backend.control_buttons[j].id == operationId)
+            {
+                operation = backend.control_buttons[j];
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            lib.logSpecific("Error: Required operation was not found", req.body.windowKey);
+            res.writeHead(400, { "Content-Type": "text/html"});
+            res.end("Error: Could not find the required operation.");
+            return;
+        }
+
+        lib.logSpecific(backend.id + " ==> " + operation.id, req.body.windowKey);
+
+        process.tool.stdin.write(operation.command);
+
+        res.writeHead(200, { "Content-Type": "text/html"});
+        res.end("operation");
+    }
 });
 
 
@@ -597,7 +499,7 @@ server.post('/upload', commandMiddleware, function(req, res, next)
                 if (processes[i].windowKey == req.body.windowKey)
                 {
                     processes[i].toKill = true;
-                    clearTimeout(processes[i].pingTimeoutObject);                
+                    timeoutProcessClearPing(processes[i]);                
                     processes[i].toRemoveCompletely = true;
                     processes[i].windowKey = "none";
 
@@ -659,8 +561,6 @@ server.post('/upload', commandMiddleware, function(req, res, next)
                 process.model = file_contents;
             else
                 process.model = "";                                   
-
-            process.pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, process);
 
             process.clafer_compiler.stdout.on("data", function (data){
                 for (var i = 0; i < processes.length; i++)
@@ -769,6 +669,7 @@ server.post('/upload', commandMiddleware, function(req, res, next)
             });
 
             processes.push(process);    
+            timeoutProcessSetPing(process);
 
             res.writeHead(200, { "Content-Type": "text/html"});
             res.end("OK"); // we have to return a response right a way to avoid confusion.               
@@ -790,163 +691,157 @@ server.post('/upload', commandMiddleware, function(req, res, next)
 
 server.post('/poll', pollingMiddleware, function(req, res, next)
 {
-    var found = false;
-    for (var i = 0; i < processes.length; i++)
+    var process = getProcess(req.body.windowKey);
+    if (process == null)
     {
-        if (processes[i].windowKey == req.body.windowKey)
+        res.writeHead(404, { "Content-Type": "application/json"});
+        res.end('{"message": "Error: the requested process is not found."}');     
+        // clearing part
+        cleanProcesses();
+        lib.logSpecific("Client polled", req.body.windowKey);
+        return;
+    }
+
+    if (req.body.command == "ping") // normal ping
+    {               
+        timeoutProcessClearPing(process);
+
+        if (process.mode_completed) // the execution of the current mode is completed
         {
-            found = true;
-            if (req.body.command == "ping") // normal ping
-            {                
-                clearTimeout(processes[i].pingTimeoutObject);
+            if (process.mode == "compiler") // if the mode completed is compilation
+            {       
 
-                if (processes[i].mode_completed) // the execution of the current mode is completed
-                {
-                    if (processes[i].mode == "compiler") // if the mode completed is compilation
-                    {       
+                res.writeHead(200, { "Content-Type": "application/json"});
+                var jsonObj = JSON.parse(process.compiler_result);
+                jsonObj.compiled_formats = process.compiled_formats;
+                jsonObj.args = process.compiler_args;
+                process.compiler_args = "";
+                jsonObj.scopes = "";
+                jsonObj.model = process.model;
+                jsonObj.compiler_message = process.compiler_message;
+                res.end(JSON.stringify(jsonObj));
 
-                        res.writeHead(200, { "Content-Type": "application/json"});
-                        var jsonObj = JSON.parse(processes[i].compiler_result);
-                        jsonObj.compiled_formats = processes[i].compiled_formats;
-                        jsonObj.args = processes[i].compiler_args;
-                        processes[i].compiler_args = "";
-                        jsonObj.scopes = "";
-                        jsonObj.model = processes[i].model;
-                        jsonObj.compiler_message = processes[i].compiler_message;
-                        res.end(JSON.stringify(jsonObj));
-
-                        processes[i].mode = "ig";
-                        processes[i].mode_completed = false;
-                    }
-                    else
-                    {
-                        var currentResult = "";
-
-                        if (processes[i].freshData != "")
-                        {
-                            currentResult += processes[i].freshData;
-                            processes[i].freshData = "";
-                        }
-
-                        if (processes[i].freshError != "")
-                        {
-                            currentResult += processes[i].freshError;
-                            processes[i].freshError = "";
-                        }                    
-
-                        res.writeHead(200, { "Content-Type": "application/json"});
-
-                        var jsonObj = new Object();
-                        jsonObj.message = currentResult;
-                        jsonObj.scopes = "";
-                        jsonObj.completed = true;
-                        res.end(JSON.stringify(jsonObj));
-                    }
-
-                    // if mode is completed, then the tool is not busy anymore, so now it's time to 
-                    // set inactivity timeout
-
-                    clearTimeout(processes[i].inactivityTimeoutObject);
-                    processes[i].inactivityTimeoutObject = setTimeout(inactivityTimeoutFunc, config.inactivityTimeout, processes[i]);
-
-                }   
-                else // still working
-                {
-                    processes[i].pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, processes[i]);                      
-
-                    if (processes[i].mode == "compiler") // if the mode completed is compilation
-                    {
-                        var jsonObj = new Object();
-                        jsonObj.message = "Working";
-                        jsonObj.args = processes[i].compiler_args;
-                        processes[i].compiler_args = "";
-                        res.end(JSON.stringify(jsonObj));
-                    }
-                    else
-                    {
-                        if (!processes[i].producedScopes)
-                        {
-                            var scopesFileName = processes[i].file + ".scopes.json";
-                            fs.readFile(scopesFileName, function (err, data) {
-                                if (!err)
-                                {
-                                    for (var i = 0; i < processes.length; i++)
-                                    {
-                                        if (processes[i].windowKey == req.body.windowKey)
-                                        {
-                                            processes[i].scopes = data.toString();    
-                                            processes[i].producedScopes = true;                                    
-                                        }
-                                    }
-
-                                    // removing the file from the system. 
-                                    fs.unlink(scopesFileName, function (err){
-                                        // nothing
-                                    });
-                                }
-                            });
-                        }
-
-                        var currentResult = "";
-
-                        if (processes[i].freshData != "")
-                        {
-                            currentResult += processes[i].freshData;
-                            processes[i].freshData = "";
-                        }
-
-                        if (processes[i].freshError != "")
-                        {
-                            currentResult += processes[i].freshError;
-                            processes[i].freshError = "";
-                        }                    
-
-                        res.writeHead(200, { "Content-Type": "application/json"});
-
-                        var jsonObj = new Object();
-                        jsonObj.message = currentResult;
-                        jsonObj.scopes = processes[i].scopes;
-
-                        processes[i].scopes = "";
-
-                        jsonObj.completed = false;
-                        res.end(JSON.stringify(jsonObj));
-                    }
-                }
+                process.mode = "ig";
+                process.mode_completed = false;
             }
-            else // if it is cancel
+            else
             {
-                processes[i].toKill = true;
-                clearTimeout(processes[i].pingTimeoutObject);                
+                var currentResult = "";
 
-                // starting inactivity timer
-                clearTimeout(processes[i].inactivityTimeoutObject);
-                processes[i].inactivityTimeoutObject = setTimeout(inactivityTimeoutFunc, config.inactivityTimeout, processes[i]);
+                if (process.freshData != "")
+                {
+                    currentResult += process.freshData;
+                    process.freshData = "";
+                }
+
+                if (process.freshError != "")
+                {
+                    currentResult += process.freshError;
+                    process.freshError = "";
+                }                    
 
                 res.writeHead(200, { "Content-Type": "application/json"});
 
                 var jsonObj = new Object();
-                jsonObj.message = "Cancelled";
+                jsonObj.message = currentResult;
                 jsonObj.scopes = "";
-                jsonObj.compiler_message = "Cancelled compilation";
                 jsonObj.completed = true;
                 res.end(JSON.stringify(jsonObj));
+            }
 
-                lib.logSpecific("Cancelled: " + processes[i].toKill, req.body.windowKey);
-           }
-           break;
+            // if mode is completed, then the tool is not busy anymore, so now it's time to 
+            // set inactivity timeout
+
+            timeoutProcessClearInactivity(process);
+            timeoutProcessSetInactivity(process);
+        }   
+        else // still working
+        {
+            timeoutProcessSetPing(process);
+
+            if (process.mode == "compiler") // if the mode completed is compilation
+            {
+                var jsonObj = new Object();
+                jsonObj.message = "Working";
+                jsonObj.args = process.compiler_args;
+                process.compiler_args = "";
+                res.end(JSON.stringify(jsonObj));
+            }
+            else
+            {
+                if (!process.producedScopes)
+                {
+                    var scopesFileName = process.file + ".scopes.json";
+                    fs.readFile(scopesFileName, function (err, data) {
+                        if (!err)
+                        {
+                            for (var i = 0; i < processes.length; i++)
+                            {
+                                if (process.windowKey == req.body.windowKey)
+                                {
+                                    process.scopes = data.toString();    
+                                    process.producedScopes = true;                                    
+                                }
+                            }
+
+                            // removing the file from the system. 
+                            fs.unlink(scopesFileName, function (err){
+                                // nothing
+                            });
+                        }
+                    });
+                }
+
+                var currentResult = "";
+
+                if (process.freshData != "")
+                {
+                    currentResult += process.freshData;
+                    process.freshData = "";
+                }
+
+                if (process.freshError != "")
+                {
+                    currentResult += process.freshError;
+                    process.freshError = "";
+                }                    
+
+                res.writeHead(200, { "Content-Type": "application/json"});
+
+                var jsonObj = new Object();
+                jsonObj.message = currentResult;
+                jsonObj.scopes = process.scopes;
+
+                process.scopes = "";
+
+                jsonObj.completed = false;
+                res.end(JSON.stringify(jsonObj));
+            }
         }
     }
-    
-    if (!found)
+    else // if it is cancel
     {
-        res.writeHead(404, { "Content-Type": "application/json"});
-        res.end('{"message": "Error: the requested process is not found."}');
-    }
+        process.toKill = true;
+        timeoutProcessClearPing(process);
 
+        // starting inactivity timer
+        timeoutProcessClearInactivity(process);
+        timeoutProcessSetInactivity(process);
+
+        res.writeHead(200, { "Content-Type": "application/json"});
+
+        var jsonObj = new Object();
+        jsonObj.message = "Cancelled";
+        jsonObj.scopes = "";
+        jsonObj.compiler_message = "Cancelled compilation";
+        jsonObj.completed = true;
+        res.end(JSON.stringify(jsonObj));
+
+        lib.logSpecific("Cancelled: " + process.toKill, req.body.windowKey);
+    }
+    
     // clearing part
     cleanProcesses();
-
     lib.logSpecific("Client polled", req.body.windowKey);
     
 });
@@ -1074,4 +969,89 @@ function dependency_ok()
         lib.logNormal('======================================');
         lib.logNormal('Ready. Listening on port ' + port);        
     }
+}
+
+function getProcess(key)
+{
+    for (var i = 0; i < processes.length; i++)
+    {
+        if (processes[i].windowKey == key)
+        {
+            return processes[i];
+        }
+    }
+
+    return null;
+}
+
+function timeoutProcessSetPing(process)
+{
+    for (var i = 0; i < processes.length; i++)
+    {
+        if (processes[i].windowKey == process.windowKey)
+        {
+            processes[i].pingTimeoutObject = setTimeout(pingTimeoutFunc, config.pingTimeout, processes[i]);
+            return;
+        }
+    }
+}
+
+function timeoutProcessClearPing(process)
+{
+    for (var i = 0; i < processes.length; i++)
+    {
+        if (processes[i].windowKey == process.windowKey)
+        {
+            clearTimeout(processes[i].pingTimeoutObject);
+            return;
+        }
+    }
+}
+
+function timeoutProcessSetInactivity(process)
+{
+    for (var i = 0; i < processes.length; i++)
+    {
+        if (processes[i].windowKey == process.windowKey)
+        {
+            processes[i].inactivityTimeoutObject = setTimeout(inactivityTimeoutFunc, config.inactivityTimeout, processes[i]);
+            return;
+        }
+    }
+}
+
+function timeoutProcessClearInactivity(process)
+{
+    for (var i = 0; i < processes.length; i++)
+    {
+        if (processes[i].windowKey == process.windowKey)
+        {
+            clearTimeout(processes[i].inactivityTimeoutObject);
+            return;
+        }
+    }
+}
+
+function getBackend(backendId)
+{
+    for (var j = 0; j < backendConfig.backends.length; j++)
+    {
+        if (backendConfig.backends[j].id == backendId)
+        {
+            return backendConfig.backends[j]; 
+        }
+    }
+    return null;
+}
+
+function getFormat(formatId){
+    for (var j = 0; j < formatConfig.formats.length; j++)
+    {
+        if (formatConfig.formats[j].id == formatId)
+        {
+            return formatConfig.formats[j];
+        }
+    }
+
+    return null;
 }
