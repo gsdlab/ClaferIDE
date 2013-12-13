@@ -49,6 +49,16 @@
             "compiler_args": [],
             "shows_compilation_errors" : "false",
             "display_element": "xml"
+        },
+        {
+            "id": "graph", 
+            "label": "Graph", 
+            "tooltip": "Graphical representation written in DOT language", 
+            "file_suffix": ".dot",             
+            "compiler_mode": "graph",
+            "compiler_args": [],
+            "shows_compilation_errors" : "false",
+            "display_element": "textarea"
         }                        
     ]   
 }

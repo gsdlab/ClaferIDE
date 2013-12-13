@@ -1159,15 +1159,20 @@ function onAllFormatsCompiled(process)
 }
 
 function finishCleanup(dir, results){
-	if (fs.existsSync(dir)){
-		fs.rmdir(dir, function (err) {
-  			if (err) {
-                logSpecific("Could not finish the cleanup: " + dir, null);
-                return;
-            };
- 			logSpecific("Successfully deleted " + dir + " along with contents:\n" + results, null);
-		});
-	}
+	fs.exists(dir, function(exists)
+    {		
+        if (exists)
+        {
+            fs.rmdir(dir, function (err) {
+  		        if (err) 
+                {
+                    logSpecific("Could not finish the cleanup: " + dir, null);
+                    return;
+                }
+                logSpecific("Successfully deleted " + dir + " along with contents:\n" + results, null);
+            });
+		}
+	});
 }
  
 function cleanupOldFiles(dir) {
@@ -1198,12 +1203,22 @@ function cleanupOldFiles(dir) {
 //done cleanup
 }
 
-function deleteOld(path){
-	if (fs.existsSync(path)){
-		fs.unlinkSync(path, function (err) { // added Sync to make sure all files are properly removed until the removal of the directory
-			if (err) throw err;
-		});
-	}
+function deleteOld(path)
+{
+	fs.exists(path, function(exists)
+    {
+        if (exists)
+        {
+    		fs.unlink(path, function (err) 
+            { 
+    			if (err)
+                {
+                    logNormal("Could not delete the file: " + path);              
+                    logNormal(err);                 
+                }
+            });
+        }
+	});
 }
 
 function escapeJSON(unsafe) 

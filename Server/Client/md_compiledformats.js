@@ -121,11 +121,11 @@ CompiledFormats.method("onInitRendered", function()
                 {
                     views += '<iframe id="' + formats[i].id + '_format" style="' + style + '" scrolling="yes" height = "' + '100%' + '" src="' + ajaxUrl + '" frameborder="0" width="' + '100%' + '"></iframe>';
                 }
-                else if (formats[i].display_element == "xml") // TODO: customize for XML
-                {
-                    style += 'width: ' + '100%' + '; height: ' + '100%' + ';' + 'white-space: nowrap; overflow: auto; resize: none;';
-                    views += '<textarea readonly="readonly" id="' + formats[i].id + '_format" height = "' + '100%' + '" width="' + '100%' + '" style="' + style + '"></textarea>';
-                }
+//                else if (formats[i].display_element == "xml") // TODO: customize for XML
+//                {
+//                    style += 'width: ' + '100%' + '; height: ' + '100%' + ';' + 'white-space: nowrap; overflow: auto; resize: none;';
+//                    views += '<textarea readonly="readonly" id="' + formats[i].id + '_format" height = "' + '100%' + '" width="' + '100%' + '" style="' + style + '"></textarea>';
+//                }
                 else // textarea
                 {
                     style += 'width: ' + '100%' + '; height: ' + '100%' + ';' + 'white-space: nowrap; overflow: auto; resize: none;';
@@ -176,6 +176,10 @@ CompiledFormats.method("setResult", function(data){
         {
             $("#" + data[i].id + "_format").val(data[i].result); 
         }
+        else if (data[i].displayElement == "download_only") // only for download
+        {
+            $("#" + data[i].id + "_format").val("For download only"); 
+        }        
         else // to textarea: copy directly
         {
             $("#" + data[i].id + "_format").val(data[i].result); 
