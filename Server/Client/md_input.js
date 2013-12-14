@@ -350,15 +350,26 @@ Input.method("getInitContent", function()
     result += '<td style="padding: 0px 2px 0px 2px;border-left: 2px groove threedface">Flags: <input id="args" type="text" style="width:90px;" name="args" value="-k" title="You can specify any additional compilation flags supported by the compiler"></input></td>';
 
 //    result += '</div>';
-    result += '</tr><tr height="100%"><td style="height:100%;border-top: 2px groove threedface" colspan = "3"><div id="clafer_editor" style="height:100%">';
+    result += '</tr><tr height="100%"><td style="height:100%;border-top: 2px groove threedface;padding-bottom:35px;" colspan = "3"><div id="clafer_editor" style="height:100%">';
 //    result += '<div style="height: 1px; border-bottom: 2px groove threedface"></div>';
 
 //    result += '<div name="clafer_editor" style="height:400px" id="clafer_editor">';
 //    result += '</div>';
 
-    result += '</div></td></tr></table>';
+    result += '</div></td>';
+
+    result += '</tr></table>';
 
     result += '</form>';
+
+    result += '<div style="position:absolute;bottom:0; left:0;right:0;margin-bottom:-20px;">';
+    result += '<div style="height:2px; border-top: 2px groove threedface;"></div>';
+
+    result += 'Optimization backend: <select id="optimizationBackend" style="width:180px" name="optimizationBackend" title=""></select>';
+
+    result += '<input id="useCache" type="checkbox" name="useCache" value="checked">Use Cache</input>';
+
+    result += '</div>';
 
 //    result += '<form id="saveSourceForm" action="/savesource" method="post" enctype="multipart/form-data">';
 //    result += '<input type="hidden" name="windowKey" value="' + this.host.key + '"/>';
