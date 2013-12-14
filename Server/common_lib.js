@@ -171,7 +171,7 @@ var moveUploadedFile = function (req, res, next, uploadedFilePath, urlFile, call
 	};
 
 
-var runClaferCompiler = function(key, specifiedArgs, genericArgs)
+var runClaferCompiler = function(key, specifiedArgs, genericArgs, onComplete)
 {
     var formatModeArgs = [];
     var process = core.getProcess(key);
@@ -274,7 +274,7 @@ var runClaferCompiler = function(key, specifiedArgs, genericArgs)
 
                         if (formats_for_process.length == item.process.compiled_formats.length)
                         {
-                            item.process.mode_completed = true;
+                        	onComplete();
                         }
                     });
                 }
@@ -288,7 +288,7 @@ var runClaferCompiler = function(key, specifiedArgs, genericArgs)
 
                     if (formats_for_process.length == item.process.compiled_formats.length)
                     {
-                        item.process.mode_completed = true;
+                        onComplete();
                     }
                 }
             });

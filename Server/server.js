@@ -530,8 +530,10 @@ server.post('/upload', commandMiddleware, function(req, res, next)
             else
                 process.model = "";                                   
 
-            // if (process == null) assuming it is added
-            lib.runClaferCompiler(req.body.windowKey, specifiedArgs, genericArgs);
+            lib.runClaferCompiler(req.body.windowKey, specifiedArgs, genericArgs, function(){
+                process.mode_completed = true;
+            });
+
             core.timeoutProcessSetPing(process);
 
             res.writeHead(200, { "Content-Type": "text/html"});
