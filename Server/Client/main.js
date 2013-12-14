@@ -32,18 +32,53 @@ $(document).ready(function()
     var modules = Array();
     
     modules.push("Input");
-    modules.push("ClaferModel");
+    modules.push("CompiledFormats");
     modules.push("Control");
     modules.push("Output");
     
     host = new Host(modules);
+
+    window.onbeforeunload = exitConfirmation;
 });
+
+function exitConfirmation() {
+    return 'Are you sure you want to quit? ClaferIDE does not save any of results, so you are responsible for saving your results.';
+}
+
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
 
 function Host(modules)
 {
-    this.key = Math.floor(Math.random()*1000000000).toString(16);
-    this.instanceCounterArg = "?special_counter?"; 
-    this.instanceCounterLabel = "#instance"
+    /* GUID for each browser tab */
+    /* Note that page refresh is supposed to create a new session */
+
+    var GUID = function () {
+                //------------------
+                var S4 = function () {
+                    return(
+                            Math.floor(
+                                    Math.random() * 0x10000 /* 65536 */
+                                ).toString(16)
+                        );
+                };
+                //------------------
+
+                return (
+                        S4() + S4() + "-" +
+                        S4() + "-" +
+                        S4() + "-" +
+                        S4() + "-" +
+                        S4() + S4() + S4()
+                    );
+            };
+
+    this.key = GUID();
+    this.claferFileURL = getParameterByName("claferFileURL");
     this.modules = new Array();
     this.helpGetter = new helpGetter(this);
 
@@ -66,10 +101,10 @@ function Host(modules)
 
         var windowType = "normal";
         
-        if (this.modules[i].iframeType)
-        {
-            windowType = "iframe";
-        }
+//        if (this.modules[i].iframeType)
+//        {
+//            windowType = "iframe";
+//        }
         
         var x = $.newWindow({
             id: this.modules[i].id,
@@ -93,20 +128,24 @@ function Host(modules)
             resizeable: true
         });    
     
+//        this.modules[i].window = x;
+
         if (this.modules[i].getInitContent)
             $.updateWindowContent(this.modules[i].id, this.modules[i].getInitContent());
+  
+//        if (this.modules[i].iframeType)
+//        {
+//            $.updateWindowContent(this.modules[i].id, '<iframe id="model" style="height:100%" src="' + this.modules[i].ajaxUrl + '" frameborder="0" width="' + this.modules[i].width + '"></iframe>');
+//        }
 
-        if (this.modules[i].iframeType)
-        {
-            $.updateWindowContent(this.modules[i].id, '<iframe id="model" style="height:100%" src="' + this.modules[i].ajaxUrl + '" frameborder="0" width="' + this.modules[i].width + '"></iframe>');
-        }
-            
         if (this.modules[i].onInitRendered)
             this.modules[i].onInitRendered();        
 
         var helpButton = this.getHelpButton(this.modules[i].title);
         $("#" + this.modules[i].id + " .window-titleBar").append(helpButton);   
     }
+
+    this.print("ClaferIDE> Welcome! Session: " + this.key + "\n");
     
     var displayHelp=getCookie("startHelpMooViz")
     if(displayHelp==null){
@@ -118,9 +157,12 @@ function Host(modules)
         $("#help").hide();
         $(".fadeOverlay").hide();
     }
-//    $.minimizeWindow("mdGoals");
-//    $.minimizeWindow("mdComparisonTable");    
 }
+
+Host.method("print", function(text)
+{
+    this.findModule("mdOutput").appendConsole(text);
+});
 
 //returns the module object. useful for modifying or getting data from other modules.
 Host.method("findModule", function(id)
@@ -133,49 +175,6 @@ Host.method("findModule", function(id)
     
     return null;
 
-});
-
-//runs the "onSelectionChanged" function for each module. Called by the selector.
-Host.method("selectionChanged", function(data)
-{
-    for (var i = 0; i < this.modules.length; i++)
-    {
-        if (this.modules[i].onSelectionChanged)
-            this.modules[i].onSelectionChanged(data);
-    }
-    
-});
-
-//runs after data is uploaded from server. Causes all modules to update their data.
-Host.method("updateData", function(data)
-{
-/*
-    if (data.error != "") // we do not process errors here anymore
-    {
-        return;
-    }
-*/
-    for (var i = 0; i < this.modules.length; i++)
-    {
-        if (this.modules[i].onDataLoaded)
-            this.modules[i].onDataLoaded(data);
-    }
-    
-    for (var i = 0; i < this.modules.length; i++)
-    {
-        if (this.modules[i].getContent)
-            $.updateWindowContent(this.modules[i].id, this.modules[i].getContent());
-
-        if (this.modules[i].onRendered)
-            this.modules[i].onRendered();
-            
-        if (this.modules[i].resize)
-            this.modules[i].resize();
-                
-    }
-    
-//    $.placeholder.shim(); // fixes the placeholder issue in IE
-    
 });
 
 Host.method("getHelp", function(moduleName){

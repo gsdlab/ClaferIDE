@@ -25,27 +25,67 @@ function Output(host)
     this.id = "mdOutput";
     this.title = "Output";
 
-    this.width = (window.parent.innerWidth-30) / 4;
-    this.height = window.parent.innerHeight-190;
-    this.posx = (window.parent.innerWidth-30) * 3 / 4;
-    this.posy = 140;
+    this.width = (window.parent.innerWidth+65) * 0.38;
+    this.height = window.parent.innerHeight-60;
+    this.posx = (window.parent.innerWidth-40) * (1 - 0.38);
+    this.posy = 0;
     this.host = host;
     this.content = "";
+
+    this.editor = null;
+    this.editorWidth = this.width - 5;
+    this.editorHeight = this.height - 28;   
+
+    this.resize = this.onResize.bind(this);     
 }
 
+Output.method("onResize", function() {
+    this.editor.resize();
+});
+
 Output.method("getInitContent", function(){
-    return '<textarea id="output" readonly="readonly" style="width:95%;height:95%;border:0" border="0">The Instance Generator result will be here.\n</textarea>';
+	var result = "";
+
+    result += '<div style="height:100%;overflow:hidden">';
+    result += '<table cellspacing="0" width="100%" height="100%" cellpadding="0">';
+    result += '<tr height="1em"><td style="border-bottom: 2px groove threedface"><button id="clearOutput">Clear output</button></td></tr>';
+    result += '<tr height="100%"><td style="height:100%">';
+//    result += '<div style="display:inline-block;height:100%;">';
+    result += '<div style="height:100%; width:100%" name="clafer_editor" id="console_editor">';
+//    result += '</div>';
+    result += '</div>';
+    result += '</td></tr>';
+    result += '</table>';
+    result += '</div>';
+    return result;
 });
 
-Output.method("onDataLoaded", function(data){
-//    if (data.consoleOut)
-//        this.content += data.consoleOut;
+Output.method("appendConsole", function(text){
+    this.editor.setValue(this.editor.getValue() + text);
+
+	var count = this.editor.getSession().getLength();
+	//Go to end of the last line
+	this.editor.gotoLine(count, this.editor.getSession().getLine(count - 1).length);
+
 });
 
-Output.method("onRendered", function(){
-//    $("#mdOutput .window-content").scrollTop($("#mdOutput #output").height());
+Output.method("onClearClick", function(){
+    if (confirm("Are you sure you want to clear the output window?"))
+    {
+        this.editor.setValue("");
+    }
 });
 
 Output.method("onInitRendered", function(){
-    $('#myform').submit();
+    this.editor = ace.edit("console_editor");
+    this.editor.setTheme("ace/theme/terminal");
+    this.editor.getSession().setMode("ace/mode/console");
+    this.editor.setShowPrintMargin(false);
+
+    $("#clearOutput")[0].onclick = this.onClearClick.bind(this);
+
+	this.editor.getSession().setUseWrapMode(false);   
+	this.editor.setReadOnly(true); 
+	this.editor.setHighlightActiveLine(false);	 
+	this.editor.renderer.setShowGutter(false);
 });
