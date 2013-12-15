@@ -1,7 +1,7 @@
 var fs = require("fs");
-var config = require('./config.json');
-var backendConfig = require('./Backends/backends.json');
-var formatConfig = require('./Formats/formats.json');
+var config = require('./../config.json');
+var backendConfig = require('./../Backends/backends.json');
+var formatConfig = require('./../Formats/formats.json');
 
 var spawn = require('child_process').spawn;    
 

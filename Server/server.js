@@ -30,8 +30,8 @@ var config = require('./config.json');
 var backendConfig = require('./Backends/backends.json');
 var formatConfig = require('./Formats/formats.json');
 
-var lib = require("./common_lib");
-var core = require("./core_lib");
+var lib = require("./commons/common_lib");
+var core = require("./commons/core_lib");
 
 /*  Rate Limiter */
 var rate            = require('express-rate/lib/rate'),
