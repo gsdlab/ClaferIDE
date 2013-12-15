@@ -29,12 +29,7 @@ var host = null;
 
 $(document).ready(function()
 {
-    var modules = Array();
-    
-    modules.push("Input");
-    modules.push("CompiledFormats");
-    modules.push("Control");
-    modules.push("Output");
+    var modules = getConfiguration();    
     
     host = new Host(modules);
 
@@ -80,12 +75,13 @@ function Host(modules)
     this.key = GUID();
     this.claferFileURL = getParameterByName("claferFileURL");
     this.modules = new Array();
+    this.configurations = new Array();    
     this.helpGetter = new helpGetter(this);
 
     for (var i = 0; i < modules.length; i++)
     {
-        var MyClass = stringToFunction(modules[i]);        
-        var instance = new MyClass(this);
+        var MyClass = stringToFunction(modules[i].name);        
+        var instance = new MyClass(this, modules[i].configuration);
         
         this.modules.push(instance);
     }    

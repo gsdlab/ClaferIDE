@@ -19,10 +19,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-function Input(host)
+function Input(host, settings)
 { 
     this.id = "mdInput";
-    this.title = "Input Clafer Model and Options";
+    this.settings = settings;
+    this.title = this.settings.title;
 
     this.requestTimeout = 60000; // what is the timeout for response after sending a file
     this.pollingTimeout = 60000;  // what is the timeout when polling
@@ -30,13 +31,14 @@ function Input(host)
     this.pollingTimeoutObject = null;
     this.toCancel = false;
 
-    this.width = (window.parent.innerWidth-40) * 0.38;
-    this.height = window.parent.innerHeight-60;
-    this.posx = 0;
-    this.posy = 0;
+    this.width = this.settings.layout.width;
+    this.height = this.settings.layout.height;
+    this.posx = this.settings.layout.posx;
+    this.posy = this.settings.layout.posy;
     
     this.host = host;
     this.serverAction = "/upload";
+    this.serverOptimizeAction = "/optimize";
     
     this.dataFileChosen = false;
 
@@ -79,6 +81,13 @@ Input.method("onInitRendered", function()
     options.timeout = this.requestTimeout;
 
     $('#myform').ajaxForm(options); 
+
+//    var options = new Object();
+//    options.error = this.handleError.bind(this);
+//    options.timeout = this.requestTimeout;
+
+//    $('#optimizeForm').ajaxForm(options); 
+
 
 //    var optionsForFile = new Object();
 //    optionsForFile.success = this.saveSourceSuccess.bind(this);
@@ -143,39 +152,15 @@ Input.method("onPoll", function(responseObject)
         return;
     }
 
-    if (responseObject.args)
-    {
-        this.host.print("ClaferIDE> clafer " + responseObject.args + "\n");
-    }
-
+    this.settings.onPoll(this, responseObject);
+    
     if (responseObject.message == "Working")
     {
         this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
     }
     else // finished 
     {   
-        if (responseObject.compiled_formats)
-        {
-            this.host.findModule("mdCompiledFormats").setResult(responseObject.compiled_formats);
-        }
-
-        if (responseObject.model != "")
-        {
-            this.editor.getSession().setValue(responseObject.model);
-        }
-
-        this.host.print("Compiler> " + responseObject.message + "\n");
-        this.host.print(responseObject.compiler_message + "\n");    
-
-        if (responseObject.message == "Success")
-        {
-            this.host.findModule("mdControl").resetControls();
-        }
-        else
-        {
-            this.host.findModule("mdControl").disableAll(); // if exited IG, then disable controls
-        }
-
+        this.settings.onCompleted(this, responseObject);
         this.endQuery();
     }
 });        
@@ -208,10 +193,7 @@ Input.method("fileSent", function(responseText, statusText, xhr, $form)  {
 
     if (responseText != "no clafer file submitted")
     {
-        this.host.print("ClaferIDE> Processing the submitted model. Compiling...\n");
-
-        var data = new Object();
-        data.message = responseText;
+        this.settings.onFileSent(this);
         this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
     }
     else
@@ -225,28 +207,7 @@ Input.method("handleError", function(response, statusText, xhr)  {
 	clearTimeout(this.pollingTimeoutObject);
 	var er = document.getElementById("error_overlay");
 	er.style.display = "block";	
-    var caption;
-
-    if (statusText == "compile_error")
-        caption = "<b>Compile Error.</b><br>Please check whether Clafer Compiler is available, and the model is correct.";
-    else if (statusText == "timeout")
-        caption = "<b>Request Timeout.</b><br>Please check whether the server is available.";
-//    else if (statusText == "malformed_output")
-//        caption = "<b>Malformed output received from ClaferMoo.</b><br>Please check whether you are using the correct version of ClaferMoo. Also, an unhandled exception is possible.  Please verify your input file: check syntax and integer ranges.";        
-//    else if (statusText == "malformed_instance")
-//        caption = "<b>Malformed instance data received from ClaferMoo.</b><br>An unhandled exception may have occured during ClaferMoo execution. Please verify your input file: check syntax and integer ranges.";        
-//    else if (statusText == "empty_instances")
-//        caption = "<b>No instances returned.</b>Possible reasons:<br><ul><li>No optimal instances, all variants are non-optimal.</li><li>An unhandled exception occured during ClaferMoo execution. Please verify your input file: check syntax and integer ranges.</li></ul>.";        
-//    else if (statusText == "empty_argument")
-//        caption = "<b>Empty argument given to processToolResult.</b><br>Please report this error.";        
-//    else if (statusText == "empty_instance_file")
-//        caption = "<b>No instances found in the specified file.";        
-//    else if (statusText == "optimize_first")
-//        caption = "<b>You have to run optimization first, and only then add instances.";        
-    else if (statusText == "error" && response.responseText == "")
-        caption = "<b>Request Error.</b><br>Please check whether the server is available.";        
-    else
-        caption = '<b>' + xhr + '</b><br>' + response.responseText.replace("\n", "<br>");
+    var caption = this.settings.onError(this, statusText, response.responseText);
     
 	document.getElementById("error_report").innerHTML = ('<span id="close_error" alt="close">Close Message</span><p>' + caption + "</p>");
 	document.getElementById("close_error").onclick = function(){ 
@@ -297,7 +258,7 @@ Input.method("inputChange", function(){
     {
         if (filename.substring(filename.length-4) == ".cfr"){
             $("#submitFile").removeAttr("disabled");                    
-            $("#submitFile").val("Compile");            
+            $("#submitFile").val(this.settings.button_file_caption);            
         }  
         else{ // unknown file
             $("#submitFile").val("Unknown");
@@ -306,7 +267,7 @@ Input.method("inputChange", function(){
     }
     else{ // no file
         $("#submitFile").attr("disabled", "disabled");       
-        $("#submitFile").val("Compile");            
+        $("#submitFile").val(this.settings.button_file_caption);            
     }
     
 });
@@ -324,13 +285,13 @@ Input.method("getInitContent", function()
     result += '<table width="100%" height="100%" cellspacing="0" cellpadding="0">';    
     result += '<tr height="1em">';
     result += '<td><input type="file" size="20" name="claferFile" id="claferFile" title="If you want to upload your clafer file, select one here "/></td>';
-    result += '<td width="60"><input id="submitFile" type="submit" value="Compile" title="Compile the chosen file with Clafer Compiler"/></td>';
+    result += '<td width="60"><input id="submitFile" type="submit" value="' + this.settings.button_file_caption + '" title="' + this.settings.button_file_tooltip + '"/></td>';
     result += '<td width="160"><input id="loadExampleInEditor" type="checkbox" name="loadExampleInEditor" value="unchecked" title="If checked, the editor window below will be loaded with a file or an example submitted">Load into editor</input></td>';
     result += '</tr><tr height="1em">';
     result += '<td><select id="exampleURL" style="width:240px" name="exampleURL" title="If you want, you can choose to compile an example clafer model from the list">';   
     
     result += '</select></td>';
-    result += '<td><input id="submitExample" type="submit" value="Compile" title="Compile the chosen example using Clafer Compiler"></input></td>';
+    result += '<td><input id="submitExample" type="submit" value="' + this.settings.button_example_caption + '" title="' + this.settings.button_example_tooltip + '"></input></td>';
 
     result += '<td style="padding: 0px 2px 0px 2px; border-top: 2px groove threedface; border-left: 2px groove threedface">Scopes: <select id="ss" name="ss" title="Choose a scope computing strategy. Scopes are used for instantiation using bounded model checking">';
 
@@ -343,18 +304,17 @@ Input.method("getInitContent", function()
     result += '</tr><tr height="1em">';
     result += '<td style="border-top: 2px groove threedface;">';
     result += 'Or enter your model:</td>';
-    result += '<td style="border-top: 2px groove threedface; "><input id="submitText" type="submit" value="Compile" title="Compile the contents of the editor below using Clafer Compiler"/></td>';
-
-//    result += '<span class="save_button" id="saveSourceButton"></span>';
+    result += '<td style="border-top: 2px groove threedface; "><input id="submitText" type="submit" value="' + this.settings.button_editor_caption + '" title="' + this.settings.button_editor_tooltip + '"/></td>';
 
     result += '<td style="padding: 0px 2px 0px 2px;border-left: 2px groove threedface">Flags: <input id="args" type="text" style="width:90px;" name="args" value="-k" title="You can specify any additional compilation flags supported by the compiler"></input></td>';
 
-//    result += '</div>';
-    result += '</tr><tr height="100%"><td style="height:100%;border-top: 2px groove threedface;padding-bottom:35px;" colspan = "3"><div id="clafer_editor" style="height:100%">';
-//    result += '<div style="height: 1px; border-bottom: 2px groove threedface"></div>';
+    var padding = "";
+    if (this.settings.optimization_backend)
+    {
+        padding = 'padding-bottom:35px;';
+    }
 
-//    result += '<div name="clafer_editor" style="height:400px" id="clafer_editor">';
-//    result += '</div>';
+    result += '</tr><tr height="100%"><td style="height:100%;border-top: 2px groove threedface;' + padding + '" colspan = "3"><div id="clafer_editor" style="height:100%">';
 
     result += '</div></td>';
 
@@ -362,14 +322,18 @@ Input.method("getInitContent", function()
 
     result += '</form>';
 
-    result += '<div style="position:absolute;bottom:0; left:0;right:0;margin-bottom:-20px;">';
-    result += '<div style="height:2px; border-top: 2px groove threedface;"></div>';
+    if (this.settings.optimization_backend)
+    {
+        result += '<div style="position:absolute;bottom:0; left:0;right:0;margin-bottom:-20px;">';
+        result += '<div style="height:2px; border-top: 2px groove threedface;"></div>';
 
-    result += 'Optimization backend: <select id="optimizationBackend" style="width:180px" name="optimizationBackend" title=""></select>';
+        result += 'Optimization backend: <select id="optimizationBackend" style="width:180px" name="optimizationBackend" title=""></select>';
 
-    result += '<input id="useCache" type="checkbox" name="useCache" value="checked">Use Cache</input>';
+        result += '<input id="useCache" type="checkbox" name="useCache" value="checked">Use Cache</input>';
 
-    result += '</div>';
+        result += '</div>';
+    }
+
 
 //    result += '<form id="saveSourceForm" action="/savesource" method="post" enctype="multipart/form-data">';
 //    result += '<input type="hidden" name="windowKey" value="' + this.host.key + '"/>';

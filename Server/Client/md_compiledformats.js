@@ -20,15 +20,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-function CompiledFormats(host)
+function CompiledFormats(host, settings)
 { 
     this.id = "mdCompiledFormats";
-    this.title = "Compiled Formats";
-    
-    this.width = (window.parent.innerWidth-40) * (0.24);
-    this.height = window.parent.innerHeight - 60 - 245;
-    this.posx = (window.parent.innerWidth-40) * 0.38;
-    this.posy = 0;
+    this.settings = settings;
+
+    this.title = this.settings.title;
+
+    this.width = this.settings.layout.width;
+    this.height = this.settings.layout.height;
+    this.posx = this.settings.layout.posx;
+    this.posy = this.settings.layout.posy;
+
     this.ajaxUrl = "/htmlwrapper";
     
     this.host = host;
@@ -67,8 +70,13 @@ CompiledFormats.method("getInitContent", function()
     result += '<table width="100%" height="100%" cellspacing="0" cellpadding="0">';    
     result += '<tr height="1em"><td style="padding: 0px 2px 2px 5px"><span>Show:</span><select id="formats" title="Select a format to show">';   
     result += '</select></td><td>';   
-    result += '<a id="saveFormat" href="" target="_blank">Download</a></td>';
-    result += '<tr height="100%"><td colspan="2" style="border-top: 2px groove threedface; height:100%">';    
+
+    if (this.settings.allow_downloading)
+    {
+        result += '<a id="saveFormat" href="" target="_blank">Download</a>';
+    }
+
+    result += '</td></tr><tr height="100%"><td colspan="2" style="border-top: 2px groove threedface; height:100%">';    
     result += '<div id="format_views" style="height:100%;overflow:hidden;padding:0px 5px 5px 0px">';
     result += '</td></tr></table></div>';
 

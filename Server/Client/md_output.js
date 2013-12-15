@@ -20,21 +20,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-function Output(host)
+function Output(host, settings)
 { 
     this.id = "mdOutput";
-    this.title = "Output";
+    this.settings = settings;
+    this.title = this.settings.title;
 
-    this.width = (window.parent.innerWidth+65) * 0.38;
-    this.height = window.parent.innerHeight-60;
-    this.posx = (window.parent.innerWidth-40) * (1 - 0.38);
-    this.posy = 0;
+    this.width = this.settings.layout.width;
+    this.height = this.settings.layout.height;
+    this.posx = this.settings.layout.posx;
+    this.posy = this.settings.layout.posy;
+
     this.host = host;
     this.content = "";
 
     this.editor = null;
-    this.editorWidth = this.width - 5;
-    this.editorHeight = this.height - 28;   
 
     this.resize = this.onResize.bind(this);     
 }

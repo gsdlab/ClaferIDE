@@ -20,10 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-function Control(host)
+function Control(host, settings)
 { 
     this.id = "mdControl";
-    this.title = "Instance Generator";
+    this.settings = settings;
+    this.title = this.settings.title;
     
     this.requestTimeout = 60000; // what is the timeout for response after sending a file
     this.pollingTimeout = 60000;  // what is the timeout when polling
@@ -31,10 +32,11 @@ function Control(host)
     this.pollingTimeoutObject = null;
     this.toCancel = false;
 
-    this.width = (window.parent.innerWidth-40) * (0.24);
-    this.height = 200;
-    this.posx = (window.parent.innerWidth-40) * 0.38;
-    this.posy = window.parent.innerHeight - 60 - 200;
+    this.width = this.settings.layout.width;
+    this.height = this.settings.layout.height;
+    this.posx = this.settings.layout.posx;
+    this.posy = this.settings.layout.posy;
+
     this.host = host;
 
     this.sessionActive = false;
@@ -240,22 +242,22 @@ Control.method("beginQuery", function(formData, jqForm, options){
 Control.method("showResponse", function(responseText, statusText, xhr, $form)
 {
     if (responseText == "started")
-    {        
-        this.host.print("ClaferIDE> Running the chosen instance generator...\n");
+    {   
+        this.settings.onStarted(this);
         this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay); // start polling
         this.enableRuntimeControls();
     }
     else if (responseText == "stopped")
     {
-        this.host.print("ClaferIDE> Forcing the instance generator to close...\n");
+        this.settings.onStopped(this);
     }
     else if (responseText == "global_scope_set")
     {
-        this.host.print("ClaferIDE> Setting the global scope...\n");
+        this.settings.onGlobalScopeSet(this);
     }
     else if (responseText == "individual_scope_set")
     {
-        this.host.print("ClaferIDE> Setting the individual scope...\n");
+        this.settings.onClaferScopeSet(this);
     }
 
     this.endQuery();
@@ -274,20 +276,8 @@ Control.method("handleError", function(response, statusText, xhr)  {
     
     var er = document.getElementById("error_overlay");
     er.style.display = "block"; 
-    var caption;
+    var caption = this.settings.onError(this, statusText, response.responseText);
 
-//    alert(statusText);
-//    alert(response);
-
-    if (statusText == "timeout")
-        caption = "<b>Request Timeout.</b><br>Please check whether the server is available.";
-    else if (response && response.responseText == "process_not_found")
-        caption = "<b>Session not found.</b><br>Looks like your session has been closed due to inactivity. Please recompile your model to start a new session";
-    else if (statusText == "error" && response.responseText == "")
-        caption = "<b>Request Error.</b><br>Please check whether the server is available.";        
-    else
-        caption = '<b>' + xhr + '</b><br>' + response.responseText.replace("\n", "<br>");
-    
     document.getElementById("error_report").innerHTML = ('<span id="close_error" alt="close">Close Message</span><p>' + caption + "</p>");
     document.getElementById("close_error").onclick = function(){ 
         document.getElementById("error_overlay").style.display = "none";
@@ -301,23 +291,34 @@ Control.method("handleError", function(response, statusText, xhr)  {
 Control.method("onPoll", function(responseObject)
 {
 //    console.log(responseObject);
-    this.processToolResult(responseObject);
+    if (!responseObject)
+    {
+        this.handleError(null, "empty_argument", null);
+        return;
+    }
+
+    if (responseObject.scopes != "")
+    {
+        this.updateClaferList(JSON.parse(responseObject.scopes));    
+    }
+
+    this.settings.onPoll(this, responseObject);
     
     if (responseObject.completed)
     {
-        this.host.print("ClaferIDE> The instance generator is exited.\n");
+        this.settings.onCompleted(this, responseObject);
         this.disableRuntimeControls();
         this.sessionActive = false;
     }
     else
     {
-        if (responseObject.message.length >= 5 && responseObject.message.substring(0,5) == "Error")
-        {
-        }
-        else
-        {
+//        if (responseObject.message.length >= 5 && responseObject.message.substring(0,5) == "Error")
+//        {
+//        }
+//        else
+//        {
             this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
-        }
+//        }
     }
 });        
 
@@ -336,27 +337,6 @@ Control.method("poll", function()
     options.error = this.handleError.bind(this);
 
     $.ajax(options);
-});
-
-
-Control.method("processToolResult", function(result)
-{
-    if (!result)
-    {
-        this.handleError(null, "empty_argument", null);
-        return;
-    }
-
-    if (result.message != "")
-    {
-        this.host.print(result.message);
-    }
-
-    if (result.scopes != "")
-    {
-        this.updateClaferList(JSON.parse(result.scopes));    
-    }
-
 });
 
 Control.method("updateClaferList", function(jsonList){
