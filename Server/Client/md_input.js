@@ -153,7 +153,7 @@ Input.method("onPoll", function(responseObject)
     }
 
     this.settings.onPoll(this, responseObject);
-    
+
     if (responseObject.message == "Working")
     {
         this.pollingTimeoutObject = setTimeout(this.poll.bind(this), this.pollingDelay);
@@ -288,7 +288,7 @@ Input.method("getInitContent", function()
     result += '<td width="60"><input id="submitFile" type="submit" value="' + this.settings.button_file_caption + '" title="' + this.settings.button_file_tooltip + '"/></td>';
     result += '<td width="160"><input id="loadExampleInEditor" type="checkbox" name="loadExampleInEditor" value="unchecked" title="If checked, the editor window below will be loaded with a file or an example submitted">Load into editor</input></td>';
     result += '</tr><tr height="1em">';
-    result += '<td><select id="exampleURL" style="width:240px" name="exampleURL" title="If you want, you can choose to compile an example clafer model from the list">';   
+    result += '<td><select id="exampleURL" style="width:220px" name="exampleURL" title="If you want, you can choose to compile an example clafer model from the list">';   
     
     result += '</select></td>';
     result += '<td><input id="submitExample" type="submit" value="' + this.settings.button_example_caption + '" title="' + this.settings.button_example_tooltip + '"></input></td>';

@@ -11,14 +11,14 @@ function getConfiguration()
     		},
 
     		"title": "Input Clafer Model and Options",
-    		"optimization_backend": true, 
-    		"button_file_caption": "Optimize",
-    		"button_example_caption": "Optimize",
-    		"button_editor_caption": "Optimize",
+    		"optimization_backend": false, 
+    		"button_file_caption": "Compile",
+    		"button_example_caption": "Compile",
+    		"button_editor_caption": "Compile",
 
-    		"button_file_tooltip": "Optimize",
-    		"button_example_tooltip": "Optimize",
-    		"button_editor_tooltip": "Optimize",
+    		"button_file_tooltip": "Compile",
+    		"button_example_tooltip": "Compile",
+    		"button_editor_tooltip": "Compile",
 
     		"onError": function(module, statusText, responseText){
 			    var caption = "";
