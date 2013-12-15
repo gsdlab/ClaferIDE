@@ -137,13 +137,13 @@ function Host(modules)
         if (this.modules[i].onInitRendered)
             this.modules[i].onInitRendered();        
 
-        var helpButton = this.getHelpButton(this.modules[i].title);
+        var helpButton = this.getHelpButton(this.modules[i].id);
         $("#" + this.modules[i].id + " .window-titleBar").append(helpButton);   
     }
 
     this.print("ClaferIDE> Welcome! Session: " + this.key + "\n");
     
-    var displayHelp=getCookie("startHelpMooViz")
+    var displayHelp=getCookie("displayIntroHelp")
     if(displayHelp==null){
         $("body").prepend(this.helpGetter.getInitial());
         this.helpGetter.setListeners();

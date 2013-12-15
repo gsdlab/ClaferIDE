@@ -1,0 +1,35 @@
+.help{
+    z-index: 10000;
+    position: absolute;
+    background: white;
+    width: 700px;
+    height: 450px;
+    color: #000000;
+    border: 1px solid #777;
+}
+
+.fadeOverlay{
+    z-index: 9000;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    background: #FFFFFF;
+    opacity: 0.5;
+    top: 0;
+    left: 0;
+}
+
+.window-helpButton.active{
+    background: url("images/help_hover.png");
+}
+
+
+.window-helpButton {
+    background: url("images/help.png");
+    cursor: pointer;
+    height: 16px;
+    right: 25px;
+    position: absolute;
+    top: 4px;
+    width: 17px;
+}

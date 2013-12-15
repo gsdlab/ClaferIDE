@@ -1,0 +1,10 @@
+digraph "fd2fb3a7-9b1f-29dd-8eb4-e947dc16c9d80"
+{
+rankdir=BT;
+ranksep=0.3;
+nodesep=0.1;
+graph [fontname=Sans fontsize=11];
+node [shape=box color=lightgray fontname=Sans fontsize=11 margin="0.02,0.02" height=0.2 ];
+edge [fontname=Sans fontsize=11];
+"c0_androidPhone" [label="androidPhone" URL="#c0_androidPhone" tooltip="androidPhone&#10;  hardware&#10;  software&#10;"];
+}

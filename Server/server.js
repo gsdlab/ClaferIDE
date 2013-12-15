@@ -58,7 +58,7 @@ server.use(express.bodyParser({ keepExtensions: true, uploadDir: __dirname + '/u
 //-------------------------------------------------
 // Response: File contents
 server.get('/', fileMiddleware, function(req, res) {
-    res.sendfile("Client/app.html");
+    res.sendfile("Client/commons/app.html");
 });
 
 //-------------------------------------------------
@@ -78,7 +78,7 @@ server.get('/Formats/:file', fileMiddleware, function(req, res) {
 });
 
 server.get('/htmlwrapper', fileMiddleware, function(req, res) {
-    res.sendfile("Client/compiler_html_wrapper.html");
+    res.sendfile("Client/commons/compiler_html_wrapper.html");
 });
 
 //------------------- save format request --------------------------
