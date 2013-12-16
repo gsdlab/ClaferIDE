@@ -47,6 +47,19 @@ function getConfiguration()
 
     		},
 
+    		"onBeginQuery": function(module)
+    		{
+			    if (module.host.findModule("mdControl").sessionActive) // if there is an active IG session
+			    {
+			        alert("Please stop the instance generator and save your results first");
+			        return false;
+			    }
+
+			    module.host.findModule("mdControl").disableAll();
+
+			    return true;
+    		},
+
     		"onFileSent": function(module){
 		        module.host.print("ClaferIDE> Processing the submitted model. Compiling...\n");
     		},
