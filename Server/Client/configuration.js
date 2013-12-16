@@ -178,5 +178,10 @@ function getConfiguration()
 
     	}});
 
-    return modules;
+    var settings = {"onLoaded": function(host)
+    {
+    	$("#myform").submit();
+    }};
+
+    return {"modules": modules, "settings": settings};
 }
