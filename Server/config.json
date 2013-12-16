@@ -1,4 +1,5 @@
 {
+	"pageTitle": "ClaferIDE",
 	"port": "8194",
 	"inactivityTimeout": "600000",
 	"pingTimeout": "10000",
