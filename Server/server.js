@@ -49,7 +49,9 @@ var port = config.port;
 
 var server = express();
 
-server.use(express.static(__dirname + '/Client'));
+server.use("/commons/Client", express.static(__dirname + '/commons/Client'));
+server.use("/Client", express.static(__dirname + '/Client'));
+//server.use(express.static(__dirname + '/commons/Client'));
 //server.use(express.static(__dirname + '/Client/'));
 server.use(express.bodyParser({ keepExtensions: true, uploadDir: __dirname + '/uploads' }));
 
@@ -58,8 +60,16 @@ server.use(express.bodyParser({ keepExtensions: true, uploadDir: __dirname + '/u
 //-------------------------------------------------
 // Response: File contents
 server.get('/', fileMiddleware, function(req, res) {
-    res.sendfile("Client/commons/app.html");
+    res.sendfile("commons/Client/app.html");
 });
+
+//server.get('/commons/Client/:file', function(req, res) {
+//    res.sendfile('commons/Client/' + req.params.file);
+//});
+
+//server.get('/commons/Client/modules/:file', function(req, res) {
+//    res.sendfile('commons/Client/modules/' + req.params.file);
+//});
 
 //-------------------------------------------------
 // File requests
@@ -78,7 +88,7 @@ server.get('/Formats/:file', fileMiddleware, function(req, res) {
 });
 
 server.get('/htmlwrapper', fileMiddleware, function(req, res) {
-    res.sendfile("Client/commons/compiler_html_wrapper.html");
+    res.sendfile("commons/Client/compiler_html_wrapper.html");
 });
 
 //------------------- save format request --------------------------
