@@ -1,0 +1,9 @@
+{
+    "scripts": [
+        "configuration.js"
+    ],
+
+    "styles": [
+        "styles.css"        
+    ]    
+}
