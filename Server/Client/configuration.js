@@ -20,7 +20,7 @@ function getConfiguration()
     		"button_example_tooltip": "Compile",
     		"button_editor_tooltip": "Compile",
 
-    		"onError": function(module, statusText, responseText){
+    		"onError": function(module, statusText, response, xhr){
 			    var caption = "";
 			    if (statusText == "compile_error")
 			        caption = "<b>Compile Error.</b><br>Please check whether Clafer Compiler is available, and the model is correct.";
@@ -38,10 +38,10 @@ function getConfiguration()
 			//        caption = "<b>No instances found in the specified file.";        
 			//    else if (statusText == "optimize_first")
 			//        caption = "<b>You have to run optimization first, and only then add instances.";        
-			    else if (statusText == "error" && responseText == "")
+			    else if (statusText == "error" && response.responseText == "")
 			        caption = "<b>Request Error.</b><br>Please check whether the server is available.";        
 			    else
-			        caption = '<b>' + xhr + '</b><br>' + responseText.replace("\n", "<br>");
+			        caption = '<b>' + xhr + '</b><br>' + response.responseText.replace("\n", "<br>");
 
 			    return caption;
 
@@ -178,10 +178,15 @@ function getConfiguration()
 
     	}});
 
-    var settings = {"onLoaded": function(host)
-    {
-    	$("#myform").submit();
-    }};
+    var settings = {
+    	"onInitialize": function(host)
+	    {
+	    },
+    	"onLoaded": function(host)
+	    {
+	    	$("#myform").submit();
+	    }	    
+	};
 
     return {"modules": modules, "settings": settings};
 }
