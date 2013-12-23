@@ -12,6 +12,8 @@ function getConfiguration()
 
     		"title": "Input Clafer Model and Options",
     		"optimization_backend": false, 
+            "input_default_cache": "checked",
+            "input_default_flags": "-k",    		
             "file_extensions": [
                 {
                     "ext": ".cfr", 
