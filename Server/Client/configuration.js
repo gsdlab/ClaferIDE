@@ -17,13 +17,13 @@ function getConfiguration()
             "file_extensions": [
                 {
                     "ext": ".cfr", 
-                    "button_file_caption": "Optimize",
-                    "button_example_caption": "Optimize",
-                    "button_editor_caption": "Optimize",
+                    "button_file_caption": "Compile",
+                    "button_example_caption": "Compile",
+                    "button_editor_caption": "Compile",
 
-                    "button_file_tooltip": "Optimize tooltip",
-                    "button_example_tooltip": "Optimize tooltip",
-                    "button_editor_tooltip": "Optimize tooltip"
+                    "button_file_tooltip": "Compile tooltip",
+                    "button_example_tooltip": "Compile tooltip",
+                    "button_editor_tooltip": "Compile tooltip"
                 }
             ],
     		"onError": function(module, statusText, response, xhr){
