@@ -1,5 +1,5 @@
 {
-  "name": "Clafer IDE",
+  "name": "ClaferIDE",
   "description": "A web-based GUI for domain and product line modeling with Clafer",
   "version": "0.3.5",
   "private": true,
