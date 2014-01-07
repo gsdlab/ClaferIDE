@@ -774,7 +774,7 @@ server.use(function(req, res, next)
 //================================================================
 
 core.logNormal('===============================');
-core.logNormal('| ClaferIDE v0.3.5.??-??-???? |');
+core.logNormal('| ' + core.getTitle() + ' ' + core.getVersion() + ' |');
 core.logNormal('===============================');
 
 core.addDependency("clafer", ["-V"], "Clafer Compiler");
