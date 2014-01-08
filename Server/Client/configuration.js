@@ -160,6 +160,14 @@ function getConfiguration()
 			{
 		        module.host.print("ClaferIDE> Setting the individual scope...\n");
 		    },
+			"onIntScopeSet": function (module)
+			{
+		        module.host.print("ClaferIDE> Setting integer bounds...\n");
+		    },		    
+			"onBitwidthSet": function (module)
+			{
+		        module.host.print("ClaferIDE> Setting the bitwidth...\n");
+		    },		    
     		"onPoll" : function(module, responseObject){
 		        if (responseObject.message != "")
 				{
