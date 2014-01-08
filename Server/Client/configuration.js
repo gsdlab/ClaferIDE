@@ -131,7 +131,7 @@ function getConfiguration()
 			    "posy": window.parent.innerHeight - 60 - 200
     		},
 	    	"title": "Instance Generator",
-    		"onError": function(module, statusText, responseText)
+    		"onError": function(module, statusText, response, xhr)
     		{
 			    if (statusText == "timeout")
 			        caption = "<b>Request Timeout.</b><br>Please check whether the server is available.";
