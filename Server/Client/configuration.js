@@ -152,6 +152,14 @@ function getConfiguration()
 			{
 				module.host.print("ClaferIDE> Forcing the instance generator to close...\n");				
 			},
+			"onStart": function (module)
+			{
+				return true;				
+			},
+			"onStop": function (module)
+			{
+				return true;				
+			},
 			"onGlobalScopeSet": function (module)
 			{
 				module.host.print("ClaferIDE> Setting the global scope...\n");
