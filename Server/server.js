@@ -212,6 +212,11 @@ server.post('/control', commandMiddleware, function(req, res)
 
             var args = core.replaceTemplateList(backend.tool_args, fileAndPathReplacement);
 
+            if (backend.tool_args_forward_from_compiler) // so far forwarding only ss
+            {
+                args.push(process.ss);
+            }
+
             core.logSpecific(args, req.body.windowKey);
             
             process.tool = spawn(core.replaceTemplate(backend.tool, fileAndPathReplacement), args);
@@ -575,6 +580,8 @@ server.post('/upload', commandMiddleware, function(req, res, next)
             var genericArgs = [ss, uploadedFilePath + ".cfr"];
 
             var process = core.getProcess(req.body.windowKey);
+
+            process.ss = ss; // saving the scope strategy
 
             if (loadExampleInEditor)
                 process.model = file_contents;
