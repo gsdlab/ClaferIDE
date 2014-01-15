@@ -92,15 +92,15 @@ function getConfiguration()
 		            module.editor.getSession().setValue(responseObject.model);
 		        }
 
-		        module.host.print("Compiler> " + responseObject.message + "\n");
-		        module.host.print(responseObject.compiler_message + "\n");    
-
 		        if (responseObject.message == "Success")
 		        {
+			        module.host.print("Compiler> " + responseObject.message + "\n");
+			        module.host.print(responseObject.compiler_message + "\n");    
 		            module.host.findModule("mdControl").resetControls();
 		        }
 		        else
 		        {
+		        	module.host.print("Compiler> Error response:\n" + responseObject + "\n");
 		            module.host.findModule("mdControl").disableAll(); // if exited IG, then disable controls
 		        }		          
 
