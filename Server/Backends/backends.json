@@ -17,6 +17,7 @@
             "control_buttons": [
                 {"id": "next_instance", "command": "\n", "label" : "Next", "tooltip": "Next Instance"}, 
                 {"id": "reload", "command": "r\n", "label" : "Reload", "tooltip": "Reload the model"}, 
+                {"id": "clafer_model", "command": "claferModel\n", "label" : "Clafer Model", "tooltip": "Print the Clafer model along with the scopes and mappings"},
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}                
             ]            
         }, 
