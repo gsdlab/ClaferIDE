@@ -160,13 +160,21 @@ function getConfiguration()
 			{
 				return true;				
 			},
-			"onGlobalScopeSet": function (module)
+			"onDefaultScopeSet": function (module)
 			{
-				module.host.print("ClaferIDE> Setting the global scope...\n");
+				module.host.print("ClaferIDE> Setting the default scope...\n");
 			},
-			"onClaferScopeSet": function (module)
+			"onAllScopesIncreased": function (module)
+			{
+				module.host.print("ClaferIDE> Increasing all the scopes...\n");
+			},
+			"onIndividualScopeSet": function (module)
 			{
 		        module.host.print("ClaferIDE> Setting the individual scope...\n");
+		    },
+			"onIndividualScopeIncreased": function (module)
+			{
+		        module.host.print("ClaferIDE> Increasing the individual scope...\n");
 		    },
 			"onIntScopeSet": function (module)
 			{

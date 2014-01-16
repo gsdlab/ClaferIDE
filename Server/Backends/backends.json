@@ -10,9 +10,12 @@
             "tool_args_forward_from_compiler" : ["--ss"],
             "tool_version_args": ["-V"],
             "scope_options": {
-                "global_scope" : {"command": "s $value$\n"}, 
-                "bitwidth" : {"command": "b $value$\n"},                 
-                "individual_scope": {"command": "s $clafer$ $value$\n"}
+                "set_default_scope" : {"command": "s $value$\n"}, 
+                "set_individual_scope": {"command": "s $clafer$ $value$\n"},
+                "inc_all_scopes" : {"command": "i $value$\n"},
+                "inc_individual_scope": {"command": "i $clafer$ $value$\n"},
+                "produce_scope_file" : {"command": "saveScopes\n"},
+                "set_bitwidth" : {"command": "b $value$\n"}                 
             },
             "control_buttons": [
                 {"id": "next_instance", "command": "\n", "label" : "Next", "tooltip": "Next Instance"}, 
@@ -27,13 +30,13 @@
             "tooltip": "The new IG based on Choco3 solver library",
             "accepted_format": "choco",             
             "tool": "java",
-            "tool_args": ["-jar", "$dirname$/ChocoIG/claferchocoig-0.3.5-jar-with-dependencies.jar", "$filepath$"],            
-            "tool_version_args": ["-jar", "$dirname$/ChocoIG/claferchocoig-0.3.5-jar-with-dependencies.jar", "--version"],
+            "tool_args": ["-jar", "$dirname$/claferchocoig-0.3.5-jar-with-dependencies.jar", "$filepath$"],            
+            "tool_version_args": ["-jar", "$dirname$/claferchocoig-0.3.5-jar-with-dependencies.jar", "--version"],
             "scope_options": {
-                "set_global_scope" : {"command": "globalScope $value$\n"}, 
-                "set_int_scope" : {"command": "intScope $low$ $high$\n"},                 
+                "set_default_scope" : {"command": "globalScope $value$\n"}, 
                 "set_individual_scope": {"command": "scope $clafer$ $value$\n"}, 
-                "clafer_scope_list" : {"command": "saveScopes\n"}
+                "produce_scope_file" : {"command": "saveScopes\n"},
+                "set_int_scope" : {"command": "intScope $low$ $high$\n"}                 
             },
             "control_buttons": [
                 {"id": "next", "command": "n\n", "label" : "Next", "tooltip": "Next Instance"}, 

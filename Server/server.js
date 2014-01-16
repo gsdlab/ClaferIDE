@@ -34,14 +34,14 @@ var lib = require("./commons/common_lib");
 var core = require("./commons/core_lib");
 
 /*  Rate Limiter */
-var rate            = require('express-rate/lib/rate'),
-  redis     = require('redis'),
-  client      = redis.createClient();
+//var rate            = require('express-rate/lib/rate'),
+//  redis     = require('redis'),
+//  client      = redis.createClient();
 
-var redisHandler = new rate.Redis.RedisRateHandler({client: client});
-var commandMiddleware = rate.middleware({handler: redisHandler, interval: config.commandLimitingRate.interval, limit: config.commandLimitingRate.limit}); // limiting command sending
-var pollingMiddleware = rate.middleware({handler: redisHandler, interval: config.pollingLimitingRate.interval, limit: config.pollingLimitingRate.limit}); // limiting polling
-var fileMiddleware = rate.middleware({handler: redisHandler, interval: config.fileRequestLimitingRate.interval, limit: config.fileRequestLimitingRate.limit}); // limiting requesting files
+//var redisHandler = new rate.Redis.RedisRateHandler({client: client});
+//var commandMiddleware = rate.middleware({handler: redisHandler, interval: config.commandLimitingRate.interval, limit: config.commandLimitingRate.limit}); // limiting command sending
+//var pollingMiddleware = rate.middleware({handler: redisHandler, interval: config.pollingLimitingRate.interval, limit: config.pollingLimitingRate.limit}); // limiting polling
+//var fileMiddleware = rate.middleware({handler: redisHandler, interval: config.fileRequestLimitingRate.interval, limit: config.fileRequestLimitingRate.limit}); // limiting requesting files
 
 /* ----- */
 
@@ -59,7 +59,7 @@ server.use(express.bodyParser({ keepExtensions: true, uploadDir: __dirname + '/u
 // Standard GET request
 //-------------------------------------------------
 // Response: File contents
-server.get('/', fileMiddleware, function(req, res) {
+server.get('/', /*fileMiddleware, */ function(req, res) {
     res.writeHead(200, { "Content-Type": "text/html"});    
     res.end(lib.getMainHTML());
 
@@ -77,24 +77,24 @@ server.get('/', fileMiddleware, function(req, res) {
 // File requests
 //-------------------------------------------------
 
-server.get('/Examples/:file', fileMiddleware, function(req, res) {
+server.get('/Examples/:file', /* fileMiddleware,*/ function(req, res) {
     res.sendfile('Examples/' + req.params.file);
 });
 
-server.get('/Backends/:file', fileMiddleware, function(req, res) {
+server.get('/Backends/:file', /*fileMiddleware,*/ function(req, res) {
     res.sendfile('Backends/' + req.params.file);
 });
 
-server.get('/Formats/:file', fileMiddleware, function(req, res) {
+server.get('/Formats/:file', /*fileMiddleware,*/ function(req, res) {
     res.sendfile('Formats/' + req.params.file);
 });
 
-server.get('/htmlwrapper', fileMiddleware, function(req, res) {
+server.get('/htmlwrapper', /*fileMiddleware,*/ function(req, res) {
     res.sendfile("commons/Client/compiler_html_wrapper.html");
 });
 
 //------------------- save format request --------------------------
-server.get('/saveformat', fileMiddleware, function(req, res) {
+server.get('/saveformat', /*fileMiddleware, */function(req, res) {
     
     if (!req.query.windowKey)
         return;
@@ -144,382 +144,16 @@ server.get('/saveformat', fileMiddleware, function(req, res) {
 //-------------------------------------------------
 
 /* Controlling Instance Generators */
-server.post('/control', commandMiddleware, function(req, res)
+server.post('/control', /*commandMiddleware, */function(req, res)
 {
-    core.logSpecific("Control: Enter", req.body.windowKey);
-
-    var isError = true;
-    var resultMessage;
-
-    var process = core.getProcess(req.body.windowKey);
-    if (process == null)
-    {
-        res.writeHead(400, { "Content-Type": "text/html"});
-        res.end("process_not_found");               
-        return;
-    }
-
-    if (req.body.operation == "run") // "Run" operation
-    {
-        core.logSpecific("Control: Run", req.body.windowKey);
-
-        var backendId = req.body.backend;
-        core.logSpecific("Backend: " + backendId, req.body.windowKey);
-        if (process.mode != "ig")
-        {
-            core.logSpecific("Error: Not compiled yet", req.body.windowKey);
-            res.writeHead(400, { "Content-Type": "text/html"});
-            res.end("Error: The mode is not IG: the compilation is still running");        
-            return;
-        }
-        else
-        {
-            core.timeoutProcessClearInactivity(process); // reset the inactivity timeout
-
-            // looking for a backend
-            var backend = core.getBackend(backendId);
-            if (!backend)
-            {
-                core.logSpecific("Error: Backend was not found", req.body.windowKey);
-                res.writeHead(400, { "Content-Type": "text/html"});
-                res.end("Error: Could not find the backend by its submitted id.");
-                return;
-            }
-
-            // looking for a format
-            var format = core.getFormat(backend.accepted_format);
-            if (!format)
-            {
-                core.logSpecific("Error: Required format was not found", req.body.windowKey);
-                resultMessage = "Error: Could not find the required file format.";
-                isError = true;
-                return;
-            }
-
-            core.logSpecific(backend.id + " ==> " + format.id, req.body.windowKey);
-            process.mode_completed = false;
-
-            var fileAndPathReplacement = [
-                    {
-                        "needle": "$dirname$", 
-                        "replacement": __dirname + "/Backends"
-                    },
-                    {
-                        "needle": "$filepath$", 
-                        "replacement": process.file + format.file_suffix
-                    }
-                ];
-
-            var args = core.replaceTemplateList(backend.tool_args, fileAndPathReplacement);
-
-            if (backend.tool_args_forward_from_compiler) // so far forwarding only ss
-            {
-                args.push(process.ss);
-            }
-
-            core.logSpecific(args, req.body.windowKey);
-            
-            process.tool = spawn(core.replaceTemplate(backend.tool, fileAndPathReplacement), args);
-
-            process.tool.on('error', function (err){
-                core.logSpecific('ERROR: Cannot run the chosen instance generator. Please check whether it is installed and accessible.', req.body.windowKey);
-                var process = core.getProcess(req.body.windowKey);
-                if (process != null)
-                {
-                    process.result = '{"message": "' + lib.escapeJSON("Error: Cannot run claferIG") + '"}';
-                    process.completed = true;
-                    process.tool = null;
-                }
-            });
-
-            process.tool.stdout.on("data", function (data)
-            {
-                var process = core.getProcess(req.body.windowKey);
-                if (process != null)
-                {
-                    if (!process.completed)
-                    {
-                        process.freshData += data;
-                    }
-                }
-            });
-
-            process.tool.stderr.on("data", function (data)
-            {
-                var process = core.getProcess(req.body.windowKey);
-                if (process != null)
-                {
-                    if (!process.completed){
-                        process.freshError += data;
-                    }
-                }
-            });
-
-            process.tool.on("close", function (code)
-            {
-                var process = core.getProcess(req.body.windowKey);
-                if (process != null)
-                {
-                    process.mode_completed = true;
-                    process.tool = null;
-                }                
-            });
-
-
-            // if the backend supports production of the scope file, then send this command
-            // the command will be handled after the initial processing in any case
-
-
-            if (backend.scope_options.clafer_scope_list)
-            {
-                process.tool.stdin.write(backend.scope_options.clafer_scope_list.command);
-                process.producedScopes = false;
-            }
-            else
-            {
-                process.producedScopes = true;
-            }
-
-            res.writeHead(200, { "Content-Type": "text/html"});
-            res.end("started");
-
-        }
-    }
-    else if (req.body.operation == "stop") // "Stop" operation
-    {
-        core.logSpecific("Control: Stop", req.body.windowKey);
-        process.toKill = true;
-        process.mode_completed = true;
-        res.writeHead(200, { "Content-Type": "text/html"});
-        res.end("stopped");
-    }
-    else if (req.body.operation == "setGlobalScope") // "Set Global Scope" operation
-    {
-        core.logSpecific("Control: setGlobalScope", req.body.windowKey);
-
-        // looking for a backend
-        var backend = core.getBackend(req.body.backend);
-        if (!backend)
-        {
-            core.logSpecific("Error: Backend was not found", req.body.windowKey);
-            res.writeHead(400, { "Content-Type": "text/html"});
-            res.end("Error: Could not find the backend by its submitted id.");
-            return;
-        }
-
-        core.logSpecific(backend.id + " " + req.body.operation_arg1, req.body.windowKey);
-
-        var replacements = [
-                {
-                    "needle": "$value$", 
-                    "replacement": req.body.operation_arg1
-                }
-            ];
-
-        var command = core.replaceTemplate(backend.scope_options.global_scope.command, replacements);
-        process.tool.stdin.write(command);
-            
-        if (backend.scope_options.clafer_scope_list)
-        {
-            process.tool.stdin.write(backend.scope_options.clafer_scope_list.command);
-            process.producedScopes = false;
-        }
-        else
-        {
-            process.producedScopes = true;
-        }
-
-        res.writeHead(200, { "Content-Type": "text/html"});
-        res.end("global_scope_set");
-    }
-    else if (req.body.operation == "setIndividualScope") // "Set Clafer Scope" operation
-    {
-        core.logSpecific("Control: setIndividualScope", req.body.windowKey);
-
-        // looking for a backend
-        var backend = core.getBackend(req.body.backend);
-        if (!backend)
-        {
-            core.logSpecific("Error: Backend was not found", req.body.windowKey);
-            res.writeHead(400, { "Content-Type": "text/html"});
-            res.end("Error: Could not find the backend by its submitted id.");
-            return;
-        }
-
-        core.logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
-
-        var replacements = [
-                {
-                    "needle": "$clafer$", 
-                    "replacement": req.body.operation_arg2
-                },
-                {
-                    "needle": "$value$", 
-                    "replacement": req.body.operation_arg1
-                }
-            ];
-
-        var command = core.replaceTemplate(backend.scope_options.individual_scope.command, replacements);
-        process.tool.stdin.write(command);
-            
-        if (backend.scope_options.clafer_scope_list)
-        {
-            process.tool.stdin.write(backend.scope_options.clafer_scope_list.command);
-            process.producedScopes = false;
-        }
-        else
-        {
-            process.producedScopes = true;
-        }
-
-        res.writeHead(200, { "Content-Type": "text/html"});
-        res.end("individual_scope_set");
-    }
-    else if (req.body.operation == "setIntScope") // "Set Integer Scope" operation
-    {
-        core.logSpecific("Control: setIntScope", req.body.windowKey);
-
-        // looking for a backend
-        var backend = core.getBackend(req.body.backend);
-        if (!backend)
-        {
-            core.logSpecific("Error: Backend was not found", req.body.windowKey);
-            res.writeHead(400, { "Content-Type": "text/html"});
-            res.end("Error: Could not find the backend by its submitted id.");
-            return;
-        }
-
-        core.logSpecific(backend.id + " " + req.body.operation_arg1 + " " + req.body.operation_arg2, req.body.windowKey);
-
-        var replacements = [
-                {
-                    "needle": "$low$", 
-                    "replacement": req.body.operation_arg1
-                },
-                {
-                    "needle": "$high$", 
-                    "replacement": req.body.operation_arg2
-                }
-            ];
-
-        var command = core.replaceTemplate(backend.scope_options.int_scope.command, replacements);
-        process.tool.stdin.write(command);
-            
-        if (backend.scope_options.clafer_scope_list)
-        {
-            process.tool.stdin.write(backend.scope_options.clafer_scope_list.command);
-            process.producedScopes = false;
-        }
-        else
-        {
-            process.producedScopes = true;
-        }
-
-        res.writeHead(200, { "Content-Type": "text/html"});
-        res.end("int_scope_set");
-    }
-    else if (req.body.operation == "setBitwidth") // "Set Bitwidth" operation
-    {
-        core.logSpecific("Control: setBitwidth", req.body.windowKey);
-
-        // looking for a backend
-        var backend = core.getBackend(req.body.backend);
-        if (!backend)
-        {
-            core.logSpecific("Error: Backend was not found", req.body.windowKey);
-            res.writeHead(400, { "Content-Type": "text/html"});
-            res.end("Error: Could not find the backend by its submitted id.");
-            return;
-        }
-
-        core.logSpecific(backend.id + " " + req.body.operation_arg1, req.body.windowKey);
-
-        var replacements = [
-                {
-                    "needle": "$value$", 
-                    "replacement": req.body.operation_arg1
-                }
-            ];
-
-        var command = core.replaceTemplate(backend.scope_options.bitwidth.command, replacements);
-        process.tool.stdin.write(command);
-            
-        if (backend.scope_options.clafer_scope_list)
-        {
-            process.tool.stdin.write(backend.scope_options.clafer_scope_list.command);
-            process.producedScopes = false;
-        }
-        else
-        {
-            process.producedScopes = true;
-        }
-
-        res.writeHead(200, { "Content-Type": "text/html"});
-        res.end("bitwidth_set");
-    }
-    else // else look for custom commands defined by backend config
-    {
-        var parts = req.body.operation.split("-");
-        if (parts.length != 2)
-        {
-            core.logSpecific('Control: Command does not follow pattern "backend-opreration": "' + req.body.operation + '"', req.body.windowKey, req.body.windowKey);
-            res.writeHead(400, { "Content-Type": "text/html"});
-            res.end("Error: Command does not follow the 'backend-operation' pattern.");
-            return;
-        }
-
-        var backendId = parts[0]; // it does not matter how to get backendid.
-        var operationId = parts[1];
-
-        var found = false;
-        var operation = null;
-        // looking for a backend
-
-        var backend = core.getBackend(backendId);
-        if (!backend)
-        {
-            core.logSpecific("Error: Backend was not found", req.body.windowKey);
-            res.writeHead(400, { "Content-Type": "text/html"});
-            res.end("Error: Could not find the backend by its submitted id.");
-            return;
-        }
-
-        // looking for the operation
-        var found = false;
-
-        for (var j = 0; j < backend.control_buttons.length; j++)
-        {
-            if (backend.control_buttons[j].id == operationId)
-            {
-                operation = backend.control_buttons[j];
-                found = true;
-                break;
-            }
-        }
-
-        if (!found)
-        {
-            core.logSpecific("Error: Required operation was not found", req.body.windowKey);
-            res.writeHead(400, { "Content-Type": "text/html"});
-            res.end("Error: Could not find the required operation.");
-            return;
-        }
-
-        core.logSpecific(backend.id + " ==> " + operation.id, req.body.windowKey);
-
-        process.tool.stdin.write(operation.command);
-
-        res.writeHead(200, { "Content-Type": "text/html"});
-        res.end("operation");
-    }
+    lib.handleControlRequest(req, res);
 });
-
 
 /*
  * "Compile" command
  * This is related to any time of submissions done using the Input view: compiling a file, example or text, etc.
  */
-server.post('/upload', commandMiddleware, function(req, res, next) 
+server.post('/upload', /*commandMiddleware, */function(req, res, next) 
 {
     lib.handleUploads(req, res, next, fileReady);
 
@@ -612,7 +246,7 @@ server.post('/upload', commandMiddleware, function(req, res, next)
  * An alternative way might be to create a web socket
  */
 
-server.post('/poll', pollingMiddleware, function(req, res, next)
+server.post('/poll', /*pollingMiddleware,*/ function(req, res, next)
 {
     var process = core.getProcess(req.body.windowKey);
     if (process == null)
@@ -694,7 +328,8 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
             {
                 if (!process.producedScopes)
                 {
-                    var scopesFileName = process.file + ".scopes.json";
+                    var scopesFileName = process.file + ".cfr-scope";
+                    console.log(scopesFileName);
                     fs.readFile(scopesFileName, function (err, data) {
                         if (!err)
                         {
@@ -767,7 +402,7 @@ server.post('/poll', pollingMiddleware, function(req, res, next)
     
 });
 
-server.get('/initdata', commandMiddleware, function(req, res)
+server.get('/initdata', /*commandMiddleware,*/ function(req, res)
 {
     core.logSpecific("Initialization data request", req.body.windowKey);
 
