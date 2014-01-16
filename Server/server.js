@@ -146,7 +146,30 @@ server.get('/saveformat', /*fileMiddleware, */function(req, res) {
 /* Controlling Instance Generators */
 server.post('/control', /*commandMiddleware, */function(req, res)
 {
-    lib.handleControlRequest(req, res);
+
+    var settings = new Object();
+    settings.onData = function(data){
+        var process = core.getProcess(req.body.windowKey);
+        if (process != null)
+        {
+            if (!process.completed)
+            {
+                process.freshData += data;
+            }
+        }
+    };
+    settings.onError = function(data){
+        var process = core.getProcess(req.body.windowKey);
+        if (process != null)
+        {
+            if (!process.completed)
+            {
+                process.freshData += data;
+            }
+        }
+    };
+
+    lib.handleControlRequest(req, res, settings);
 });
 
 /*
