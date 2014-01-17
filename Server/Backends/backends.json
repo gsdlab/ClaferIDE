@@ -30,8 +30,8 @@
             "tooltip": "The new IG based on Choco3 solver library",
             "accepted_format": "choco",             
             "tool": "java",
-            "tool_args": ["-jar", "$dirname$/claferchocoig-0.3.5-jar-with-dependencies.jar", "$filepath$"],            
-            "tool_version_args": ["-jar", "$dirname$/claferchocoig-0.3.5-jar-with-dependencies.jar", "--version"],
+            "tool_args": ["-jar", "$dirname$/ChocoIG/claferchocoig-0.3.5-jar-with-dependencies.jar", "$filepath$"],            
+            "tool_version_args": ["-jar", "$dirname$/ChocoIG/claferchocoig-0.3.5-jar-with-dependencies.jar", "--version"],
             "scope_options": {
                 "set_default_scope" : {"command": "globalScope $value$\n"}, 
                 "set_individual_scope": {"command": "scope $clafer$ $value$\n"}, 
