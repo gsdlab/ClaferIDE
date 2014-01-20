@@ -112,7 +112,7 @@ function getConfiguration()
     	{
     		"layout": {
     			"width": (window.parent.innerWidth-40) * (0.24),
-    			"height": window.parent.innerHeight - 60 - 245,
+    			"height": window.parent.innerHeight - 60 - 255,
     			"posx": (window.parent.innerWidth-40) * 0.38,
     			"posy": 0
     		},
@@ -126,9 +126,9 @@ function getConfiguration()
     {
     		"layout": {
 			    "width": (window.parent.innerWidth-40) * (0.24),
-			    "height": 200,
+			    "height": 210,
 			    "posx": (window.parent.innerWidth-40) * 0.38,
-			    "posy": window.parent.innerHeight - 60 - 200
+			    "posy": window.parent.innerHeight - 60 - 210
     		},
 	    	"title": "Instance Generator",
     		"onError": function(module, statusText, response, xhr)
