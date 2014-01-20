@@ -194,7 +194,7 @@ function getConfiguration()
 
 				if (responseObject.ig_args != "")
 				{
-				    module.host.print("Arguments: " + responseObject.ig_args + "\n");
+				    module.host.print(responseObject.ig_args + "\n");
 				}				
     		},
     		"onCompleted": function (module, responseObject){
