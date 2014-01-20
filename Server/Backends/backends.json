@@ -15,7 +15,7 @@
                 "inc_all_scopes" : {"command": "i $value$\n"},
                 "inc_individual_scope": {"command": "i $clafer$ $value$\n"},
                 "produce_scope_file" : {"command": "saveScopes\n"},
-                "set_int_scope" : {"command": "maxint $value$\n", "argument": "--maxint=$value$"}                 
+                "set_int_scope" : {"command": "maxint $value$\n", "argument": "--maxint=$value$", "default_value": 31}                 
             },
             "control_buttons": [
                 {"id": "next_instance", "command": "\n", "label" : "Next", "tooltip": "Next Instance"}, 
@@ -41,7 +41,7 @@
                 "inc_all_scopes" : {"command": "incGlobalScope $value$\n"},
                 "inc_individual_scope": {"command": "incScope $clafer$ $value$\n"},
                 "produce_scope_file" : {"command": "saveScopes\n"},
-                "set_int_scope" : {"command": "maxInt $value$\n"}
+                "set_int_scope" : {"command": "maxInt $value$\n", "default_value": 127}
             },
             "control_buttons": [
                 {"id": "next", "command": "n\n", "label" : "Next", "tooltip": "Next Instance"}, 
