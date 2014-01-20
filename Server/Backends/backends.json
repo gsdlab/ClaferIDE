@@ -15,14 +15,17 @@
                 "inc_all_scopes" : {"command": "i $value$\n"},
                 "inc_individual_scope": {"command": "i $clafer$ $value$\n"},
                 "produce_scope_file" : {"command": "saveScopes\n"},
-                "set_bitwidth" : {"command": "b $value$\n"}                 
+                "set_bitwidth" : {"command": "b $value$\n", "argument": "-b=$value$"}                 
             },
             "control_buttons": [
                 {"id": "next_instance", "command": "\n", "label" : "Next", "tooltip": "Next Instance"}, 
-                {"id": "reload", "command": "r\n", "label" : "Reload", "tooltip": "Reload the model"}, 
+                {"id": "reload", "command": "r\n", "label" : "Reset", "tooltip": "Reset instance generation but preserve scopes"}, 
                 {"id": "clafer_model", "command": "claferModel\n", "label" : "Clafer Model", "tooltip": "Print the Clafer model along with the scopes and mappings"},
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}                
-            ]            
+            ],
+            "presentation_specifics": {
+                "prompt_title": "claferIG> "
+            }            
         }, 
         {
             "id": "chocoIG", 
@@ -35,15 +38,20 @@
             "scope_options": {
                 "set_default_scope" : {"command": "globalScope $value$\n"}, 
                 "set_individual_scope": {"command": "scope $clafer$ $value$\n"}, 
+                "inc_all_scopes" : {"command": "incGlobalScope $value$\n"},
+                "inc_individual_scope": {"command": "incScope $clafer$ $value$\n"},
                 "produce_scope_file" : {"command": "saveScopes\n"},
-                "set_int_scope" : {"command": "intScope $low$ $high$\n"}                 
+                "set_int_scope" : {"command": "intScope $low$ $high$\n", "argument": "--integers=$low$to$high$"}                 
             },
             "control_buttons": [
                 {"id": "next", "command": "n\n", "label" : "Next", "tooltip": "Next Instance"}, 
-                {"id": "reload", "command": "r\n", "label" : "Reload", "tooltip": "Reload the model"}, 
+                {"id": "reload", "command": "r\n", "label" : "Reset", "tooltip": "Reset instance generation, applied scopes and other settings"}, 
                 {"id": "soo_mode", "command": "soo\n", "label" : "SOO Mode", "tooltip": "Switch to single-objective optimization mode and back"}, 
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
-            ]            
+            ],
+            "presentation_specifics": {
+                "prompt_title": "claferIG> "
+            }            
         }
     ]   
 }

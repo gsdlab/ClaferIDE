@@ -187,12 +187,16 @@ function getConfiguration()
     		"onPoll" : function(module, responseObject){
 		        if (responseObject.message != "")
 				{
-				    module.host.print(responseObject.message);
+				    module.host.print(filterOutput(module.host, responseObject.message));
 				}
     		},
     		"onCompleted": function (module, responseObject){
     			module.host.print("ClaferIDE> The instance generator is exited.\n");
-    		}		    
+    		},
+            "onBackendChange": function (module, newBackend)
+            {
+				module.host.storage.backend = newBackend;            	
+            }    				    
     	}});
 
     modules.push({"name": "Output", "configuration": 
@@ -219,4 +223,13 @@ function getConfiguration()
 	};
 
     return {"modules": modules, "settings": settings};
+}
+
+function filterOutput(host, output)
+{
+	var title = host.storage.backend.presentation_specifics.prompt_title;
+	if (title != "")
+		return output.replaceAll(title, "");
+	
+	return output;
 }
