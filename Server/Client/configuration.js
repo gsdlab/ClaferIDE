@@ -179,16 +179,23 @@ function getConfiguration()
 			"onIntScopeSet": function (module)
 			{
 		        module.host.print("ClaferIDE> Setting integer bounds...\n");
-		    },		    
+		    },	
+		    /*	    
 			"onBitwidthSet": function (module)
 			{
 		        module.host.print("ClaferIDE> Setting the bitwidth...\n");
-		    },		    
+		    },
+		    */		    
     		"onPoll" : function(module, responseObject){
 		        if (responseObject.message != "")
 				{
 				    module.host.print(filterOutput(module.host, responseObject.message));
 				}
+
+				if (responseObject.ig_args != "")
+				{
+				    module.host.print("Arguments: " + responseObject.ig_args + "\n");
+				}				
     		},
     		"onCompleted": function (module, responseObject){
     			module.host.print("ClaferIDE> The instance generator is exited.\n");
@@ -196,6 +203,7 @@ function getConfiguration()
             "onBackendChange": function (module, newBackend)
             {
 				module.host.storage.backend = newBackend;            	
+			    module.host.findModule("mdControl").disableRuntimeControls();
             }    				    
     	}});
 
