@@ -2,11 +2,11 @@
 <html>
 <head>
 <link rel="stylesheet" type="text/css" href="/commons/Client/styles.css"/>
+<script type = "text/javascript" src="/commons/Client/help_utils.js"></script>
 </head>
-
-<body class="helpbody">
-<h2>Welcome to ClaferIDE</h2>
-<h3>v0.3.5.30-10-2013 (preview)</h3>
+<body class="helpbody" onload="docLoad()">
+<h2>Welcome to <span id="title"></span></h2>
+<h3><span id="version"></span></h3>
 <ul>
 <li>Click anywhere outside help windows to hide.</li>
 </ul>
@@ -14,10 +14,10 @@ In this tool, you can edit, compile, explore, and instantiate Clafer models.
 
 Press the '?' button of each window to see specific help. In general:
 <ul>
-<li>Use the <a href="inputfileorexample_help.html">Input File or Example</a> view to compile and instantiate a model.</li>
-<li>Use the <a href="clafersourcemodel_help.html">Clafer Source Model</a> view to explore a HTML rendering of a model.</li>
-<li>Use the <a href="control_help.html">Control</a> view to generate more instances and adjust the scope.</li>
-<li>Use the <a href="output_help.html">Output</a> view to see instances, errors, and UnSAT cores.</li>
+<li>Use the view <a href="mdInput.html" class="local">Input Clafer Model and Options</a> to edit and compile a model.</li>
+<li>Use the view <a href="mdCompiledFormats.html" class="local">Compiled Formats</a> to explore a HTML rendering of a model.</li>
+<li>Use the view <a href="mdControl.html" class="local">Instance Generator</a> to run an instance generator, adjust the global and the individual scopes, and the bitwidth.</li>
+<li>Use the view <a href="mdOutput.html" class="local">Output</a> to see the generated instances, messages, and UnSAT cores.</li>
 </ul>
 <br>
 For more information visit<br>

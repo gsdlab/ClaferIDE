@@ -21,9 +21,9 @@ function getConfiguration()
                     "button_example_caption": "Compile",
                     "button_editor_caption": "Compile",
 
-                    "button_file_tooltip": "Compile tooltip",
-                    "button_example_tooltip": "Compile tooltip",
-                    "button_editor_tooltip": "Compile tooltip"
+                    "button_file_tooltip": "Compile the Clafer file selected on your machine",
+                    "button_example_tooltip": "Compile the example chosen from the example list",
+                    "button_editor_tooltip": "Compile the code in the editor below"
                 }
             ],
     		"onError": function(module, statusText, response, xhr){
@@ -92,15 +92,15 @@ function getConfiguration()
 		            module.editor.getSession().setValue(responseObject.model);
 		        }
 
-		        module.host.print("Compiler> " + responseObject.message + "\n");
-		        module.host.print(responseObject.compiler_message + "\n");    
-
 		        if (responseObject.message == "Success")
 		        {
+			        module.host.print("Compiler> " + responseObject.message + "\n");
+			        module.host.print(responseObject.compiler_message + "\n");    
 		            module.host.findModule("mdControl").resetControls();
 		        }
 		        else
 		        {
+		        	module.host.print("Compiler> Error response:\n" + responseObject + "\n");
 		            module.host.findModule("mdControl").disableAll(); // if exited IG, then disable controls
 		        }		          
 
@@ -112,7 +112,7 @@ function getConfiguration()
     	{
     		"layout": {
     			"width": (window.parent.innerWidth-40) * (0.24),
-    			"height": window.parent.innerHeight - 60 - 245,
+    			"height": window.parent.innerHeight - 60 - 255,
     			"posx": (window.parent.innerWidth-40) * 0.38,
     			"posy": 0
     		},
@@ -126,12 +126,12 @@ function getConfiguration()
     {
     		"layout": {
 			    "width": (window.parent.innerWidth-40) * (0.24),
-			    "height": 200,
+			    "height": 210,
 			    "posx": (window.parent.innerWidth-40) * 0.38,
-			    "posy": window.parent.innerHeight - 60 - 200
+			    "posy": window.parent.innerHeight - 60 - 210
     		},
 	    	"title": "Instance Generator",
-    		"onError": function(module, statusText, responseText)
+    		"onError": function(module, statusText, response, xhr)
     		{
 			    if (statusText == "timeout")
 			        caption = "<b>Request Timeout.</b><br>Please check whether the server is available.";
@@ -152,23 +152,59 @@ function getConfiguration()
 			{
 				module.host.print("ClaferIDE> Forcing the instance generator to close...\n");				
 			},
-			"onGlobalScopeSet": function (module)
+			"onStart": function (module)
 			{
-				module.host.print("ClaferIDE> Setting the global scope...\n");
+				return true;				
 			},
-			"onClaferScopeSet": function (module)
+			"onStop": function (module)
+			{
+				return true;				
+			},
+			"onDefaultScopeSet": function (module)
+			{
+				module.host.print("ClaferIDE> Setting the default scope...\n");
+			},
+			"onAllScopesIncreased": function (module)
+			{
+				module.host.print("ClaferIDE> Increasing all the scopes...\n");
+			},
+			"onIndividualScopeSet": function (module)
 			{
 		        module.host.print("ClaferIDE> Setting the individual scope...\n");
 		    },
+			"onIndividualScopeIncreased": function (module)
+			{
+		        module.host.print("ClaferIDE> Increasing the individual scope...\n");
+		    },
+			"onIntScopeSet": function (module)
+			{
+		        module.host.print("ClaferIDE> Setting integer bounds...\n");
+		    },	
+		    /*	    
+			"onBitwidthSet": function (module)
+			{
+		        module.host.print("ClaferIDE> Setting the bitwidth...\n");
+		    },
+		    */		    
     		"onPoll" : function(module, responseObject){
 		        if (responseObject.message != "")
 				{
-				    module.host.print(responseObject.message);
+				    module.host.print(filterOutput(module.host, responseObject.message));
 				}
+
+				if (responseObject.ig_args != "")
+				{
+				    module.host.print("ClaferIDE> " + responseObject.ig_args + "\n");
+				}				
     		},
     		"onCompleted": function (module, responseObject){
     			module.host.print("ClaferIDE> The instance generator is exited.\n");
-    		}		    
+    		},
+            "onBackendChange": function (module, newBackend)
+            {
+				module.host.storage.backend = newBackend;            	
+			    module.host.findModule("mdControl").disableRuntimeControls();
+            }    				    
     	}});
 
     modules.push({"name": "Output", "configuration": 
@@ -195,4 +231,13 @@ function getConfiguration()
 	};
 
     return {"modules": modules, "settings": settings};
+}
+
+function filterOutput(host, output)
+{
+	var title = host.storage.backend.presentation_specifics.prompt_title;
+	if (title != "")
+		return output.replaceAll(title, "");
+	
+	return output;
 }

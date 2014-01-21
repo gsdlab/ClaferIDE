@@ -2,43 +2,56 @@
     "backends": [
         {
             "id": "alloyIG", 
-            "label": "ClaferIG - Alloy Instance Generator", 
-            "tooltip": "Classic IG based on Alloy solver",
+            "label": "Alloy-based Instance Generator", 
+            "tooltip": "The original ClaferIG based on Alloy4.1 solver",
             "accepted_format": "clafer_source",               
             "tool": "claferIG", 
             "tool_args": ["$filepath$"],
+            "tool_args_forward_from_compiler" : ["--ss"],
+            "tool_version_args": ["-V"],
             "scope_options": {
-                "global_scope" : {"command": "setscope $value$\n"}, 
-                "int_scope" : {"command": "intScope $low$ $high$\n"},                 
-                "individual_scope": {"command": "setscope $clafer$ $value$\n"} 
+                "set_default_scope" : {"command": "s $value$\n"}, 
+                "set_individual_scope": {"command": "s $clafer$ $value$\n"},
+                "inc_all_scopes" : {"command": "i $value$\n"},
+                "inc_individual_scope": {"command": "i $clafer$ $value$\n"},
+                "produce_scope_file" : {"command": "saveScopes\n"},
+                "set_int_scope" : {"command": "maxint $value$\n", "argument": "--maxint=$value$", "default_value": 31}                 
             },
             "control_buttons": [
                 {"id": "next_instance", "command": "\n", "label" : "Next", "tooltip": "Next Instance"}, 
-                {"id": "reload", "command": "r\n", "label" : "Reload", "tooltip": "Reload the model"}, 
-                {"id": "alloy_model", "command": "alloyModel\n", "label" : "Alloy Model", "tooltip": "Print the Alloy model along with the scopes"},                
+                {"id": "reload", "command": "r\n", "label" : "Reset", "tooltip": "Reset instance generation but preserve scopes"}, 
+                {"id": "clafer_model", "command": "claferModel\n", "label" : "Clafer Model", "tooltip": "Print the Clafer model along with the scopes and mappings"},
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}                
-            ]            
+            ],
+            "presentation_specifics": {
+                "prompt_title": "claferIG> "
+            }            
         }, 
         {
             "id": "chocoIG", 
-            "label": "Choco Instance Generator",
-            "tooltip": "IG based on Choco solver library",
+            "label": "Choco-based Instance Generator",
+            "tooltip": "The new IG based on Choco3 solver library",
             "accepted_format": "choco",             
             "tool": "java",
-            "tool_args": ["-jar", "$dirname$/ChocoIG/claferchocoig-0.0.1-SNAPSHOT-jar-with-dependencies.jar", "$filepath$"],            
+            "tool_args": ["-jar", "$dirname$/ChocoIG/claferchocoig-0.3.5-jar-with-dependencies.jar", "$filepath$"],            
+            "tool_version_args": ["-jar", "$dirname$/ChocoIG/claferchocoig-0.3.5-jar-with-dependencies.jar", "--version"],
             "scope_options": {
-                "global_scope" : {"command": "globalScope $value$\n"}, 
-                "int_scope" : {"command": "intScope $low$ $high$\n"},                 
-                "individual_scope": {"command": "individualScope $clafer$ $value$\n"}, 
-                "clafer_scope_list" : {"command": "list\n"}
+                "set_default_scope" : {"command": "globalScope $value$\n"}, 
+                "set_individual_scope": {"command": "scope $clafer$ $value$\n"}, 
+                "inc_all_scopes" : {"command": "incGlobalScope $value$\n"},
+                "inc_individual_scope": {"command": "incScope $clafer$ $value$\n"},
+                "produce_scope_file" : {"command": "saveScopes\n"},
+                "set_int_scope" : {"command": "maxInt $value$\n", "default_value": 127}
             },
             "control_buttons": [
                 {"id": "next", "command": "n\n", "label" : "Next", "tooltip": "Next Instance"}, 
-                {"id": "reload", "command": "r\n", "label" : "Reload", "tooltip": "Reload the model"}, 
-                {"id": "min_unsat", "command": "minUnsat\n", "label" : "Min UNSAT", "tooltip": "Print minUNSAT when the model is unsatisfiable"},
+                {"id": "reload", "command": "r\n", "label" : "Reset", "tooltip": "Reset instance generation, applied scopes and other settings"}, 
                 {"id": "soo_mode", "command": "soo\n", "label" : "SOO Mode", "tooltip": "Switch to single-objective optimization mode and back"}, 
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
-            ]            
+            ],
+            "presentation_specifics": {
+                "prompt_title": ""
+            }            
         }
     ]   
 }
