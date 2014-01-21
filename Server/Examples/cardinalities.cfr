@@ -36,7 +36,13 @@ leg                  // unconstrained feature group, default group cardinality 0
    female
 
 xor gender2          // xor feature group, group cardinality 1..1
+   male
+   female
 
 or gender3          // or feature group, group cardinality 1..*
+   male
+   female
 
 mux gender4          // mux feature group, group cardinality 0..1
+   male
+   female
