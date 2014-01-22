@@ -71,10 +71,10 @@ function getConfiguration()
     		},
 
     		"onPoll" : function(module, responseObject){
-		        if (responseObject.args)
-		        {
-		            module.host.print("ClaferIDE> clafer " + responseObject.args + "\n");
-		        }
+//		        if (responseObject.args)
+//		        {
+//		            module.host.print("ClaferIDE> clafer " + responseObject.args + "\n");
+//		        }
     		},
     		"onCompleted" : function(module, responseObject){    			
 //		        if (responseObject.args)
@@ -187,10 +187,10 @@ function getConfiguration()
 		    },
 		    */		    
     		"onPoll" : function(module, responseObject){
-				if (responseObject.ig_args != "")
-				{
-				    module.host.print("ClaferIDE> " + responseObject.ig_args + "\n");
-				}				
+//				if (responseObject.ig_args != "")
+//				{
+//				    module.host.print("ClaferIDE> " + responseObject.ig_args + "\n");
+//				}				
 
 				if (responseObject.message != "")
 				{
