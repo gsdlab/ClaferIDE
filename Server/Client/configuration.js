@@ -187,15 +187,15 @@ function getConfiguration()
 		    },
 		    */		    
     		"onPoll" : function(module, responseObject){
-		        if (responseObject.message != "")
-				{
-				    module.host.print(filterOutput(module.host, responseObject.message));
-				}
-
 				if (responseObject.ig_args != "")
 				{
 				    module.host.print("ClaferIDE> " + responseObject.ig_args + "\n");
 				}				
+
+				if (responseObject.message != "")
+				{
+				    module.host.print(filterOutput(module.host, responseObject.message));
+				}
     		},
     		"onCompleted": function (module, responseObject){
     			module.host.print("ClaferIDE> The instance generator is exited.\n");
