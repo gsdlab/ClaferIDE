@@ -148,17 +148,25 @@ server.post('/control', /*commandMiddleware, */function(req, res)
 {
 
     var settings = new Object();
-    settings.onData = function(data){
+    settings.onData = function(data, backend){
         var process = core.getProcess(req.body.windowKey);
         if (process != null)
         {
             if (!process.completed)
             {
+                if (process.ig_just_started)
+                {
+                    // if the backend supports production of the scope file, then send this command
+                    // the command will be handled after the initial processing in any case
+                    process.ig_just_started = false;
+                    lib.produceScopes(process, backend);
+                }
+
                 process.freshData += data;
             }
         }
     };
-    settings.onError = function(data){
+    settings.onError = function(data, backend){
         var process = core.getProcess(req.body.windowKey);
         if (process != null)
         {
