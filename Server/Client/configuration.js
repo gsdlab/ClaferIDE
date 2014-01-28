@@ -198,7 +198,7 @@ function getConfiguration()
 				}
     		},
     		"onCompleted": function (module, responseObject){
-    			module.host.print("ClaferIDE> The instance generator is exited.\n");
+    			module.host.print("ClaferIDE> Instance generator stopped.\n");
     		},
             "onBackendChange": function (module, newBackend)
             {

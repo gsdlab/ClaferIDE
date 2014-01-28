@@ -2,7 +2,7 @@
     "backends": [
         {
             "id": "alloyIG", 
-            "label": "Alloy-based Instance Generator", 
+            "label": "Alloy-based IG", 
             "tooltip": "The original ClaferIG based on Alloy4.1 solver",
             "accepted_format": "clafer_source",               
             "tool": "claferIG", 
@@ -29,8 +29,8 @@
         }, 
         {
             "id": "chocoIG", 
-            "label": "Choco-based Instance Generator",
-            "tooltip": "The new IG based on Choco3 solver library",
+            "label": "Choco-based IG",
+            "tooltip": "The new instance generator based on Choco3 solver library",
             "accepted_format": "choco",             
             "tool": "java",
             "tool_args": ["-jar", "$dirname$/ChocoIG/claferchocoig-0.3.5-jar-with-dependencies.jar", "$filepath$"],            
