@@ -351,6 +351,7 @@ server.post('/poll', /*pollingMiddleware,*/ function(req, res, next)
 
             if (process.mode == "compiler") // if the mode completed is compilation
             {
+                res.writeHead(200, { "Content-Type": "application/json"});
                 var jsonObj = new Object();
                 jsonObj.message = "Working";
                 jsonObj.args = process.compiler_args;
