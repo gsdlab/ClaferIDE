@@ -1,0 +1,18 @@
+abstract Person                 // this is an abstraction of a Person
+    age -> integer
+    xor maritalStatus           // xor means that exactly one of the children must be instantiated
+        neverMarried
+        married
+            [ age >= 18 ]        // can only be married when 18 or older
+            spouse -> Person   // when married, one has a spouse
+            [ spouse != Person ]    // who must be different than yourself (this Person)
+            [ spouse.maritalStatus.married.spouse = Person ]    // and who must be married back to you
+        divorced
+            [ age >= 18 ]
+
+Alice : Person    // this is a partial instance
+    [ married ]    // we assert that Alice is married
+
+Bob : Person    // another partial instance
+
+Carol : Person

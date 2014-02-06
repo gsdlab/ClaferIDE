@@ -1,6 +1,7 @@
 {
     "examples": [
         {"url": "", "label": "Or Choose Example..."}, 
+        {"url": "simplePerson.cfr", "label": "Simple model of a Person"}, 
         {"url": "person.cfr", "label": "Person from Clafer Tutorial 9.3"}, 
         {"url": "cardinalities.cfr", "label": "Clafer and group cardinalities"}, 
         {"url": "Car.cfr", "label": "Cruise Control Example"},
