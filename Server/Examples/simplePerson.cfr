@@ -1,5 +1,6 @@
 abstract Person                 // this is an abstraction of a Person
     age -> integer
+        [ this >= 0 ]
     xor maritalStatus           // xor means that exactly one of the children must be instantiated
         neverMarried
         married
@@ -16,3 +17,4 @@ Alice : Person    // this is a partial instance
 Bob : Person    // another partial instance
 
 Carol : Person
+    [ age = 5 ]   // she cannot be married nor divorced
