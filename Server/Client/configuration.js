@@ -100,7 +100,8 @@ function getConfiguration()
 		        }
 		        else
 		        {
-		        	module.host.print("Compiler> Error response:\n" + responseObject + "\n");
+		        	module.host.print("Compiler> Error response:\n" + responseObject.compiler_message + "\n");
+		        	console.log(responseObject);
 		            module.host.findModule("mdControl").disableAll(); // if exited IG, then disable controls
 		        }		          
 
