@@ -2,7 +2,7 @@
     "backends": [
         {
             "id": "alloyIG", 
-            "label": "Alloy-based IG", 
+            "label": "Alloy-based (IG only)", 
             "tooltip": "The original ClaferIG based on Alloy4.1 solver",
             "accepted_format": "clafer_source",               
             "tool": "claferIG", 
@@ -29,8 +29,8 @@
         }, 
         {
             "id": "pythonZ3", 
-            "label": "Z3-based IG",
-            "tooltip": "A new instance generator based on Z3 solver library",
+            "label": "Z3-based (IG + MOO)",
+            "tooltip": "A new instance generator and multi-objective optimizer based on Z3 solver library",
             "accepted_format": "python",             
             "tool": "sh",
             "tool_args": ["$dirname$/../../../ClaferZ3/runClaferZ3", "$filepath$", "--mode=repl"],            
@@ -50,8 +50,8 @@
         }, 
         {
             "id": "chocoIG", 
-            "label": "Choco-based IG",
-            "tooltip": "The new instance generator based on Choco3 solver library",
+            "label": "Choco-based (IG + MOO)",
+            "tooltip": "A new instance generator and multi-objective optimizer based on Choco3 solver library",
             "accepted_format": "choco",             
             "tool": "java",
             "tool_args": ["-jar", "$dirname$/../../../ChocoIG/claferchocoig-0.3.6-jar-with-dependencies.jar", "--file=$filepath$", "--repl"],            
