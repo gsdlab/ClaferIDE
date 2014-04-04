@@ -54,7 +54,7 @@
             "tooltip": "A new instance generator and multi-objective optimizer based on Choco3 solver library",
             "accepted_format": "choco",             
             "tool": "java",
-            "tool_args": ["-jar", "$dirname$/../../../ChocoIG/claferchocoig-0.3.6-jar-with-dependencies.jar", "--file=$filepath$", "--repl"],            
+            "tool_args": ["-jar", "$dirname$/../../../ChocoIG/claferchocoig-0.3.6-jar-with-dependencies.jar", "--file=$filepath$", "--repl", "--prettify"],            
             "tool_version_args": ["-jar", "$dirname$/../../../ChocoIG/claferchocoig-0.3.6-jar-with-dependencies.jar", "--version"],
             "scope_options": {
                 "set_default_scope" : {"command": "globalScope $value$\n"}, 
