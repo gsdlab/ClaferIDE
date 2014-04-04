@@ -28,13 +28,34 @@
             }            
         }, 
         {
+            "id": "pythonZ3", 
+            "label": "Z3-based IG",
+            "tooltip": "A new instance generator based on Z3 solver library",
+            "accepted_format": "python",             
+            "tool": "sh",
+            "tool_args": ["$dirname$/../../../ClaferZ3/runClaferZ3", "$filepath$", "--mode=repl"],            
+            "tool_version_args": ["$dirname$/../../../ClaferZ3/runClaferZ3", "-v"],
+            "scope_options": {
+                "set_default_scope" : {"command": "s $value$\n"}, 
+                "inc_all_scopes" : {"command": "i $value$\n"}
+            },
+            "control_buttons": [
+                {"id": "next_instance", "command": "n\n", "label" : "Next", "tooltip": "Next Instance"}, 
+                {"id": "reload", "command": "r\n", "label" : "Reset", "tooltip": "Reset instance generation but preserve scopes"}, 
+                {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}                
+            ],
+            "presentation_specifics": {
+                "prompt_title": "ClaferZ3 > "
+            }            
+        }, 
+        {
             "id": "chocoIG", 
             "label": "Choco-based IG",
             "tooltip": "The new instance generator based on Choco3 solver library",
             "accepted_format": "choco",             
             "tool": "java",
-            "tool_args": ["-jar", "$dirname$/ChocoIG/claferchocoig-0.3.6-jar-with-dependencies.jar", "--file=$filepath$", "--repl"],            
-            "tool_version_args": ["-jar", "$dirname$/ChocoIG/claferchocoig-0.3.6-jar-with-dependencies.jar", "--version"],
+            "tool_args": ["-jar", "$dirname$/../../../ChocoIG/claferchocoig-0.3.6-jar-with-dependencies.jar", "--file=$filepath$", "--repl"],            
+            "tool_version_args": ["-jar", "$dirname$/../../../ChocoIG/claferchocoig-0.3.6-jar-with-dependencies.jar", "--version"],
             "scope_options": {
                 "set_default_scope" : {"command": "globalScope $value$\n"}, 
                 "set_individual_scope": {"command": "scope $clafer$ $value$\n"}, 
