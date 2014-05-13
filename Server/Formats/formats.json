@@ -21,6 +21,16 @@
             "display_element": "iframe"
         },
         {
+            "id": "desugared_clafer", 
+            "label": "Desugared Clafer", 
+            "tooltip": "Desugared Clafer model", 
+            "file_suffix": ".des.cfr",             
+            "compiler_mode": "clafer",
+            "compiler_args": [],
+            "shows_compilation_errors" : "false",            
+            "display_element": "textarea"
+        },
+        {
             "id": "python", 
             "label": "Python Z3", 
             "tooltip": "Python Z3 file format (Python)", 
