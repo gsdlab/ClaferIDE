@@ -1,6 +1,6 @@
 {
     "scripts": [
-        "configuration.js"
+        "client.js"
     ],
 
     "styles": [
