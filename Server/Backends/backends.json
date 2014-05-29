@@ -36,9 +36,9 @@
             "tool_args": ["-jar", "$dirname$/../../../ChocoIG/claferchocoig-0.3.6-jar-with-dependencies.jar", "--file=$filepath$", "--repl", "--prettify"],            
             "tool_version_args": ["-jar", "$dirname$/../../../ChocoIG/claferchocoig-0.3.6-jar-with-dependencies.jar", "--version"],
             "scope_options": {
-                "set_default_scope" : {"command": "globalScope $value$\n", "label": "Default scope:", "argument": "--scope=$value$", "default_value": 1}, 
+                "set_default_scope" : {"command": "globalScope $value$\n", "label": "Default:", "argument": "--scope=$value$", "default_value": 1}, 
                 "set_individual_scope": {"command": "scope $clafer$ $value$\n"}, 
-                "inc_all_scopes" : {"command": "incGlobalScope $value$\n", "label": "All scopes:", "default_value": 1},
+                "inc_all_scopes" : {"command": "incGlobalScope $value$\n", "label": "All:", "default_value": 1},
                 "inc_individual_scope": {"command": "incScope $clafer$ $value$\n"},
                 "produce_scope_file" : {"command": "saveScopes\n"},
                 "set_int_scope" : {"command": "maxInt $value$\n", "label": "Max. integer:", "argument": "--maxint=$value$", "default_value": 127}
@@ -61,8 +61,8 @@
             "tool_args": ["$dirname$/../../../ClaferZ3/runClaferZ3", "$filepath$", "--mode=repl"],            
             "tool_version_args": ["$dirname$/../../../ClaferZ3/runClaferZ3", "-v"],
             "scope_options": {
-                "set_default_scope" : {"command": "s $value$\n", "label": "Global scope:", "argument": "-g=$value$\n", "default_value": 5}, 
-                "inc_all_scopes" : {"command": "i $value$\n", "label": "Global scope:"}
+                "set_default_scope" : {"command": "s $value$\n", "label": "Global:", "argument": "-g=$value$\n", "default_value": 5}, 
+                "inc_all_scopes" : {"command": "i $value$\n", "label": "Global:"}
             },
             "control_buttons": [
                 {"id": "next_instance", "command": "n\n", "label" : "Next", "tooltip": "Next Instance"}, 
