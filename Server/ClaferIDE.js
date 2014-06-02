@@ -105,7 +105,7 @@ server.get('/saveformat', /*fileMiddleware, */function(req, res) {
     if (process == null)
     {
         res.writeHead(400, { "Content-Type": "text/html"});    
-        res.end("process_not_found");        
+        res.end("The process has already been ended before");        
         return;
     }
 
@@ -188,19 +188,26 @@ server.post('/upload', /*commandMiddleware, */function(req, res, next)
 {
     lib.handleUploads(req, res, next, fileReady);
 
-    function fileReady(uploadedFilePath, dlDir, loadedViaURL)
+    function fileReady(process)
     {        
 
+        console.log("FILE READY");
+
         var loadExampleInEditor = req.body.loadExampleInEditor;
-        if (loadedViaURL)
+        if (process.loadedViaURL)
         {
             loadExampleInEditor = true;
         }
 
-        var key = req.body.windowKey;
-
         // read the contents of the uploaded file
-        fs.readFile(uploadedFilePath + ".cfr", function (err, data) {
+        fs.readFile(process.file + ".cfr", function (err, data) {
+
+            if (err)
+            {
+                res.writeHead(500, { "Content-Type": "text/html"});
+                res.end("Error while reading the file: " + err);
+                return;
+            }
 
             var file_contents;
             if(data)
@@ -208,25 +215,11 @@ server.post('/upload', /*commandMiddleware, */function(req, res, next)
             else
             {
                 res.writeHead(500, { "Content-Type": "text/html"});
-                res.end("No data has been read");
-                lib.cleanupOldFiles(dlDir);
+                res.end("Could not read the target file contents");
                 return;
             }
             
             core.logSpecific("Compiling...", req.body.windowKey);
-
-            core.addProcess({ 
-                windowKey: req.body.windowKey, 
-                toRemoveCompletely: false, 
-                tool: null, 
-                freshData: "", 
-                scopes: "",
-                folder: dlDir, 
-                clafer_compiler: null,
-                file: uploadedFilePath, 
-                mode : "compiler", 
-                freshError: ""});    
-
 
             var ss = "--ss=none";
 
@@ -242,9 +235,7 @@ server.post('/upload', /*commandMiddleware, */function(req, res, next)
             }
 
             var specifiedArgs = []; // core.filterArgs(req.body.args);
-            var genericArgs = [ss, uploadedFilePath + ".cfr"];
-
-            var process = core.getProcess(req.body.windowKey);
+            var genericArgs = [ss, process.file + ".cfr"];
 
             process.ss = ss; // saving the scope strategy
 
@@ -255,6 +246,7 @@ server.post('/upload', /*commandMiddleware, */function(req, res, next)
 
             lib.runClaferCompiler(req.body.windowKey, specifiedArgs, genericArgs, function(){
                 process.mode_completed = true;
+                console.log("Completed");
             });
 
             core.timeoutProcessSetPing(process);
@@ -293,6 +285,8 @@ server.post('/poll', /*pollingMiddleware,*/ function(req, res, next)
     if (req.body.command == "ping") // normal ping
     {               
         core.timeoutProcessClearPing(process);
+
+        console.log(process.mode + "_" + process.mode_completed);
 
         if (process.mode_completed) // the execution of the current mode is completed
         {

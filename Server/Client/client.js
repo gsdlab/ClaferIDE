@@ -76,13 +76,11 @@ function getConfiguration()
 
     		"onBeginQuery": function(module)
     		{
-			    if (module.host.findModule("mdControl").sessionActive) // if there is an active IG session
+			    module.host.storage.toReload = module.host.findModule("mdControl").sessionActive; // if there is an active IG session
+			    if (module.host.storage.toReload)
 			    {
-			        alert("Please stop the instance generator and save your results first");
-			        return false;
+			    	module.host.findModule("mdControl").pausePolling();
 			    }
-
-			    module.host.findModule("mdControl").disableAll();
 
 			    return true;
     		},
@@ -117,13 +115,34 @@ function getConfiguration()
 		        {
 			        module.host.print("Compiler> " + responseObject.message + "\n");
 			        module.host.print(responseObject.compiler_message + "\n");    
-		            module.host.findModule("mdControl").resetControls();
+
+			        if (module.host.storage.toReload)
+			        {
+			        	module.host.storage.toReload = false;
+			            if (!module.host.findModule("mdControl").reload())
+			            {
+				            module.host.print("ClaferIDE> No reload command specified for the given backend.\nClaferIDE> Please re-run the backend to work with the changed model.\n");
+			            }
+			        }
+			        else
+			        {
+			            module.host.findModule("mdControl").resetControls();
+			        }
 		        }
 		        else
 		        {
 		        	module.host.print("Compiler> Error response:\n" + responseObject.compiler_message + "\n");
 		        	console.log(responseObject);
-		            module.host.findModule("mdControl").disableAll(); // if exited IG, then disable controls
+			        if (module.host.storage.toReload)
+			        {
+						module.host.print("ClaferIDE> The instance generator is still running with the last version of the model.\n");
+						module.host.print("ClaferIDE> After you fix the compilation problem, the instance generator will reload.\n");
+			        	module.host.findModule("mdControl").resumePolling();
+			        }
+			        else
+			        {
+		            	module.host.findModule("mdControl").disableAll(); // if exited IG, then disable controls
+		            }
 		        }		          
 
 		        return true;  
@@ -201,13 +220,7 @@ function getConfiguration()
 			"onIntScopeSet": function (module)
 			{
 		        module.host.print("ClaferIDE> Setting integer bounds...\n");
-		    },	
-		    /*	    
-			"onBitwidthSet": function (module)
-			{
-		        module.host.print("ClaferIDE> Setting the bitwidth...\n");
-		    },
-		    */		    
+		    },		    
     		"onPoll" : function(module, responseObject){
 				if (responseObject.ig_args != "")
 				{
@@ -226,7 +239,12 @@ function getConfiguration()
             {
 				module.host.storage.backend = newBackend;            	
 			    module.host.findModule("mdControl").disableRuntimeControls();
-            }    				    
+            },
+            "onCustomEvent": function (module, event)
+            {
+				module.host.print("ClaferIDE> '" + event + "' command sent.\n");
+            }
+
     	}});
 
     modules.push({"name": "Output", "configuration": 
