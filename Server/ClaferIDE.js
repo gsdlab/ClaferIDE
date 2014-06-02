@@ -191,8 +191,6 @@ server.post('/upload', /*commandMiddleware, */function(req, res, next)
     function fileReady(process)
     {        
 
-        console.log("FILE READY");
-
         var loadExampleInEditor = req.body.loadExampleInEditor;
         if (process.loadedViaURL)
         {
@@ -246,7 +244,6 @@ server.post('/upload', /*commandMiddleware, */function(req, res, next)
 
             lib.runClaferCompiler(req.body.windowKey, specifiedArgs, genericArgs, function(){
                 process.mode_completed = true;
-                console.log("Completed");
             });
 
             core.timeoutProcessSetPing(process);
