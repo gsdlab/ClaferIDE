@@ -86,7 +86,10 @@ function getConfiguration()
 
 		        if (responseObject.model != "")
 		        {
-		            module.editor.getSession().setValue(responseObject.model);
+		            module.editor.selectAll();
+		            module.editor.getSession().replace(module.editor.selection.getRange(), responseObject.model);
+		            module.editor.selection.moveCursorTo(0, 0, false);
+		            module.editor.selection.clearSelection();
 		        }
 
 		        if (responseObject.message == "Success")
