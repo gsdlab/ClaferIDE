@@ -22,6 +22,7 @@ SOFTWARE.
 function getConfiguration() 
 {
 	var modules = [];
+
     modules.push({"name": "Input", "configuration": 
     	{
     		"layout": {
@@ -48,30 +49,7 @@ function getConfiguration()
                 }
             ],
     		"onError": function(module, statusText, response, xhr){
-			    var caption = "";
-			    if (statusText == "compile_error")
-			        caption = "<b>Compile Error.</b><br>Please check whether Clafer Compiler is available, and the model is correct.";
-			    else if (statusText == "timeout")
-			        caption = "<b>Request Timeout.</b><br>Please check whether the server is available.";
-			//    else if (statusText == "malformed_output")
-			//        caption = "<b>Malformed output received from ClaferMoo.</b><br>Please check whether you are using the correct version of ClaferMoo. Also, an unhandled exception is possible.  Please verify your input file: check syntax and integer ranges.";        
-			//    else if (statusText == "malformed_instance")
-			//        caption = "<b>Malformed instance data received from ClaferMoo.</b><br>An unhandled exception may have occured during ClaferMoo execution. Please verify your input file: check syntax and integer ranges.";        
-			//    else if (statusText == "empty_instances")
-			//        caption = "<b>No instances returned.</b>Possible reasons:<br><ul><li>No optimal instances, all variants are non-optimal.</li><li>An unhandled exception occured during ClaferMoo execution. Please verify your input file: check syntax and integer ranges.</li></ul>.";        
-			//    else if (statusText == "empty_argument")
-			//        caption = "<b>Empty argument given to processToolResult.</b><br>Please report this error.";        
-			//    else if (statusText == "empty_instance_file")
-			//        caption = "<b>No instances found in the specified file.";        
-			//    else if (statusText == "optimize_first")
-			//        caption = "<b>You have to run optimization first, and only then add instances.";        
-			    else if (statusText == "error" && response.responseText == "")
-			        caption = "<b>Request Error.</b><br>Please check whether the server is available.";        
-			    else
-			        caption = '<b>' + xhr + '</b><br>' + response.responseText.replace("\n", "<br>");
-
-			    return caption;
-
+    			return onError(module, statusText, response, xhr);
     		},
 
     		"onBeginQuery": function(module)
@@ -174,16 +152,7 @@ function getConfiguration()
 	    	"title": "Instance Generator",
     		"onError": function(module, statusText, response, xhr)
     		{
-			    if (statusText == "timeout")
-			        caption = "<b>Request Timeout.</b><br>Please check whether the server is available.";
-			    else if (response && response.responseText == "process_not_found")
-			        caption = "<b>Session not found.</b><br>Looks like your session has been closed due to inactivity. Please recompile your model to start a new session";
-			    else if (statusText == "error" && response.responseText == "")
-			        caption = "<b>Request Error.</b><br>Please check whether the server is available.";        
-			    else
-			        caption = '<b>' + xhr + '</b><br>' + response.responseText.replace("\n", "<br>");	
-
-			    return caption;    	
+    			return onError(module, statusText, response, xhr);
 			},
 			"onStarted": function (module)
 			{
@@ -280,4 +249,44 @@ function filterOutput(host, output)
 		return output.replaceAll(title, "");
 	
 	return output;
+}
+
+function onError(module, statusText, response, xhr) 
+{
+	var currentDate = new Date();
+    var errorRecord = {};
+
+    if (statusText == "compile_error")
+        errorRecord = {
+        	"caption": "Compilation Error", 
+    		"body": "Please check whether Clafer Compiler is available, and the model is syntactically correct."
+    	};
+    else if (statusText == "timeout")
+        errorRecord = {
+        	"caption": "Request Timeout", 
+    		"body": "Please check whether the server is available. You may want to reload the browser page."
+    	};
+    else if (response && response.responseText == "process_not_found")
+        errorRecord = {
+        	"caption": "Session not found", 
+    		"body": "Looks like your session has been closed due to inactivity. Just recompile your model to start a new session."
+    	};
+    else if (statusText == "error" && response.responseText == "")
+        errorRecord = {
+        	"caption": "Request Error", 
+    		"body": "Please check whether the server is available. Try to recompile the model or to reload the browser page."
+    	};
+    else
+        errorRecord = {
+        	"caption": xhr, 
+    		"body": response.responseText
+    	};
+
+    errorRecord.datetime = currentDate.today() + " @ " + currentDate.timeNow();
+    errorRecord.contact = "If the error persists, please contact Alexandr Murashkin (http://gsd.uwaterloo.ca/amurashk) or Michal Antkiewicz (http://gsd.uwaterloo.ca/mantkiew)";
+
+    module.host.print("ClaferIDE> " + errorRecord.caption + ": " + errorRecord.datetime + "\n" + errorRecord.body + "\n");
+    module.host.errorWindow(errorRecord);
+
+    return true;
 }
