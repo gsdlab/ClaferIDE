@@ -186,7 +186,7 @@ server.post('/control', /*commandMiddleware, */function(req, res)
  */
 server.post('/upload', /*commandMiddleware, */function(req, res, next) 
 {
-    lib.handleUploads(req, res, next, fileReady);
+    lib.handleUploads(req, res, next, fileReady, true);
 
     function fileReady(process)
     {        
