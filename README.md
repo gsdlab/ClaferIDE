@@ -1,7 +1,7 @@
 ClaferIDE
 ===================
 
-v0.3.5.20-01-2014
+v0.3.6.1
 
 A web-based IDE for Clafer.
 
@@ -11,14 +11,17 @@ Read more in the paper [Clafer Tools for Product Line Engineering](http://gsd.uw
 ### Live demo
 
 * Master branch (stable and released): [Try me!](http://t3-necsis.cs.uwaterloo.ca:8094/)
-* Develop branch (with newest features, but not guaranteed to be stable): [Try me!](http://t3-necsis.cs.uwaterloo.ca:8194/)
+* Develop branch (with latest features, but may be unstable): [Try me!](http://t3-necsis.cs.uwaterloo.ca:8194/)
 
 If the demo is down or you encounter a bug, please email [Michal Antkiewicz](mailto:mantkiew@gsd.uwaterloo.ca).
 
 ### Background
 
-[Clafer](http://clafer.org) is a general-purpose lightweight structural modeling language developed at [GSD Lab](http://gsd.uwaterloo.ca/), [University of Waterloo](http://uwaterloo.ca). 
-Clafer can be used for *domain modeling*, *product-line modeling* and *multi-objective optimization* with respect to various one or more optimization goals. 
+[Clafer](http://clafer.org) is a general-purpose lightweight structural modeling language developed by 
+[GSD Lab](http://gsd.uwaterloo.ca/), [University of Waterloo](http://uwaterloo.ca), and 
+[MODELS](http://www.itu.dk/research/models/) group at [IT University of Copenhagen](http://www.itu.dk/).
+Clafer can be used for modeling of static hierarchical structures but has no support (yet) for modeling the change of the structures over time (behavior). 
+The main goal of Clafer is to make modeling more accessible to a wider range of users and domains.  
 
 ### Functions
 
@@ -31,8 +34,8 @@ Clafer can be used for *domain modeling*, *product-line modeling* and *multi-obj
 ### Nature
 
 ClaferIDE is a web-based application. 
-Its server side (implemented with Node.JS) processes requests, runs the chosen back-end and passes back its output.
-The client-side is implemented using Javascript/HTML and handles all the visualization and exploration functionality.
+Its server side (implemented with [Node.js](http://nodejs.org/)) processes requests, runs the chosen back-end solver, and passes back its output.
+The client-side is implemented using Javascript/HTML ([D3.js](http://d3js.org/)) and handles all the visualization and exploration functionality.
 
 Contributors
 ------------
@@ -43,8 +46,8 @@ Contributors
 Getting Binaries
 --------------------
 
-Binary distributions of the release 0.3.6 of Clafer Tools for Windows, Mac, and Linux, 
-can be downloaded from [Clafer Tools - Binary Distributions](http://http://gsd.uwaterloo.ca/clafer-tools-binary-distributions). There you can get binaries for `Clafer Compiler`, `ClaferIG` and the `ClaferChocoIG` backend.
+Binary distributions of the release 0.3.6.1 of Clafer Tools for Windows, Mac, and Linux, 
+can be downloaded from [Clafer Tools - Binary Distributions](http://http://gsd.uwaterloo.ca/clafer-tools-binary-distributions). There you can get binaries for `Clafer Compiler`, `ClaferIG`, `ClaferChocoIG`, and `ClaferSMT` backends.
 
 ### Installation
 
@@ -53,17 +56,18 @@ can be downloaded from [Clafer Tools - Binary Distributions](http://http://gsd.u
 1. Download (`git clone`) [ClaferIDE](https://github.com/gsdlab/ClaferIDE) to some directory `<target directory>`
 2. Go to `<target directory>/ClaferIDE` and execute
 	
- `git submodule init`
+```
+git submodule init
+git submodule update
+```
 
- `git submodule update`
-
-  This will install the platform
+This will install the platform
 
 3. Go to `<target directory>/ClaferIDE/Server` and execute
 	
  `npm install`
 
-  This will download all the required `Node.JS` modules.
+This will download all the required `Node.js` modules.
 
 4. Install the necessary backends using the steps below.
 
@@ -79,7 +83,7 @@ This assumes you use the default configuration `<target directory>/ClaferIDE/Ser
 
 1. Install [Java 7+](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
 
-2. Copy the binary of `ClaferChocoIG` (`claferchocoig-0.3.6-jar-with-dependencies.jar`) into the folder `<target directory>/ChocoIG`.
+2. Copy the binary of `ClaferChocoIG` (`claferchocoig-0.3.6.1-jar-with-dependencies.jar`) into the folder `<target directory>/ChocoIG`.
 
 **Backend: ClaferZ3**
 
