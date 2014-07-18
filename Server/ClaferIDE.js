@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2012, 2013 Alexander Murashkin, Neil Redman <http://gsd.uwaterloo.ca>
+Copyright (C) 2012 - 2014 Alexander Murashkin, Neil Redman <http://gsd.uwaterloo.ca>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -105,7 +105,7 @@ server.get('/saveformat', /*fileMiddleware, */function(req, res) {
     if (process == null)
     {
         res.writeHead(400, { "Content-Type": "text/html"});    
-        res.end("process_not_found");        
+        res.end("The process has already been ended before");        
         return;
     }
 
@@ -186,21 +186,26 @@ server.post('/control', /*commandMiddleware, */function(req, res)
  */
 server.post('/upload', /*commandMiddleware, */function(req, res, next) 
 {
-    lib.handleUploads(req, res, next, fileReady);
+    lib.handleUploads(req, res, next, fileReady, true);
 
-    function fileReady(uploadedFilePath, dlDir, loadedViaURL)
+    function fileReady(process)
     {        
 
         var loadExampleInEditor = req.body.loadExampleInEditor;
-        if (loadedViaURL)
+        if (process.loadedViaURL)
         {
             loadExampleInEditor = true;
         }
 
-        var key = req.body.windowKey;
-
         // read the contents of the uploaded file
-        fs.readFile(uploadedFilePath + ".cfr", function (err, data) {
+        fs.readFile(process.file + ".cfr", function (err, data) {
+
+            if (err)
+            {
+                res.writeHead(500, { "Content-Type": "text/html"});
+                res.end("Error while reading the file: " + err);
+                return;
+            }
 
             var file_contents;
             if(data)
@@ -208,25 +213,11 @@ server.post('/upload', /*commandMiddleware, */function(req, res, next)
             else
             {
                 res.writeHead(500, { "Content-Type": "text/html"});
-                res.end("No data has been read");
-                lib.cleanupOldFiles(dlDir);
+                res.end("Could not read the target file contents");
                 return;
             }
             
             core.logSpecific("Compiling...", req.body.windowKey);
-
-            core.addProcess({ 
-                windowKey: req.body.windowKey, 
-                toRemoveCompletely: false, 
-                tool: null, 
-                freshData: "", 
-                scopes: "",
-                folder: dlDir, 
-                clafer_compiler: null,
-                file: uploadedFilePath, 
-                mode : "compiler", 
-                freshError: ""});    
-
 
             var ss = "--ss=none";
 
@@ -242,9 +233,7 @@ server.post('/upload', /*commandMiddleware, */function(req, res, next)
             }
 
             var specifiedArgs = []; // core.filterArgs(req.body.args);
-            var genericArgs = [ss, uploadedFilePath + ".cfr"];
-
-            var process = core.getProcess(req.body.windowKey);
+            var genericArgs = [ss, process.file + ".cfr"];
 
             process.ss = ss; // saving the scope strategy
 
@@ -293,6 +282,8 @@ server.post('/poll', /*pollingMiddleware,*/ function(req, res, next)
     if (req.body.command == "ping") // normal ping
     {               
         core.timeoutProcessClearPing(process);
+
+        console.log(process.mode + "_" + process.mode_completed);
 
         if (process.mode_completed) // the execution of the current mode is completed
         {
@@ -468,8 +459,8 @@ core.logNormal('===============================');
 core.logNormal('| ' + core.getTitle() + ' ' + core.getVersion() + ' |');
 core.logNormal('===============================');
 
-core.addDependency("clafer", ["-V"], "Clafer Compiler");
-core.addDependency("java", ["-version"], "Java");
+core.addDependency("clafer", ["-V"], "Clafer Compiler", true);
+core.addDependency("java", ["-version"], "Java", true);
 
 var dirReplacementMap = [
         {
@@ -480,7 +471,7 @@ var dirReplacementMap = [
 
 for (var i = 0; i < backendConfig.backends.length; i++)
 {
-    core.addDependency(backendConfig.backends[i].tool, core.replaceTemplateList(backendConfig.backends[i].tool_version_args, dirReplacementMap), backendConfig.backends[i].label);
+    core.addDependency(backendConfig.backends[i].tool, core.replaceTemplateList(backendConfig.backends[i].tool_version_args, dirReplacementMap), backendConfig.backends[i].label, false);
 }
 
 core.runWithDependencyCheck(function(){
