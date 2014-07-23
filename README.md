@@ -104,11 +104,11 @@ This assumes you use the default configuration `<target directory>/ClaferIDE/Ser
 
 `clafer -V` 
 
-> `Clafer v0.3.5.20-01-2014`
+> `Clafer v0.3.6.1`
 
 `java -version`
 
-> `java version 1.7.0_25`
+> `java version 1.7.0_51`
 
 `node -v`
 
