@@ -30,8 +30,8 @@ See [Clafer](http://clafer.org).
 ### Nature
 
 ClaferIDE is a web-based application. 
-Its server side (implemented with Node.JS) processes requests, runs the chosen back-end and passes back its output.
-The client-side is implemented using Javascript/HTML and handles all the visualization and exploration functionality.
+Its server side (implemented with `Node.JS`) processes requests, runs the chosen back-end and passes back its output.
+The client-side is implemented using `Javascript/HTML` and handles all the IDE functionality.
 
 Contributors
 ------------
@@ -56,7 +56,7 @@ can be downloaded from [Clafer Tools - Binary Distributions](http://http://gsd.u
 
  `git submodule update`
 
-  This will install the platform
+This will install the platform.
 
 3. Go to `<target directory>/ClaferIDE/Server` and execute
 	
@@ -64,29 +64,24 @@ can be downloaded from [Clafer Tools - Binary Distributions](http://http://gsd.u
 
   This will download all the required `Node.JS` modules.
 
-4. Install the necessary backends using the steps below.
+4. Install the necessary backends into some location `<bin>` found on `PATH`. The default configuration in `<target directory>/ClaferIDE/Server/Backends/backends.json` assumes `~/bin`.
+
+The fastest way is to unzip a binary distribution into the folder `<bin>`. Below are the detailed steps:
 
 **Backend: ClaferIG**
 
-This assumes you use the default configuration `<target directory>/ClaferIDE/Server/Backends/backends.json` file.
-
-1. Install [ClaferIG](https://github.com/gsdlab/claferIG) following the installation instructions.
+1. Install [ClaferIG](https://github.com/gsdlab/claferIG) following the installation instructions into `<bin>`.
 
 **Backend: ClaferChocoIG**
 
-This assumes you use the default configuration `<target directory>/ClaferIDE/Server/Backends/backends.json` file.
-
-1. Install [Java 7+](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
-
-2. Copy the binary of `ClaferChocoIG` (`claferchocoig.jar`) into the folder `<target directory>/ChocoIG`.
+1. Install Java 8.
+2. Copy the binary of `ClaferChocoIG` (`claferchocoig.jar`) into `<bin>`.
 
 **Backend: ClaferSMT**
 
-This assumes you use the default configuration `<target directory>/ClaferIDE/Server/Backends/backends.json` file.
+1. Refer to the [ClaferSMT](https://github.com/gsdlab/ClaferSMT/) installation requirements. This should install `Python 3`, `PIP` and `Z3`. ClaferIDE will call the `claferSMT.sh` script, which has to be modified to point to `<bin>`.
 
-1. Refer to the [ClaferSMT](https://github.com/gsdlab/ClaferSMT/) installation requirements. This should install `Python 3`, `PIP` and `Z3`.
-
-2. Install `ClaferSMT` into the folder `<target directory>/ClaferSMT`.
+2. Install `ClaferSMT` into `<bin>`.
 
 ### Settings
 
@@ -119,7 +114,7 @@ This assumes you use the default configuration `<target directory>/ClaferIDE/Ser
 	
 `cd <target directory>/ClaferIDE/Server/`
 
-`node ClaferConfigurator.js`
+`node ClaferIDE.js`
 
 * If you use `Node Supervisor` under Linux, you can execute
 

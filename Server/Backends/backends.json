@@ -24,7 +24,7 @@
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
             ],
             "presentation_specifics": {
-                "prompt_title": "claferIG> "
+                "prompt_title": "AlloyIG> "
             }
         },
         {
@@ -32,9 +32,9 @@
             "label": "Choco-based (IG + MOO)",
             "tooltip": "A new instance generator and multi-objective optimizer based on Choco3 solver library",
             "accepted_format": "choco",
-            "tool": "bash",
-            "tool_args": ["claferChocoIG.sh", "--file=$filepath$", "--repl", "--prettify"],
-            "tool_version_args": ["claferChocoIG.sh", "--version"],
+            "tool": "java",
+            "tool_args": ["-jar", "~/bin/claferchocoig.jar", "--file=$filepath$", "--repl", "--prettify"],
+            "tool_version_args": ["-jar", "~/bin/claferchocoig.jar", "--version"],
             "scope_options": {
                 "set_default_scope" : {"command": "globalScope $value$\n", "label": "Default:", "argument": "--scope=$value$", "default_value": 1},
                 "set_individual_scope": {"command": "scope $clafer$ $value$\n"},
@@ -49,7 +49,7 @@
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
             ],
             "presentation_specifics": {
-                "prompt_title": "claferChocoIG> "
+                "prompt_title": "ChocoIG> "
             }
         },
         {
@@ -70,7 +70,7 @@
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
             ],
             "presentation_specifics": {
-                "prompt_title": "ClaferSMT > "
+                "prompt_title": "SMT-IG> "
             }
         }
     ]
