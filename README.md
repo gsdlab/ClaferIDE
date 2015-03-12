@@ -11,7 +11,7 @@ Read more in the paper [Clafer Tools for Product Line Engineering](http://gsd.uw
 ### Live demo
 
 * Master branch (stable and released): [Try me!](http://t3-necsis.cs.uwaterloo.ca:8094/)
-* Develop branch (with newest features, but not guaranteed to be stable): [Try me!](http://t3-necsis.cs.uwaterloo.ca:8194/)
+* Develop branch (with latest features, but may be unstable): [Try me!](http://t3-necsis.cs.uwaterloo.ca:8194/)
 
 If the demo is down or you encounter a bug, please email [Michal Antkiewicz](mailto:mantkiew@gsd.uwaterloo.ca).
 
@@ -52,7 +52,10 @@ can be downloaded from [Clafer Tools - Binary Distributions](http://http://gsd.u
 1. Download (`git clone`) [ClaferIDE](https://github.com/gsdlab/ClaferIDE) to some directory `<target directory>`
 2. Go to `<target directory>/ClaferIDE` and execute
 	
- `git submodule init`
+```
+git submodule init
+git submodule update
+```
 
  `git submodule update`
 
@@ -62,7 +65,7 @@ This will install the platform.
 	
  `npm install`
 
-  This will download all the required `Node.JS` modules.
+This will download all the required `Node.js` modules.
 
 4. Install the necessary backends into some location `<bin>` found on `PATH`. The default configuration in `<target directory>/ClaferIDE/Server/Backends/backends.json` assumes `~/bin`.
 
