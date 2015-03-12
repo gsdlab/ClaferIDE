@@ -3,50 +3,44 @@ Example from <a href="http://t3-necsis.cs.uwaterloo.ca:8091/NECSIS-Workshop/Mode
 */
 
 abstract Feature
-    cost ->> integer
-    mass ->> integer
+    cost -> integer
+    mass -> integer
 
 abstract ComfortFeature : Feature
-    comfort ->> integer
+    comfort -> integer
 
 abstract FuelFeature : ComfortFeature
-    fuel ->> integer
-    
+    fuel -> integer
+
 abstract Car
     ABS : ComfortFeature ?
         [cost = 2]
         [mass = 1]
-        [comfort = 1]        
-    xor Transmission : Feature
-        [cost = 0]
-        [mass = 0]        
+        [comfort = 1]
+    xor Transmission
         Automatic : FuelFeature
             [fuel = 2]
-            [mass = 1]            
+            [mass = 1]
             [comfort = 2]
-            [cost = 4]     
+            [cost = 4]
         Manual : FuelFeature
             [fuel = 0]
-            [mass = 1]            
+            [mass = 1]
             [comfort = 1]
             [cost = 3]
     FCA : FuelFeature ?
         [fuel = 2]
-        [mass = 2] 
+        [mass = 2]
         [comfort = 4]
-        [cost = 5]        
-        xor Sensor : Feature
-            [cost = 0]
-            [mass = 0]
+        [cost = 5]
+        xor Sensor
             Radar : Feature
                 [cost = 3]
                 [mass = 1]
             Lidar : Feature
                 [cost = 5]
-                [mass = 1]            
-        xor Alert : Feature ?
-            [cost = 0]
-            [mass = 0]
+                [mass = 1]
+        xor Alert ?
             Haptic : ComfortFeature
                 [comfort = 4]
                 [cost = 2]
@@ -65,13 +59,13 @@ abstract Car
             [mass = 2]
             [comfort = 6]
             [cost = 3]
-    [ ACC => FCA]
-    
-    total_cost ->> integer = sum Feature.cost
-    total_comfort ->> integer = sum ComfortFeature.cost
-    total_fuel ->> integer = sum FuelFeature.cost
-    total_mass ->> integer = sum FuelFeature.mass
-    
+    [ ACC => FCA ]
+
+    total_cost -> integer = sum Feature.cost
+    total_comfort -> integer = sum ComfortFeature.cost
+    total_fuel -> integer = sum FuelFeature.cost
+    total_mass -> integer = sum FuelFeature.mass
+
 optimalCar : Car
 
 << min optimalCar.total_cost >>

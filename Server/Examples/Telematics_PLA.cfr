@@ -17,7 +17,7 @@ telematicsSystem
     [ small <=> ! plaECU.display.options.size.large ]
 
 abstract comp
-    version : integer
+    version -> integer
 
 abstract ECU : comp
 
@@ -31,7 +31,7 @@ abstract options
         small
         large
     cache ?
-        size : integer
+        size -> integer
             fixed ?
     [small && cache => fixed]
 
