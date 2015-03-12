@@ -1,77 +1,77 @@
 {
     "backends": [
         {
-            "id": "alloyIG", 
-            "label": "Alloy-based (IG only)", 
+            "id": "alloyIG",
+            "label": "Alloy-based (IG only)",
             "tooltip": "The original ClaferIG based on Alloy4.1 solver",
-            "accepted_format": "clafer_source",               
-            "tool": "claferIG", 
+            "accepted_format": "clafer_source",
+            "tool": "claferIG",
             "tool_args": ["$filepath$"],
             "tool_args_forward_from_compiler" : ["--ss"],
             "tool_version_args": ["-V"],
             "scope_options": {
-                "set_default_scope" : {"command": "s $value$\n"}, 
+                "set_default_scope" : {"command": "s $value$\n"},
                 "set_individual_scope": {"command": "s $clafer$ $value$\n"},
                 "inc_all_scopes" : {"command": "i $value$\n"},
                 "inc_individual_scope": {"command": "i $clafer$ $value$\n"},
                 "produce_scope_file" : {"command": "saveScopes\n"},
-                "set_int_scope" : {"command": "maxint $value$\n", "argument": "--maxint=$value$", "default_value": 31}                 
+                "set_int_scope" : {"command": "maxint $value$\n", "argument": "--maxint=$value$", "default_value": 31}
             },
             "control_buttons": [
-                {"id": "next_instance", "command": "\n", "label" : "Next", "tooltip": "Next Instance"}, 
-                {"id": "reload", "command": "r\n", "label" : "Reload", "tooltip": "Reload the model preserving scopes and other settings"}, 
+                {"id": "next_instance", "command": "\n", "label" : "Next", "tooltip": "Next Instance"},
+                {"id": "reload", "command": "r\n", "label" : "Reload", "tooltip": "Reload the model preserving scopes and other settings"},
                 {"id": "clafer_model", "command": "claferModel\n", "label" : "Clafer Model", "tooltip": "Print the Clafer model along with the scopes and mappings"},
-                {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}                
+                {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
             ],
             "presentation_specifics": {
                 "prompt_title": "claferIG> "
-            }            
-        }, 
+            }
+        },
         {
-            "id": "chocoIG", 
+            "id": "chocoIG",
             "label": "Choco-based (IG + MOO)",
             "tooltip": "A new instance generator and multi-objective optimizer based on Choco3 solver library",
-            "accepted_format": "choco",             
+            "accepted_format": "choco",
             "tool": "bash",
-            "tool_args": ["claferChocoIG.sh", "--file=$filepath$", "--repl", "--prettify"],            
+            "tool_args": ["claferChocoIG.sh", "--file=$filepath$", "--repl", "--prettify"],
             "tool_version_args": ["claferChocoIG.sh", "--version"],
             "scope_options": {
-                "set_default_scope" : {"command": "globalScope $value$\n", "label": "Default:", "argument": "--scope=$value$", "default_value": 1}, 
-                "set_individual_scope": {"command": "scope $clafer$ $value$\n"}, 
+                "set_default_scope" : {"command": "globalScope $value$\n", "label": "Default:", "argument": "--scope=$value$", "default_value": 1},
+                "set_individual_scope": {"command": "scope $clafer$ $value$\n"},
                 "inc_all_scopes" : {"command": "incGlobalScope $value$\n", "label": "All:", "default_value": 1},
                 "inc_individual_scope": {"command": "incScope $clafer$ $value$\n"},
                 "produce_scope_file" : {"command": "saveScopes\n"},
                 "set_int_scope" : {"command": "maxInt $value$\n", "label": "Max. integer:", "argument": "--maxint=$value$", "default_value": 127}
             },
             "control_buttons": [
-                {"id": "next_instance", "command": "n\n", "label" : "Next", "tooltip": "Next Instance"}, 
-                {"id": "reload", "command": "r\n", "label" : "Reload", "tooltip": "Reload the model preserving scopes and other settings"}, 
+                {"id": "next_instance", "command": "n\n", "label" : "Next", "tooltip": "Next Instance"},
+                {"id": "reload", "command": "r\n", "label" : "Reload", "tooltip": "Reload the model preserving scopes and other settings"},
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
             ],
             "presentation_specifics": {
                 "prompt_title": "claferChocoIG> "
-            }            
+            }
         },
         {
-            "id": "pythonZ3", 
+            "id": "pythonZ3",
             "label": "Z3-based (IG + MOO)",
             "tooltip": "A new instance generator and multi-objective optimizer based on Z3 solver library",
-            "accepted_format": "python",             
+            "accepted_format": "python",
             "tool": "bash",
-            "tool_args": ["claferSMT.sh", "$filepath$", "--mode=repl"],            
+            "tool_args": ["claferSMT.sh", "$filepath$", "--mode=repl"],
             "tool_version_args": ["claferSMT.sh", "-v"],
             "scope_options": {
-                "set_default_scope" : {"command": "s $value$\n", "label": "Global:", "argument": "-g=$value$\n", "default_value": 5}, 
+                "set_default_scope" : {"command": "s $value$\n", "label": "Global:", "argument": "-g=$value$\n", "default_value": 5},
                 "inc_all_scopes" : {"command": "i $value$\n", "label": "Global:"}
             },
             "control_buttons": [
-                {"id": "next_instance", "command": "n\n", "label" : "Next", "tooltip": "Next Instance"}, 
-                {"id": "reload", "command": "r\n", "label" : "Reload", "tooltip": "Reload the model preserving scopes and other settings"}, 
-                {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}                
+                {"id": "next_instance", "command": "n\n", "label" : "Next", "tooltip": "Next Instance"},
+                {"id": "reload", "command": "r\n", "label" : "Reload", "tooltip": "Reload the model preserving scopes and other settings"},
+                {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
             ],
             "presentation_specifics": {
-                "prompt_title": "ClaferZ3 > "
-            }            
+                "prompt_title": "ClaferSMT > "
+            }
         }
-    ]   
+    ]
 }

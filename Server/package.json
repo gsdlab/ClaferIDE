@@ -1,11 +1,11 @@
 {
   "name": "ClaferIDE",
   "description": "A web-based GUI for domain and product line modeling with Clafer",
-  "version": "0.3.6",
-  "release_date": "30-05-2014",
+  "version": "0.3.9",
+  "release_date": "20-03-2015",
   "private": true,
   "dependencies": {
-    "express": "3.0.4",
+    "express": "3.20.1",
     "redis": ">=0.0.1",
     "express-rate": "0.0.1"
   }
