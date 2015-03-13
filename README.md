@@ -1,11 +1,11 @@
 ClaferIDE
-===================
+=========
 
 v0.3.9
 
 A web-based IDE for Clafer.
 
-ClaferIDE is part of Clafer Tools. 
+ClaferIDE is part of Clafer Tools.
 Read more in the paper [Clafer Tools for Product Line Engineering](http://gsd.uwaterloo.ca/publications/view/519).
 
 ### Live demo
@@ -17,7 +17,7 @@ If the demo is down or you encounter a bug, please email [Michal Antkiewicz](mai
 
 ### Background
 
-See [Clafer](http://clafer.org). 
+See [Clafer](http://clafer.org).
 
 ### Functions
 
@@ -29,21 +29,26 @@ See [Clafer](http://clafer.org).
 
 ### Nature
 
-ClaferIDE is a web-based application. 
-Its server side (implemented with `Node.JS`) processes requests, runs the chosen back-end and passes back its output.
+ClaferIDE is a web-based application.
+Its server side (implemented with `Node.js`) processes requests, runs the chosen back-end and passes back its output.
 The client-side is implemented using `Javascript/HTML` and handles all the IDE functionality.
 
 Contributors
 ------------
 
-* [Alexandr Murashkin](http://gsd.uwaterloo.ca/amurashk), MMath. Main developer.
+* [Alexandr Murashkin](http://gsd.uwaterloo.ca/amurashk), Main developer.
 * [Michał Antkiewicz](http://gsd.uwaterloo.ca/mantkiew), Research Engineer. Requirements, development, architecture, testing, technology transfer.
 
-Getting Binaries
---------------------
+Installation and running
+------------------------
 
-Binary distributions of the release 0.3.9 of Clafer Tools for Windows, Mac, and Linux, 
-can be downloaded from [Clafer Tools - Binary Distributions](http://http://gsd.uwaterloo.ca/clafer-tools-binary-distributions). There you can get binaries for `Clafer Compiler`, `ClaferIG` and the `ClaferChocoIG` backend.
+### Dependencies for running
+
+* [Java Platform (JDK)](http://www.oracle.com/technetwork/java/javase/downloads/index.html) v8+
+* [Clafer](https://github.com/gsdlab/clafer) v0.3.9
+  * can be from the binary distribution
+* [Node.js Framework](http://nodejs.org/download/), v0.12.0
+* Backends' dependencies must be satisfied. See the backend installation steps below.
 
 ### Installation
 
@@ -51,51 +56,36 @@ can be downloaded from [Clafer Tools - Binary Distributions](http://http://gsd.u
 
 1. Download (`git clone`) [ClaferIDE](https://github.com/gsdlab/ClaferIDE) to some directory `<target directory>`
 2. Go to `<target directory>/ClaferIDE` and execute
-	
+
 ```
 git submodule init
 git submodule update
 ```
 
- `git submodule update`
-
 This will install the platform.
 
 3. Go to `<target directory>/ClaferIDE/Server` and execute
-	
- `npm install`
+
+`npm install`
 
 This will download all the required `Node.js` modules.
 
 4. Install the necessary backends into some location `<bin>` found on `PATH`. The default configuration in `<target directory>/ClaferIDE/Server/Backends/backends.json` assumes `~/bin`.
 
-The fastest way is to unzip a binary distribution into the folder `<bin>`. Below are the detailed steps:
+The fastest way is to unzip a binary distribution into the folder `<bin>`.
 
-**Backend: ClaferIG**
-
-1. Install [ClaferIG](https://github.com/gsdlab/claferIG) following the installation instructions into `<bin>`.
-
-**Backend: ClaferChocoIG**
-
-1. Install Java 8.
-2. Copy the binary of `ClaferChocoIG` (`claferchocoig.jar`) into `<bin>`.
-
-**Backend: ClaferSMT**
-
-1. Refer to the [ClaferSMT](https://github.com/gsdlab/ClaferSMT/) installation requirements. This should install `Python 3`, `PIP` and `Z3`. ClaferIDE will call the `claferSMT.sh` script, which has to be modified to point to `<bin>`.
-
-2. Install `ClaferSMT` into `<bin>`.
+See [Installing Backends](https://github.com/gsdlab/ClaferToolsUICommonPlatform#backends) for detailed steps.
 
 ### Settings
 
-1. Make sure the port `8193` is free, or change the value of the key `port` in `Server/config.json`:
-`"port" = "8193"` to any free one. 
+1. Make sure the port `8194` is free, or change the value of the key `port` in `Server/config.json`:
+`"port" = "8194"` to any free one.
 
 2. Make sure `clafer`, `node`, `python`, and `java` are in `PATH` environment variables, so they can be executed without any path prefixes.
 
 3. Running the following commands should produce the following results or later version:
 
-`clafer -V` 
+`clafer -V`
 
 > `Clafer v0.3.9`
 
@@ -109,12 +99,12 @@ The fastest way is to unzip a binary distribution into the folder `<bin>`. Below
 
 4. Make sure `uploads` folder is accessible for writing, since temporary files will be stored there.
 
-5. If you use Shell scipts (`.sh`) for running, make sure the scripts have `Execute` permissions. 
+5. If you use Shell scipts (`.sh`) for running, make sure the scripts have `Execute` permissions.
 
 ### Running
 
 * To run the server in a standard mode, execute
-	
+
 `cd <target directory>/ClaferIDE/Server/`
 
 `node ClaferIDE.js`
@@ -136,13 +126,14 @@ Then you can go to any browser and type `http://localhost:[port]/` and open any 
 
 ### Important: Branches must correspond
 
-All related projects are following the *simultaneous release model*. 
-The branch `master` contains releases, whereas the branch `develop` contains code under development. 
+All related projects are following the *simultaneous release model*.
+The branch `master` contains releases, whereas the branch `develop` contains code under development.
 When building the tools, the branches should match.
 Releases from branches `master` are guaranteed to work well together.
 Development versions from branches `develop` should work well together but this might not always be the case.
 
 Need help?
 ==========
+
 * Visit [language's website](http://clafer.org).
 * Report issues to [issue tracker](https://github.com/gsdlab/ClaferIDE/issues)
