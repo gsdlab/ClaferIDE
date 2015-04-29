@@ -1,7 +1,7 @@
 ClaferIDE
 =========
 
-v0.3.9
+v0.3.10
 
 A web-based IDE for Clafer.
 
@@ -45,7 +45,7 @@ Installation and running
 ### Dependencies for running
 
 * [Java Platform (JDK)](http://www.oracle.com/technetwork/java/javase/downloads/index.html) v8+
-* [Clafer](https://github.com/gsdlab/clafer) v0.3.9
+* [Clafer](https://github.com/gsdlab/clafer) v0.3.10
   * can be from the binary distribution
 * [Node.js Framework](http://nodejs.org/download/), v0.12.0
 * [Redis Server](https://launchpad.net/~chris-lea/+archive/ubuntu/redis-server), v2:2.*
@@ -89,11 +89,11 @@ See [Installing Backends](https://github.com/gsdlab/ClaferToolsUICommonPlatform#
 
 `clafer -V`
 
-> `Clafer v0.3.9`
+> `Clafer v0.3.10`
 
 `java -version`
 
-> `java version 1.8.0_40`
+> `java version 1.8.0_45`
 
 `node -v`
 
