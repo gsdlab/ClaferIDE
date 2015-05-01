@@ -49,7 +49,7 @@
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
             ],
             "presentation_specifics": {
-                "prompt_title": "ChocoIG> "
+                "prompt_title": "claferChocoIG> "
             }
         },
         {
