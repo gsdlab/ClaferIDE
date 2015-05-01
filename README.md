@@ -36,8 +36,9 @@ The client-side is implemented using `Javascript/HTML` and handles all the IDE f
 Contributors
 ------------
 
-* [Alexandr Murashkin](http://gsd.uwaterloo.ca/amurashk), Main developer.
-* [Michał Antkiewicz](http://gsd.uwaterloo.ca/mantkiew), Research Engineer. Requirements, development, architecture, testing, technology transfer.
+* [Alexandr Murashkin](http://gsd.uwaterloo.ca/amurashk). Main developer.
+* [Michał Antkiewicz](http://gsd.uwaterloo.ca/mantkiew). Research Engineer. Requirements, development, architecture, testing, technology transfer.
+* [Eldar Khalilov](http://gsd.uwaterloo.ca/ekhalilov). Developer. Upgrade to 0.3.10 (replace XML with JSON, test suites).
 
 Installation and running
 ------------------------
