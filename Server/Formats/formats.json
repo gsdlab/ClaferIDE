@@ -45,7 +45,7 @@
             "label": "Alloy Model",
             "tooltip": "Alloy4.2 Analyzer's file format (als)",
             "file_suffix": ".als",
-            "compiler_mode": "alloy42",
+            "compiler_mode": "alloy",
             "compiler_args": ["--keep-unused"],
             "shows_compilation_errors" : "false",
             "display_element": "textarea"
@@ -58,7 +58,7 @@
             "compiler_mode": "json",
             "compiler_args": [],
             "shows_compilation_errors" : "false",
-            "display_element": "json"
+            "display_element": "iframe"
         },
         {
             "id": "graph",
