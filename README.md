@@ -10,8 +10,8 @@ Read more in the paper [Clafer Tools for Product Line Engineering](http://gsd.uw
 
 ### Live demo
 
-* Master branch (stable and released): [Try me!](http://t3-necsis.cs.uwaterloo.ca:8094/)
-* Develop branch (with latest features, but may be unstable): [Try me!](http://t3-necsis.cs.uwaterloo.ca:8194/)
+* Master branch (stable and released): [ClaferIDE release](http://t3-necsis.cs.uwaterloo.ca:8094/)
+* Develop branch (with latest features, but may be unstable): [ClaferIDE testing](http://t3-necsis.cs.uwaterloo.ca:8194/)
 
 If the demo is down or you encounter a bug, please email [Michal Antkiewicz](mailto:mantkiew@gsd.uwaterloo.ca).
 
@@ -21,11 +21,11 @@ See [clafer.org](http://clafer.org).
 
 ### Functions
 
-1. Provides a web-based IDE for modeling in Clafer
-2. Provides an source code editor (ACE)
-2. Compiles the model to HTML for syntax highlighting and navigation via hyperlinks or error highlighting
-3. Instantiates the model using ClaferIG and allows for global scope setting and requesting a next instance
-4. Provides a set of predefined examples that can be compiler and instantiated
+1. Provides a web-based IDE for modeling in Clafer.
+2. Provides an source code editor (ACE).
+2. Compiles the model to HTML for syntax highlighting and navigation via hyperlinks or error highlighting.
+3. Instantiates the model using ClaferIG and allows for global scope setting and requesting a next instance.
+4. Provides a set of predefined examples that can be compiled and instantiated.
 
 ### Nature
 

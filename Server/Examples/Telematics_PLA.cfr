@@ -38,7 +38,7 @@ abstract options
 abstract plaECU : ECU
     `display 1..2
         [server = parent ]
-        [ ! options.cache]
+        [ no options.cache]
 
 ECU1 : plaECU
 
