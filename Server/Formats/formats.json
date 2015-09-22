@@ -1,84 +1,74 @@
 {
     "formats": [
         {
-            "id": "clafer_source", 
-            "label": "Source", 
-            "tooltip": "Clafer source model (RESERVED)", 
-            "file_suffix": ".cfr",             
+            "id": "clafer_source",
+            "label": "Source",
+            "tooltip": "Clafer source model (RESERVED)",
+            "file_suffix": ".cfr",
             "compiler_mode": "none",
             "compiler_args": [],
-            "shows_compilation_errors" : "false",            
+            "shows_compilation_errors" : "false",
             "display_element": "none"
         },
         {
-            "id": "html", 
-            "label": "HTML", 
-            "tooltip": "HTML rendering of the model", 
-            "file_suffix": ".html",             
+            "id": "html",
+            "label": "HTML",
+            "tooltip": "Rendering of the model (html)",
+            "file_suffix": ".html",
             "compiler_mode": "HTML",
-            "compiler_args": ["--self-contained", "--add-comments"],
-            "shows_compilation_errors" : "true",            
+            "compiler_args": ["--self-contained", "--add-comments" ],
+            "shows_compilation_errors" : "true",
             "display_element": "iframe"
         },
         {
-            "id": "desugared_clafer", 
-            "label": "Desugared Clafer", 
-            "tooltip": "Desugared Clafer model", 
-            "file_suffix": ".des.cfr",             
+            "id": "desugared_clafer",
+            "label": "Desugared Clafer",
+            "tooltip": "Desugared Clafer model",
+            "file_suffix": ".des.cfr",
             "compiler_mode": "clafer",
-            "compiler_args": [],
-            "shows_compilation_errors" : "false",            
-            "display_element": "textarea"
-        },
-        {
-            "id": "python", 
-            "label": "Python Z3", 
-            "tooltip": "Python Z3 file format (Python)", 
-            "file_suffix": ".py",             
-            "compiler_mode": "python",
             "compiler_args": [],
             "shows_compilation_errors" : "false",
             "display_element": "textarea"
-        },        
+        },
         {
-            "id": "choco", 
-            "label": "Choco JS", 
-            "tooltip": "Choco solver file format (Javascript)", 
-            "file_suffix": ".js",             
+            "id": "choco",
+            "label": "Chocosolver's JavaScript",
+            "tooltip": "Choco solver file format (JavaScript)",
+            "file_suffix": ".js",
             "compiler_mode": "choco",
             "compiler_args": [],
             "shows_compilation_errors" : "false",
             "display_element": "textarea"
         },
         {
-            "id": "alloy", 
-            "label": "Alloy Model", 
-            "tooltip": "Alloy solver file format (ALS)", 
-            "file_suffix": ".als",             
+            "id": "alloy",
+            "label": "Alloy Model",
+            "tooltip": "Alloy4.2 Analyzer's file format (als)",
+            "file_suffix": ".als",
             "compiler_mode": "alloy",
+            "compiler_args": ["--keep-unused"],
+            "shows_compilation_errors" : "false",
+            "display_element": "textarea"
+        },
+        {
+            "id": "json",
+            "label": "JSON IR",
+            "tooltip": "Intermediate representation (json)",
+            "file_suffix": ".json",
+            "compiler_mode": "json",
             "compiler_args": [],
             "shows_compilation_errors" : "false",
             "display_element": "textarea"
         },
         {
-            "id": "xml", 
-            "label": "XML IR", 
-            "tooltip": "XML intermediate representation (XML)", 
-            "file_suffix": ".xml",             
-            "compiler_mode": "xml",
-            "compiler_args": [],
-            "shows_compilation_errors" : "false",
-            "display_element": "xml"
-        },
-        {
-            "id": "graph", 
-            "label": "Graph", 
-            "tooltip": "Graphical representation written in DOT language", 
-            "file_suffix": ".dot",             
+            "id": "graph",
+            "label": "Graph",
+            "tooltip": "Graphical representation written in DOT language",
+            "file_suffix": ".dot",
             "compiler_mode": "graph",
             "compiler_args": [],
             "shows_compilation_errors" : "false",
             "display_element": "textarea"
-        }                        
-    ]   
+        }
+    ]
 }

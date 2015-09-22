@@ -3,9 +3,9 @@ Example from <a href="http://t3-necsis.cs.uwaterloo.ca:8091/Tutorial/Intro" targ
 */
 
 abstract Person
-  Name : string
-  Surname : string
-  DateOfBirth  : date
+  Name -> string
+  Surname -> string
+  DateOfBirth : date
   or Gender
     Male
     Female
@@ -14,14 +14,14 @@ abstract Person
     Married
     Divorced
   Address
-    Street : string
-      UnitNo : string ?
-    City : string
-    Country : string
-    PostalCode : string
+    Street -> string
+      UnitNo -> string ?
+    City -> string
+    Country -> string
+    PostalCode -> string
 
-abstract date : string
-// here should go format regular expression
+abstract date ->> string
+// here should go a regular expression to constrain the format
 
 JohnDoe : Person
     [ Name = "John" ]
@@ -35,9 +35,9 @@ JohnDoe : Person
     [ PostalCode = "A1B 2C3" ]
 
 abstract Student : Person
-  StudentId : string
+  StudentId -> string
 
-abstract  WaitingLine 
+abstract  WaitingLine
   participants -> Person *
 
 MaryJane  :  Student
@@ -66,4 +66,3 @@ abstract Person2
 
 JohnDoe2 : Person2
   [ Country = Canada ]
-
