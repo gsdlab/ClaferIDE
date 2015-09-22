@@ -16,7 +16,7 @@
             "tooltip": "Rendering of the model (html)",
             "file_suffix": ".html",
             "compiler_mode": "HTML",
-            "compiler_args": ["--self-contained" ],
+            "compiler_args": ["--self-contained", "--add-comments" ],
             "shows_compilation_errors" : "true",
             "display_element": "iframe"
         },

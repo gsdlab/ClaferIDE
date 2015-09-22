@@ -13,8 +13,8 @@ telematicsSystem
     [ dual <=> ECU2 ]
     [ extraDisplay <=> #ECU1.display = 2 ]
     [ extraDisplay <=> (ECU2 => #ECU2.display = 2) ]
-    [ large <=> ! plaECU.display.options.size.small ]
-    [ small <=> ! plaECU.display.options.size.large ]
+    [ large <=> not plaECU.display.options.size.small ]
+    [ small <=> not plaECU.display.options.size.large ]
 
 abstract comp
     version -> integer
@@ -24,7 +24,7 @@ abstract ECU : comp
 abstract display : comp
     server -> ECU
     `options
-    [this.version >= server.version]
+    [ this.version >= server.version ]
 
 abstract options
     xor size
@@ -33,19 +33,19 @@ abstract options
     cache ?
         size -> integer
             fixed ?
-    [small && cache => fixed]
+    [ small && cache => fixed ]
 
 abstract plaECU : ECU
     `display 1..2
-        [server = parent ]
-        [ no options.cache]
+        [ server = parent ]
+        [ no options.cache ]
 
 ECU1 : plaECU
 
 ECU2 : plaECU ?
     master -> ECU1
 
-[dual ]
+[ dual ]
 [ extraDisplay ]
 [ telematicsSystem.size.large ]
 [ comp.version = 1 ]
