@@ -33,8 +33,8 @@
             "tooltip": "An instance generator and optimizer based on Choco3 CSP solver library",
             "accepted_format": "choco",
             "tool": "java",
-            "tool_args": ["-jar", "/home/ct/.local/bin/chocosolver.jar", "--file=$filepath$", "--repl", "--prettify"],
-            "tool_version_args": ["-jar", "/home/ct/.local/bin/chocosolver.jar", "--version"],
+            "tool_args": ["-jar", "/home/clafertools040/bin/chocosolver.jar", "--file=$filepath$", "--repl", "--prettify"],
+            "tool_version_args": ["-jar", "/home/clafertools040/bin/chocosolver.jar", "--version"],
             "scope_options": {
                 "set_default_scope" : {"command": "SetGlobalScope $value$\n", "label": "Default:", "argument": "--scope=$value$", "default_value": 1},
                 "set_individual_scope": {"command": "setScope $clafer$ $value$\n"},
