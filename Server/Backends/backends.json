@@ -33,12 +33,12 @@
             "tooltip": "An instance generator and optimizer based on Choco3 CSP solver library",
             "accepted_format": "choco",
             "tool": "java",
-            "tool_args": ["-jar", "/home/clafertools040/bin/claferchocoig.jar", "--file=$filepath$", "--repl", "--prettify"],
-            "tool_version_args": ["-jar", "/home/clafertools040/bin/claferchocoig.jar", "--version"],
+            "tool_args": ["-jar", "/home/ct/.local/bin/chocosolver.jar", "--file=$filepath$", "--repl", "--prettify"],
+            "tool_version_args": ["-jar", "/home/ct/.local/bin/chocosolver.jar", "--version"],
             "scope_options": {
-                "set_default_scope" : {"command": "globalScope $value$\n", "label": "Default:", "argument": "--scope=$value$", "default_value": 1},
-                "set_individual_scope": {"command": "scope $clafer$ $value$\n"},
-                "inc_all_scopes" : {"command": "incGlobalScope $value$\n", "label": "All:", "default_value": 1},
+                "set_default_scope" : {"command": "SetGlobalScope $value$\n", "label": "Default:", "argument": "--scope=$value$", "default_value": 1},
+                "set_individual_scope": {"command": "setScope $clafer$ $value$\n"},
+                "inc_all_scopes" : {"command": "IncGlobalScope $value$\n", "label": "All:", "default_value": 1},
                 "inc_individual_scope": {"command": "incScope $clafer$ $value$\n"},
                 "produce_scope_file" : {"command": "saveScopes\n"},
                 "set_int_scope" : {"command": "maxInt $value$\n", "label": "Max. integer:", "argument": "--maxint=$value$", "default_value": 127}
