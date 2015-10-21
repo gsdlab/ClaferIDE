@@ -1,7 +1,7 @@
 ClaferIDE
 =========
 
-v0.4.1
+v0.4.2
 
 A web-based IDE for Clafer.
 
@@ -38,7 +38,7 @@ Contributors
 
 * [Alexandr Murashkin](http://gsd.uwaterloo.ca/amurashk). Main developer.
 * [Michał Antkiewicz](http://gsd.uwaterloo.ca/mantkiew). Research Engineer. Requirements, development, architecture, testing, technology transfer.
-* [Eldar Khalilov](http://gsd.uwaterloo.ca/ekhalilov). Developer. Upgrade to 0.4.1 (replace XML with JSON, test suites).
+* [Eldar Khalilov](http://gsd.uwaterloo.ca/ekhalilov). Developer. Upgrade to 0.4.2 (replace XML with JSON, test suites).
 
 Installation and running
 ------------------------
@@ -46,7 +46,7 @@ Installation and running
 ### Dependencies for running
 
 * [Java Platform (JDK)](http://www.oracle.com/technetwork/java/javase/downloads/index.html) v8+
-* [Clafer](https://github.com/gsdlab/clafer) v0.4.1
+* [Clafer](https://github.com/gsdlab/clafer) v0.4.2
   * can be from the binary distribution
 * [Node.js Framework](http://nodejs.org/download/), v0.12.0
 * [Redis Server](https://launchpad.net/~chris-lea/+archive/ubuntu/redis-server), v2:2.*
@@ -96,7 +96,11 @@ See [Installing Backends](https://github.com/gsdlab/ClaferToolsUICommonPlatform#
 
 `clafer --version`
 
-> `Clafer v0.4.1`
+> `Clafer v0.4.2.1`
+
+`claferIG --version`
+
+> `Clafer v0.4.2.1`
 
 `java -version`
 
