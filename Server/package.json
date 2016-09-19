@@ -1,8 +1,8 @@
 {
   "name": "ClaferIDE",
   "description": "A web-based GUI for modeling with Clafer",
-  "version": "0.4.3",
-  "release_date": "2015-12-22",
+  "version": "0.4.4",
+  "release_date": "2016-09-19",
   "private": true,
   "dependencies": {
     "express": "3.20.1",
