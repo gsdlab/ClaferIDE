@@ -3,7 +3,7 @@
         {
             "id": "alloyIG",
             "label": "Alloy-based (IG only)",
-            "tooltip": "An instance generator based on Alloy4.2 Analyzer",
+            "tooltip": "An instance generator based on Alloy 6 Analyzer",
             "accepted_format": "clafer_source",
             "tool": "claferIG",
             "tool_args": ["$filepath$"],
