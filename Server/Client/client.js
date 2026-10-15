@@ -95,9 +95,22 @@ function getConfiguration()
 		        if (responseObject.message == "Success")
 		        {
 			        module.host.print("Compiler> " + responseObject.message + "\n");
-			        module.host.print(responseObject.compiler_message + "\n");    
+			        module.host.print(responseObject.compiler_message + "\n");
 
-			        if (module.host.storage.toReload)
+			        if (responseObject.temporal)
+			        {
+			        	module.host.print("ClaferIDE> Instance generation does not support temporal models yet. You can still edit and compile this model.\n");
+			        	if (module.host.storage.toReload)
+			        	{
+			        		module.host.print("ClaferIDE> The instance generator is still running with the last version of the model.\n");
+			        		module.host.findModule("mdControl").resumePolling();
+			        	}
+			        	else
+			        	{
+			        		module.host.findModule("mdControl").disableAll();
+			        	}
+			        }
+			        else if (module.host.storage.toReload)
 			        {
 			        	module.host.storage.toReload = false;
 			            if (!module.host.findModule("mdControl").reload())

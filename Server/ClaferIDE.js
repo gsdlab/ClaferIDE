@@ -20,10 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 var url = require("url");
-var sys = require("sys");
 var fs = require("fs");
 var path = require('path');
 var express = require('express');
+var multer = require('multer');
 var spawn = require('child_process').spawn;    
 
 var config = require('./config.json');
@@ -53,7 +53,15 @@ server.use("/commons/Client", express.static(__dirname + '/commons/Client'));
 server.use("/Client", express.static(__dirname + '/Client'));
 //server.use(express.static(__dirname + '/commons/Client'));
 //server.use(express.static(__dirname + '/Client/'));
-server.use(express.bodyParser({ keepExtensions: true, uploadDir: __dirname + '/uploads' }));
+server.use(express.urlencoded({ extended: true, limit: '50mb' }));
+server.use(express.json({ limit: '50mb' }));
+server.use(multer({ dest: __dirname + '/uploads', limits: { fieldSize: 50 * 1024 * 1024 } }).any());
+server.use(function(req, res, next) { // uploaded files by field name, e.g., req.files.claferFile.path
+    var files = {};
+    (req.files || []).forEach(function(file) { files[file.fieldname] = file; });
+    req.files = files;
+    next();
+});
 
 //-------------------------------------------------
 // Standard GET request
@@ -78,19 +86,19 @@ server.get('/', /*fileMiddleware, */ function(req, res) {
 //-------------------------------------------------
 
 server.get('/Examples/:file', /* fileMiddleware,*/ function(req, res) {
-    res.sendfile('Examples/' + req.params.file);
+    res.sendFile('Examples/' + req.params.file, { root: __dirname });
 });
 
 server.get('/Backends/:file', /*fileMiddleware,*/ function(req, res) {
-    res.sendfile('Backends/' + req.params.file);
+    res.sendFile('Backends/' + req.params.file, { root: __dirname });
 });
 
 server.get('/Formats/:file', /*fileMiddleware,*/ function(req, res) {
-    res.sendfile('Formats/' + req.params.file);
+    res.sendFile('Formats/' + req.params.file, { root: __dirname });
 });
 
 server.get('/htmlwrapper', /*fileMiddleware,*/ function(req, res) {
-    res.sendfile("commons/Client/compiler_html_wrapper.html");
+    res.sendFile("commons/Client/compiler_html_wrapper.html", { root: __dirname });
 });
 
 //------------------- save format request --------------------------
@@ -298,6 +306,8 @@ server.post('/poll', /*pollingMiddleware,*/ function(req, res, next)
                 jsonObj.scopes = "";
                 jsonObj.model = process.model;
                 jsonObj.compiler_message = process.compiler_message;
+                // temporal models can be edited and compiled, but not used for instance generation
+                jsonObj.temporal = lib.isTemporalModel(process);
                 res.end(JSON.stringify(jsonObj));
 
                 process.mode = "ig";
@@ -448,7 +458,7 @@ server.get('/initdata', /*commandMiddleware,*/ function(req, res)
 server.use(function(req, res, next)
 {
     core.logSpecific(req.url, null);
-    res.send(404, "Sorry can't find that!");
+    res.status(404).send("Sorry can't find that!");
 });
 
 //================================================================
