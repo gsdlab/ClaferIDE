@@ -23,7 +23,6 @@ var url = require("url");
 var fs = require("fs");
 var path = require('path');
 var express = require('express');
-var multer = require('multer');
 var spawn = require('child_process').spawn;    
 
 var config = require('./config.json');
@@ -49,19 +48,7 @@ var port = config.port;
 
 var server = express();
 
-server.use("/commons/Client", express.static(__dirname + '/commons/Client'));
-server.use("/Client", express.static(__dirname + '/Client'));
-//server.use(express.static(__dirname + '/commons/Client'));
-//server.use(express.static(__dirname + '/Client/'));
-server.use(express.urlencoded({ extended: true, limit: '50mb' }));
-server.use(express.json({ limit: '50mb' }));
-server.use(multer({ dest: __dirname + '/uploads', limits: { fieldSize: 50 * 1024 * 1024 } }).any());
-server.use(function(req, res, next) { // uploaded files by field name, e.g., req.files.claferFile.path
-    var files = {};
-    (req.files || []).forEach(function(file) { files[file.fieldname] = file; });
-    req.files = files;
-    next();
-});
+lib.configureServer(server);
 
 //-------------------------------------------------
 // Standard GET request
@@ -105,7 +92,11 @@ server.get('/htmlwrapper', /*fileMiddleware,*/ function(req, res) {
 server.get('/saveformat', /*fileMiddleware, */function(req, res) {
     
     if (!req.query.windowKey)
+    {
+        res.writeHead(400, { "Content-Type": "text/plain"});
+        res.end("Error: No session");
         return;
+    }
 
     core.logSpecific("Save format request", req.query.windowKey);
 
@@ -138,11 +129,11 @@ server.get('/saveformat', /*fileMiddleware, */function(req, res) {
     {
         core.logSpecific("Error: Format was not found within the process", req.query.windowKey);
         res.writeHead(400, { "Content-Type": "text/html"});    
-        res.end("Error: Could not find the format within a process data by its submitted id: " + formatId);
+        res.end("Error: Could not find the format within a process data by its submitted id");
         return;
     }
         
-    res.writeHead(200, { "Content-Type": "text/html",
+    res.writeHead(200, { "Content-Type": "text/plain",
                                  "Content-Disposition": "attachment; filename=compiled" + suffix});
     res.end(result);
 });
@@ -460,6 +451,8 @@ server.use(function(req, res, next)
     core.logSpecific(req.url, null);
     res.status(404).send("Sorry can't find that!");
 });
+
+lib.addErrorHandler(server);
 
 //================================================================
 // Initialization Code
