@@ -1,3 +1,4 @@
+//# OPTIONS --minint=-100 --maxint=100
 /*
 Example from <a href="http://t3-necsis.cs.uwaterloo.ca:8091/Tutorial/Intro" target="exampleSource">Clafer Tutorial 9.3</a>
 */
