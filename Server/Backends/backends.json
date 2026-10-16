@@ -3,7 +3,7 @@
         {
             "id": "alloyIG",
             "label": "Alloy-based (IG only)",
-            "tooltip": "An instance generator based on Alloy4.2 Analyzer",
+            "tooltip": "An instance generator based on Alloy 6 Analyzer",
             "accepted_format": "clafer_source",
             "tool": "claferIG",
             "tool_args": ["$filepath$"],
@@ -24,17 +24,17 @@
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
             ],
             "presentation_specifics": {
-                "prompt_title": "AlloyIG> "
+                "prompt_title": "claferIG> "
             }
         },
         {
             "id": "chocoIG",
             "label": "Choco-based (IG + MOO)",
-            "tooltip": "An instance generator and optimizer based on Choco3 CSP solver library",
+            "tooltip": "An instance generator and optimizer based on the Choco 4 CSP solver library",
             "accepted_format": "choco",
-            "tool": "java",
-            "tool_args": ["-jar", "/home/clafertools040/bin/chocosolver.jar", "--file=$filepath$", "--repl", "--prettify"],
-            "tool_version_args": ["-jar", "/home/clafertools040/bin/chocosolver.jar", "--version"],
+            "tool": "chocosolver",
+            "tool_args": ["--file=$filepath$", "--repl", "--prettify"],
+            "tool_version_args": ["--version"],
             "scope_options": {
                 "set_default_scope" : {"command": "SetGlobalScope $value$\n", "label": "Default:", "argument": "--scope=$value$", "default_value": 1},
                 "set_individual_scope": {"command": "setScope $clafer$ $value$\n"},
@@ -49,7 +49,7 @@
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
             ],
             "presentation_specifics": {
-                "prompt_title": "ChocoIG> "
+                "prompt_title": "ClaferChocoIG> "
             }
         }
     ]

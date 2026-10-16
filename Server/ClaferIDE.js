@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 var url = require("url");
-var sys = require("sys");
 var fs = require("fs");
 var path = require('path');
 var express = require('express');
@@ -49,11 +48,7 @@ var port = config.port;
 
 var server = express();
 
-server.use("/commons/Client", express.static(__dirname + '/commons/Client'));
-server.use("/Client", express.static(__dirname + '/Client'));
-//server.use(express.static(__dirname + '/commons/Client'));
-//server.use(express.static(__dirname + '/Client/'));
-server.use(express.bodyParser({ keepExtensions: true, uploadDir: __dirname + '/uploads' }));
+lib.configureServer(server);
 
 //-------------------------------------------------
 // Standard GET request
@@ -78,26 +73,30 @@ server.get('/', /*fileMiddleware, */ function(req, res) {
 //-------------------------------------------------
 
 server.get('/Examples/:file', /* fileMiddleware,*/ function(req, res) {
-    res.sendfile('Examples/' + req.params.file);
+    res.sendFile('Examples/' + req.params.file, { root: __dirname });
 });
 
 server.get('/Backends/:file', /*fileMiddleware,*/ function(req, res) {
-    res.sendfile('Backends/' + req.params.file);
+    res.sendFile('Backends/' + req.params.file, { root: __dirname });
 });
 
 server.get('/Formats/:file', /*fileMiddleware,*/ function(req, res) {
-    res.sendfile('Formats/' + req.params.file);
+    res.sendFile('Formats/' + req.params.file, { root: __dirname });
 });
 
 server.get('/htmlwrapper', /*fileMiddleware,*/ function(req, res) {
-    res.sendfile("commons/Client/compiler_html_wrapper.html");
+    res.sendFile("commons/Client/compiler_html_wrapper.html", { root: __dirname });
 });
 
 //------------------- save format request --------------------------
 server.get('/saveformat', /*fileMiddleware, */function(req, res) {
     
     if (!req.query.windowKey)
+    {
+        res.writeHead(400, { "Content-Type": "text/plain"});
+        res.end("Error: No session");
         return;
+    }
 
     core.logSpecific("Save format request", req.query.windowKey);
 
@@ -130,11 +129,11 @@ server.get('/saveformat', /*fileMiddleware, */function(req, res) {
     {
         core.logSpecific("Error: Format was not found within the process", req.query.windowKey);
         res.writeHead(400, { "Content-Type": "text/html"});    
-        res.end("Error: Could not find the format within a process data by its submitted id: " + formatId);
+        res.end("Error: Could not find the format within a process data by its submitted id");
         return;
     }
         
-    res.writeHead(200, { "Content-Type": "text/html",
+    res.writeHead(200, { "Content-Type": "text/plain",
                                  "Content-Disposition": "attachment; filename=compiled" + suffix});
     res.end(result);
 });
@@ -298,6 +297,8 @@ server.post('/poll', /*pollingMiddleware,*/ function(req, res, next)
                 jsonObj.scopes = "";
                 jsonObj.model = process.model;
                 jsonObj.compiler_message = process.compiler_message;
+                // temporal models can be edited and compiled, but not used for instance generation
+                jsonObj.temporal = lib.isTemporalModel(process);
                 res.end(JSON.stringify(jsonObj));
 
                 process.mode = "ig";
@@ -448,8 +449,10 @@ server.get('/initdata', /*commandMiddleware,*/ function(req, res)
 server.use(function(req, res, next)
 {
     core.logSpecific(req.url, null);
-    res.send(404, "Sorry can't find that!");
+    res.status(404).send("Sorry can't find that!");
 });
+
+lib.addErrorHandler(server);
 
 //================================================================
 // Initialization Code
