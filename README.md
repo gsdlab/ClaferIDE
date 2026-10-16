@@ -10,10 +10,9 @@ Read more in the paper [Clafer Tools for Product Line Engineering](http://gsd.uw
 
 ### Live demo
 
-* Master branch (stable and released): [ClaferIDE](http://t3-necsis.cs.uwaterloo.ca:8094/)
-* Develop branch (with latest features, but may be unstable): [ClaferIDE (development)](http://t3-necsis.cs.uwaterloo.ca:8194/)
+* [ClaferIDE](https://wiselab.uwaterloo.ca:8094/), with the wikis [Clafer Model Wiki](https://wiselab.uwaterloo.ca/modelwiki/), [Railway Wiki](https://wiselab.uwaterloo.ca/railwaywiki/), and [Traffic Lights Wiki](https://wiselab.uwaterloo.ca/trafficlightswiki/), whose buttons open their models in the web tools
 
-If the demo is down or you encounter a bug, please email [Michał Antkiewicz](mailto:mantkiew@gsd.uwaterloo.ca).
+If the demo is down or you encounter a bug, please email [Michał Antkiewicz](mailto:michal.antkiewicz@uwaterloo.ca).
 
 ### Background
 
