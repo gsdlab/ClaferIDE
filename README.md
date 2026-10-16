@@ -38,7 +38,7 @@ Contributors
 ------------
 
 * [Alexandr Murashkin](http://gsd.uwaterloo.ca/amurashk). Original developer.
-* [Michał Antkiewicz](http://gsd.uwaterloo.ca/mantkiew). Research Engineer. Requirements, development, architecture, testing, technology transfer.
+* [Michał Antkiewicz](https://uwaterloo.ca/waterloo-intelligent-systems-engineering-lab/profiles/michal-antkiewicz). Research Engineer. Requirements, development, architecture, testing, technology transfer.
 * [Eldar Khalilov](http://gsd.uwaterloo.ca/ekhalilov). Developer. Upgrade to 0.4.2 (replace XML with JSON, test suites).
 
 Installation and running
@@ -96,6 +96,8 @@ Optional limits and settings in `Server/config.json`:
 * `maxUploadSize` (default 16 MB): the maximum size of a submitted model or instance data
 * `uploadsPerMinute` (30), `commandsPerMinute` (300), `pollsPerMinute` (600): rate limits per client IP address
 * `trustProxy`: Express's `trust proxy` setting when running behind a reverse proxy (e.g., `"loopback"` or `1`), so that the rate limits apply per client
+
+The environment variables `ALLOWED_MODEL_URLS` (URL prefixes separated by spaces) and `TRUST_PROXY` override `allowedModelURLs` and `trustProxy`, e.g., when running in a container.
 
 2. Make sure `clafer`, `claferIG`, `chocosolver`, `node`, and `java` are in `PATH` environment variables, so they can be executed without any path prefixes.
 

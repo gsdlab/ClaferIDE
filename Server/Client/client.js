@@ -19,11 +19,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-function getConfiguration() 
+function getConfiguration()
 {
 	var modules = [];
 
-    modules.push({"name": "Input", "configuration": 
+    modules.push({"name": "Input", "configuration":
     	{
     		"layout": {
     			"width": (window.parent.innerWidth-40) * 0.38,
@@ -33,12 +33,12 @@ function getConfiguration()
     		},
 
     		"title": "Input Clafer Model and Options",
-    		"optimization_backend": false, 
+    		"optimization_backend": false,
             "input_default_cache": "checked",
-            "input_default_flags": "-k",    		
+            "input_default_flags": "-k",
             "file_extensions": [
                 {
-                    "ext": ".cfr", 
+                    "ext": ".cfr",
                     "button_file_caption": "Compile",
                     "button_example_caption": "Compile",
                     "button_editor_caption": "Compile",
@@ -73,7 +73,7 @@ function getConfiguration()
 		            module.host.print("ClaferIDE> clafer " + responseObject.args + "\n");
 		        }
     		},
-    		"onCompleted" : function(module, responseObject){    			
+    		"onCompleted" : function(module, responseObject){
 		        if (responseObject.args)
 		        {
 		            module.host.print("ClaferIDE> clafer " + responseObject.args + "\n");
@@ -137,13 +137,13 @@ function getConfiguration()
 			        {
 		            	module.host.findModule("mdControl").disableAll(); // if exited IG, then disable controls
 		            }
-		        }		          
+		        }
 
-		        return true;  
-    		}    		
+		        return true;
+    		}
     	}
 	});
-    modules.push({"name": "CompiledFormats", "configuration": 
+    modules.push({"name": "CompiledFormats", "configuration":
     	{
     		"layout": {
     			"width": (window.parent.innerWidth-40) * (0.24),
@@ -157,7 +157,7 @@ function getConfiguration()
 
     	}});
 
-    modules.push({"name": "Control", "configuration": 
+    modules.push({"name": "Control", "configuration":
     {
     		"layout": {
 			    "width": (window.parent.innerWidth-40) * (0.24),
@@ -172,19 +172,19 @@ function getConfiguration()
 			},
 			"onStarted": function (module)
 			{
-		        module.host.print("ClaferIDE> Running the chosen instance generator...\n");				
+		        module.host.print("ClaferIDE> Running the chosen instance generator...\n");
 			},
 			"onStopped": function (module)
 			{
-				module.host.print("ClaferIDE> Forcing the instance generator to close...\n");				
+				module.host.print("ClaferIDE> Forcing the instance generator to close...\n");
 			},
 			"onStart": function (module)
 			{
-				return true;				
+				return true;
 			},
 			"onStop": function (module)
 			{
-				return true;				
+				return true;
 			},
 			"onDefaultScopeSet": function (module)
 			{
@@ -205,12 +205,12 @@ function getConfiguration()
 			"onIntScopeSet": function (module)
 			{
 		        module.host.print("ClaferIDE> Setting integer bounds...\n");
-		    },		    
+		    },
     		"onPoll" : function(module, responseObject){
 				if (responseObject.ig_args != "")
 				{
 				    module.host.print("ClaferIDE> " + responseObject.ig_args + "\n");
-				}				
+				}
 
 				if (responseObject.message != "")
 				{
@@ -222,7 +222,7 @@ function getConfiguration()
     		},
             "onBackendChange": function (module, newBackend)
             {
-				module.host.storage.backend = newBackend;            	
+				module.host.storage.backend = newBackend;
 			    module.host.findModule("mdControl").disableRuntimeControls();
             },
             "onCustomEvent": function (module, event)
@@ -232,7 +232,7 @@ function getConfiguration()
 
     	}});
 
-    modules.push({"name": "Output", "configuration": 
+    modules.push({"name": "Output", "configuration":
     	{
 	    	"title": "Output",
 
@@ -252,7 +252,7 @@ function getConfiguration()
     	"onLoaded": function(host)
 	    {
 	    	$("#myform").submit();
-	    }	    
+	    }
 	};
 
     return {"modules": modules, "settings": settings};
@@ -263,43 +263,43 @@ function filterOutput(host, output)
 	var title = host.storage.backend.presentation_specifics.prompt_title;
 	if (title != "")
 		return output.replaceAll(title, "");
-	
+
 	return output;
 }
 
-function onError(module, statusText, response, xhr) 
+function onError(module, statusText, response, xhr)
 {
 	var currentDate = new Date();
     var errorRecord = {};
 
     if (statusText == "compile_error")
         errorRecord = {
-        	"caption": "Compilation Error", 
+        	"caption": "Compilation Error",
     		"body": "Please check whether Clafer Compiler is available, and the model is syntactically correct."
     	};
     else if (statusText == "timeout")
         errorRecord = {
-        	"caption": "Request Timeout", 
+        	"caption": "Request Timeout",
     		"body": "Please check whether the server is available. You may want to reload the browser page."
     	};
     else if (response && response.responseText == "process_not_found")
         errorRecord = {
-        	"caption": "Session not found", 
+        	"caption": "Session not found",
     		"body": "Looks like your session has been closed due to inactivity. Just recompile your model to start a new session."
     	};
     else if (statusText == "error" && response.responseText == "")
         errorRecord = {
-        	"caption": "Request Error", 
+        	"caption": "Request Error",
     		"body": "Please check whether the server is available. Try to recompile the model or to reload the browser page."
     	};
     else
         errorRecord = {
-        	"caption": xhr, 
+        	"caption": xhr,
     		"body": response.responseText
     	};
 
     errorRecord.datetime = currentDate.today() + " @ " + currentDate.timeNow();
-    errorRecord.contact = "If the error persists, please contact Alexandr Murashkin (http://gsd.uwaterloo.ca/amurashk) or Michal Antkiewicz (http://gsd.uwaterloo.ca/mantkiew)";
+    errorRecord.contact = "If the error persists, please contact Alexandr Murashkin (http://gsd.uwaterloo.ca/amurashk) or Michal Antkiewicz (https://uwaterloo.ca/waterloo-intelligent-systems-engineering-lab/profiles/michal-antkiewicz)";
 
     module.host.print("ClaferIDE> " + errorRecord.caption + ": " + errorRecord.datetime + "\n" + errorRecord.body + "\n");
     module.host.errorWindow(errorRecord);
