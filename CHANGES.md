@@ -1,4 +1,4 @@
-##### ClaferIDE Version 0.5.4, unreleased
+##### ClaferIDE Version 0.5.4, Oct 25, 2026
 
 Minor release with Clafer 0.5.4.
 
@@ -6,6 +6,7 @@ Minor release with Clafer 0.5.4.
 * Messages give positions as `model.cfr:line:column` and no longer show the server's folders.
 * The welcome window can be closed again: with jQuery 3, its gray backdrop stayed over the page.
 * The live demo and model wiki links point to wiselab.uwaterloo.ca.
+* [Release](https://github.com/gsdlab/ClaferIDE/pull/19)
 
 ##### ClaferIDE Version 0.5.3, Oct 15, 2026
 
