@@ -1,3 +1,10 @@
+##### ClaferIDE Version 0.5.5, unreleased
+
+Minor release with Clafer 0.5.5.
+
+* Models can use decimals, a new primitive type `decimal` with a fixed number of fractional digits, for the Choco-based instance generator (Clafer 0.5.5), e.g., `cost -> decimal = 19.99`; the editor highlights `decimal`. The Alloy-based instance generator shows why it cannot run such a model (ClaferIG 0.5.5).
+* The Choco-based backend is described as Choco 6 (chocosolver 0.5.5 uses choco-solver 6.0.2).
+
 ##### ClaferIDE Version 0.5.4, Oct 25, 2026
 
 Minor release with Clafer 0.5.4.

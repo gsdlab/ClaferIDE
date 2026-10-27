@@ -30,7 +30,7 @@
         {
             "id": "chocoIG",
             "label": "Choco-based (IG + MOO)",
-            "tooltip": "An instance generator and optimizer based on the Choco 4 CSP solver library",
+            "tooltip": "An instance generator and optimizer based on the Choco 6 CSP solver library",
             "accepted_format": "choco",
             "tool": "chocosolver",
             "tool_args": ["--file=$filepath$", "--repl", "--prettify"],
