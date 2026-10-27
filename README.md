@@ -1,7 +1,7 @@
 ClaferIDE
 =========
 
-##### v0.5.4
+##### v0.5.5
 
 A web-based IDE for Clafer.
 
@@ -46,7 +46,7 @@ Installation and running
 ### Dependencies for running
 
 * [Java Platform (JDK)](https://adoptium.net/) v17+
-* [Clafer](https://github.com/gsdlab/clafer) v0.5.4
+* [Clafer](https://github.com/gsdlab/clafer) v0.5.5
   * can be from the binary distribution
 * [Node.js](https://nodejs.org/), tested with v26
 * Backends' dependencies must be satisfied. See the backend installation steps below.
@@ -106,15 +106,15 @@ A model can import other models with `//# OPTIONS --import=...` (Clafer 0.5.4). 
 
 `clafer --version`
 
-> `Clafer 0.5.4`
+> `Clafer 0.5.5`
 
 `claferIG --version`
 
-> `ClaferIG 0.5.4`
+> `ClaferIG 0.5.5`
 
 `chocosolver --version`
 
-> `chocosolver v0.5.4.2026-10-25`
+> `chocosolver v0.5.5.2026-10-25`
 
 `java -version`
 

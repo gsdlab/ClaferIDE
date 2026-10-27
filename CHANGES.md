@@ -1,5 +1,10 @@
 ##### ClaferIDE Version 0.5.5, unreleased
 
+Minor release with Clafer 0.5.5.
+
+* Models can use decimals, a new primitive type `decimal` with a fixed number of fractional digits, for the Choco-based instance generator (Clafer 0.5.5), e.g., `cost -> decimal = 19.99`; the editor highlights `decimal`. The Alloy-based instance generator shows why it cannot run such a model (ClaferIG 0.5.5).
+* Example `Bike.cfr`: a bike with decimal costs and weights.
+* The Choco-based backend is described as Choco 6 (chocosolver 0.5.5 uses choco-solver 6.0.2).
 * The buttons **URL** and **import** next to the example selector copy the URL of the selected example, to import it into a model elsewhere, and the line `//# OPTIONS --import=Examples/<file>.cfr`, for a model in this tool. Nothing showed the URL of an example. The welcome window, the help and the README explain them.
 
 ##### ClaferIDE Version 0.5.4, Oct 25, 2026
