@@ -22,6 +22,7 @@
                 {"id": "next_instance", "command": "\ndot\n", "label" : "Next", "tooltip": "Next Instance"},
                 {"id": "diff", "command": "d\ndot\n", "label" : "Diff", "toggle": true, "default_on": true, "run_argument": "--diff", "tooltip": "Show each next instance, or state of a trace, as its changes from the previous one. It can be set before running."},
                 {"id": "fork", "command": "fork $value$\ndot\n", "label" : "Fork", "argument": {"default_value": 1, "tooltip": "The state from which the new trace differs: the states before it are kept"}, "tooltip": "Dynamic models: give another trace with the same states as the last trace before the given state"},
+                {"id": "next_config", "command": "config\ndot\n", "label" : "Next Config", "tooltip": "Dynamic models: give a trace with another configuration, whose final clafers differ from those of the traces so far"},
                 {"id": "reload", "command": "r\ndot\n", "label" : "Reload", "tooltip": "Reload the model preserving scopes and other settings"},
                 {"id": "clafer_model", "command": "claferModel\n", "label" : "Clafer Model", "tooltip": "Print the Clafer model along with the scopes and mappings"},
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}

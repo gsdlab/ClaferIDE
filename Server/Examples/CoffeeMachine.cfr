@@ -61,7 +61,7 @@ xor machine
     // sugar for temporal logic: <pattern> [before p | after p | between p and q].
 
     // absence: a coin is not accepted once the machine has started
-    [ never coin between heating and ready ]
+    [ never coin between heating and idle ]
 
     // response: every coin is eventually served
     [ ready must follow coin ]
