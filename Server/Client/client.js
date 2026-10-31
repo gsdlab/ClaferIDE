@@ -137,6 +137,7 @@ function getConfiguration()
 	});
     modules.push({"name": "CompiledFormats", "configuration":
     	{
+    		"extra_views": [{"id": "solution_graph", "label": "Solution Graph", "tooltip": "The latest instance, or the states and transitions of the latest trace"}],
     		"layout": {
     			"width": (window.parent.innerWidth-40) * (0.24),
     			"height": window.parent.innerHeight - 60 - 255,
@@ -206,6 +207,11 @@ function getConfiguration()
 
 				if (responseObject.message != "")
 				{
+				    if (GRAPH_SAVED.test(responseObject.message))
+				    {
+				        showSolutionGraph(module.host);
+				    }
+
 				    module.host.print(filterOutput(module.host, responseObject.message));
 				}
     		},
@@ -250,8 +256,25 @@ function getConfiguration()
     return {"modules": modules, "settings": settings};
 }
 
+// what claferIG says about the graph of a solution, which the tool saves after each solution
+var GRAPH_SAVED = /Saved to \S+\.dot\r?\n/;
+var GRAPH_MESSAGES = /(Saved to \S+\.dot|No solution yet: type 'n' for the first one\.)\r?\n/g;
+
+function showSolutionGraph(host)
+{
+	$.post("solutiongraph", {"windowKey": host.key}, function(svg)
+	{
+		host.findModule("mdCompiledFormats").setView("solution_graph", svg);
+	}).fail(function(xhr)
+	{
+		host.print("ClaferIDE> " + xhr.responseText + "\n");
+	});
+}
+
 function filterOutput(host, output)
 {
+	output = output.replace(GRAPH_MESSAGES, "");
+
 	var title = host.storage.backend.presentation_specifics.prompt_title;
 	if (title != "")
 		return output.replaceAll(title, "");

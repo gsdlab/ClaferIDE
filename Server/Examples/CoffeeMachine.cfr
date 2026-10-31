@@ -31,16 +31,18 @@ xor machine
     // guarded, next step: a coin starts the machine
     initial idle -[ coin ]-> heating
 
-    // unguarded, multi-step: heating takes as long as it takes
-    heating -->> brewing
+    // guarded, next step: heating is done at the required temperature
+    heating -[ temperature = 10 ]-> brewing
 
     // guarded, multi-step: only with milk is the coffee frothed
     // a state with two ways out: one on the clafer, the other as a constraint
     brewing -[ milk ]->> frothing
     [ brewing -[ no milk ]->> ready ]
 
+    // unguarded, multi-step: frothing takes as long as it takes
+    frothing -->> ready
+
     // unguarded, next step
-    frothing --> ready
     ready --> idle
 
     // 2. TEMPORAL LOGIC
@@ -48,9 +50,10 @@ xor machine
     // X (next), F (eventually), G (globally), U (until). A constraint holds in every state
     // by default, so there is no need to start it with G.
     //
-    // A transition says only what happens when it fires: without this constraint, the
-    // machine could leave idle with no coin at all.
+    // A transition says only what happens when it fires: without these constraints, the
+    // machine could leave idle with no coin at all, or heating before it is hot.
     [ idle && no coin => X idle ]
+    [ heating && temperature < 10 => X heating ]
 
     // 3. DWYER'S PATTERNS
     //
@@ -62,6 +65,31 @@ xor machine
 
     // response: every coin is eventually served
     [ ready must follow coin ]
+
+// A value can change between states too: the temperature of the water, from 0 to 10.
+// Everything about it is in its own context, so this is the value here. The machine reads
+// the temperature, and the temperature follows the machine.
+temperature -> integer
+    // the machine starts cold: initially anchors a constraint to the start of the trace
+    [ initially (this = 0) ]
+
+    // transitions work on values too: heating adds 5
+    [ this = 0 -[ machine.heating ]-> this = 5 ]
+    [ this = 5 -[ machine.heating ]-> this = 10 ]
+
+    // and idle takes 5 away, down to 0
+    [ this = 10 -[ machine.idle ]-> this = 5 ]
+    [ this = 5 -[ machine.idle ]-> this = 0 ]
+    [ this = 0 -[ machine.idle ]-> this = 0 ]
+
+    // no transition is needed here: it holds in each of these states
+    [ machine.brewing || machine.frothing || machine.ready => this = 10 ]
+
+    // and the machine is still hot in the step after ready
+    [ this = 10 -[ machine.ready ]-> this = 10 ]
+
+    // An assertion must hold in all traces, and a failed one gives a counterexample.
+    assert [ this >= 0 && this <= 10 ]
 
 // A scenario: one concrete trace to try, written as a chain of transitions. A chain is a
 // sequence, read from left to right: the three states come one after the other. It is
