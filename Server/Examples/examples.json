@@ -7,6 +7,7 @@
         {"url": "Car.cfr", "label": "Cruise Control Example"},
         {"url": "Car4O.cfr", "label": "Cruise Control Example with Quality (4 Objectives)"},
         {"url": "Telematics_PLA.cfr", "label": "Telematics PLA Example"},
-        {"url": "Bike.cfr", "label": "Bike with decimal costs and weights (Choco)"}
+        {"url": "Bike.cfr", "label": "Bike with decimal costs and weights (Choco)"},
+        {"url": "CoffeeMachine.cfr", "label": "Coffee machine with temporal behaviour (Alloy)"}
     ]        
 }

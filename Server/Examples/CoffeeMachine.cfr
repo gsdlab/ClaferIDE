@@ -1,0 +1,71 @@
+// A coffee machine: behaviour in temporal Clafer, in three modeling styles.
+//
+// A model with temporal operators is dynamic: its instances are traces, sequences of
+// states that change over time. Press Next to see a trace. It ends with a loop back to
+// an earlier state, and repeats from there forever. Alloy only.
+//
+// The styles can be mixed freely, and each one fits a different kind of statement:
+//   1. transitions: how the machine moves from state to state
+//   2. temporal logic: exact rules about the next step
+//   3. Dwyer's patterns: requirements, read as plain sentences
+
+// Two kinds of clafers change differently. A final clafer does not change during a trace,
+// so milk is an option of the product: another trace may have the other variant.
+final milk ?
+
+// Other clafers come and go between states. coin is an event from the outside:
+// it is present in the states in which a customer inserts a coin.
+coin ?
+
+xor machine
+    // 1. TRANSITIONS
+    //
+    // initial: the state in which the trace starts. A transition holds whenever its
+    // source does, and comes in four forms:
+    //
+    //   a --> b        next step: from a, the next state is b
+    //   a -->> b       multi-step: a lasts until b, however long that takes
+    //   a -[g]-> b     guarded next step: only when the guard g holds
+    //   a -[g]->> b    guarded multi-step
+
+    // guarded, next step: a coin starts the machine
+    initial idle -[ coin ]-> heating
+
+    // unguarded, multi-step: heating takes as long as it takes
+    heating -->> brewing
+
+    // guarded, multi-step: only with milk is the coffee frothed
+    // a state with two ways out: one on the clafer, the other as a constraint
+    brewing -[ milk ]->> frothing
+    [ brewing -[ no milk ]->> ready ]
+
+    // unguarded, next step
+    frothing --> ready
+    ready --> idle
+
+    // 2. TEMPORAL LOGIC
+    //
+    // X (next), F (eventually), G (globally), U (until). A constraint holds in every state
+    // by default, so there is no need to start it with G.
+    //
+    // A transition says only what happens when it fires: without this constraint, the
+    // machine could leave idle with no coin at all.
+    [ idle && no coin => X idle ]
+
+    // 3. DWYER'S PATTERNS
+    //
+    // Patterns say what must hold in a part of the trace, without any operators. They are
+    // sugar for temporal logic: <pattern> [before p | after p | between p and q].
+
+    // absence: a coin is not accepted once the machine has started
+    [ never coin between heating and ready ]
+
+    // response: every coin is eventually served
+    [ ready must follow coin ]
+
+// A scenario: one concrete trace to try, written as a chain of transitions. A chain is a
+// sequence, read from left to right: the three states come one after the other. It is
+// anchored with initially, so it holds once, at the start of the trace. Comment it out to
+// see other traces, and change it to see if the model allows a behaviour: a scenario that
+// contradicts the model has no traces, and an unsat core shows why.
+[ initially (machine.idle --> machine.idle --> machine.heating) ]

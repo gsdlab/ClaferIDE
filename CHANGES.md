@@ -2,6 +2,9 @@
 
 Minor release with Clafer 0.5.6.
 
+* New example: a coffee machine with temporal behaviour, in three modeling styles.
+* Temporal models run on the Alloy-based instance generator.
+* Diff and Fork buttons for the Alloy backend: the changes between instances or states, and another trace from a chosen state of a dynamic model.
 * The help pages are shown with their styles, images and the title and version of the tool: their paths broke when the tool moved to relative URLs in 0.5.5.
 
 ##### ClaferIDE Version 0.5.5, Oct 27, 2026

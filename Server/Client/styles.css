@@ -134,3 +134,13 @@ fieldset{
 .scopeInput {
     width:30px;
 }
+
+
+.control_argument {
+    width:30px;
+}
+
+.control_button_on {
+    border-style:inset;
+    font-weight:bold;
+}

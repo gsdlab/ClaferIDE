@@ -99,18 +99,10 @@ function getConfiguration()
 
 			        if (responseObject.temporal)
 			        {
-			        	module.host.print("ClaferIDE> Instance generation does not support temporal models yet. You can still edit and compile this model.\n");
-			        	if (module.host.storage.toReload)
-			        	{
-			        		module.host.print("ClaferIDE> The instance generator is still running with the last version of the model.\n");
-			        		module.host.findModule("mdControl").resumePolling();
-			        	}
-			        	else
-			        	{
-			        		module.host.findModule("mdControl").disableAll();
-			        	}
+			        	module.host.print("ClaferIDE> Temporal models run only on the Alloy-based instance generator.\n");
 			        }
-			        else if (module.host.storage.toReload)
+
+			        if (module.host.storage.toReload)
 			        {
 			        	module.host.storage.toReload = false;
 			            if (!module.host.findModule("mdControl").reload())
