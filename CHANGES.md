@@ -6,7 +6,8 @@ Minor release with Clafer 0.5.6.
 * Temporal models run on the Alloy-based instance generator.
 * Diff, Fork and Next Config buttons for the Alloy backend: the changes between instances or states, another trace from a chosen state of a dynamic model, and a trace with another configuration.
 * The Diff button can be set before running, and is on by default.
-* The compiled formats can show a Solution Graph: the latest instance, or the states and transitions of the latest trace (Graphviz), with the changes of each state when Diff is on.
+* The view Compiled Formats is now Results: it can show a Solution Graph, which it switches to when a run starts: the latest instance, or the states and transitions of the latest trace (Graphviz), with the changes of each state when Diff is on.
+* The tool speaks of a solution generator and solutions, which are instances or traces. The formats' Graph is now Model Graph, which shows the graph instead of its Graphviz source, still available by Download, and the help of the generator lists its buttons.
 * The help pages are shown with their styles, images and the title and version of the tool: their paths broke when the tool moved to relative URLs in 0.5.5.
 
 ##### ClaferIDE Version 0.5.5, Oct 27, 2026

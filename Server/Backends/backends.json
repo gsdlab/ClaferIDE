@@ -2,8 +2,8 @@
     "backends": [
         {
             "id": "alloyIG",
-            "label": "Alloy-based (IG only)",
-            "tooltip": "An instance generator based on Alloy 6 Analyzer",
+            "label": "Alloy-based (with traces)",
+            "tooltip": "A solution generator based on Alloy 6 Analyzer",
             "accepted_format": "clafer_source",
             "tool": "claferIG",
             "tool_args": ["$filepath$"],
@@ -19,10 +19,10 @@
                 "set_int_scope" : {"command": "maxint $value$\n", "argument": "--maxint=$value$", "default_value": 31}
             },
             "control_buttons": [
-                {"id": "next_instance", "command": "\ndot\n", "label" : "Next", "tooltip": "Next Instance"},
+                {"id": "next_instance", "command": "\ndot\n", "label" : "Next", "tooltip": "Next Solution"},
                 {"id": "diff", "command": "d\ndot\n", "label" : "Diff", "toggle": true, "default_on": true, "run_argument": "--diff", "tooltip": "Show each next instance, or state of a trace, as its changes from the previous one. It can be set before running."},
                 {"id": "fork", "command": "fork $value$\ndot\n", "label" : "Fork", "argument": {"default_value": 1, "tooltip": "The state from which the new trace differs: the states before it are kept"}, "tooltip": "Dynamic models: give another trace with the same states as the last trace before the given state"},
-                {"id": "next_config", "command": "config\ndot\n", "label" : "Next Config", "tooltip": "Give a solution with another configuration: a trace with other final clafers, or an instance with other clafers, whatever their values"},
+                {"id": "next_config", "command": "config\ndot\n", "label" : "Next Config", "tooltip": "Next solution with another configuration"},
                 {"id": "reload", "command": "r\ndot\n", "label" : "Reload", "tooltip": "Reload the model preserving scopes and other settings"},
                 {"id": "clafer_model", "command": "claferModel\n", "label" : "Clafer Model", "tooltip": "Print the Clafer model along with the scopes and mappings"},
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
@@ -33,8 +33,8 @@
         },
         {
             "id": "chocoIG",
-            "label": "Choco-based (IG + MOO)",
-            "tooltip": "An instance generator and optimizer based on the Choco 6 CSP solver library",
+            "label": "Choco-based (with optimization)",
+            "tooltip": "A solution generator and optimizer based on the Choco 6 CSP solver library",
             "accepted_format": "choco",
             "tool": "chocosolver",
             "tool_args": ["--file=$filepath$", "--repl", "--prettify"],
@@ -48,7 +48,7 @@
                 "set_int_scope" : {"command": "maxInt $value$\n", "label": "Max. integer:", "argument": "--maxint=$value$", "default_value": 127}
             },
             "control_buttons": [
-                {"id": "next_instance", "command": "n\n", "label" : "Next", "tooltip": "Next Instance"},
+                {"id": "next_instance", "command": "n\n", "label" : "Next", "tooltip": "Next Solution"},
                 {"id": "reload", "command": "r\n", "label" : "Reload", "tooltip": "Reload the model preserving scopes and other settings"},
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
             ],

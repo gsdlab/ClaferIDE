@@ -82,6 +82,7 @@ function getConfiguration()
 		        if (responseObject.compiled_formats)
 		        {
 		            module.host.findModule("mdCompiledFormats").setResult(responseObject.compiled_formats);
+		            showModelGraph(module.host);
 		        }
 
 		        if (responseObject.model != "")
@@ -99,7 +100,7 @@ function getConfiguration()
 
 			        if (responseObject.temporal)
 			        {
-			        	module.host.print("ClaferIDE> Temporal models run only on the Alloy-based instance generator.\n");
+			        	module.host.print("ClaferIDE> Temporal models run only on the Alloy-based solution generator.\n");
 			        }
 
 			        if (module.host.storage.toReload)
@@ -121,8 +122,8 @@ function getConfiguration()
 		        	console.log(responseObject);
 			        if (module.host.storage.toReload)
 			        {
-						module.host.print("ClaferIDE> The instance generator is still running with the last version of the model.\n");
-						module.host.print("ClaferIDE> After you fix the compilation problem, the instance generator will reload.\n");
+						module.host.print("ClaferIDE> The solution generator is still running with the last version of the model.\n");
+						module.host.print("ClaferIDE> After you fix the compilation problem, the solution generator will reload.\n");
 			        	module.host.findModule("mdControl").resumePolling();
 			        }
 			        else
@@ -145,7 +146,7 @@ function getConfiguration()
     			"posy": 0
     		},
 
-	    	"title": "Compiled Formats",
+	    	"title": "Results",
 	    	"allow_downloading": true
 
     	}});
@@ -158,18 +159,19 @@ function getConfiguration()
 			    "posx": (window.parent.innerWidth-40) * 0.38,
 			    "posy": window.parent.innerHeight - 60 - 210
     		},
-	    	"title": "Instance Generator",
+	    	"title": "Solution Generator",
     		"onError": function(module, statusText, response, xhr)
     		{
     			return onError(module, statusText, response, xhr);
 			},
 			"onStarted": function (module)
 			{
-		        module.host.print("ClaferIDE> Running the chosen instance generator...\n");
+		        module.host.print("ClaferIDE> Running the chosen solution generator...\n");
+		        module.host.storage.showGraph = true;
 			},
 			"onStopped": function (module)
 			{
-				module.host.print("ClaferIDE> Forcing the instance generator to close...\n");
+				module.host.print("ClaferIDE> Forcing the solution generator to close...\n");
 			},
 			"onStart": function (module)
 			{
@@ -216,7 +218,7 @@ function getConfiguration()
 				}
     		},
     		"onCompleted": function (module, responseObject){
-    			module.host.print("ClaferIDE> Instance generator stopped.\n");
+    			module.host.print("ClaferIDE> Solution generator stopped.\n");
     		},
             "onBackendChange": function (module, newBackend)
             {
@@ -260,11 +262,29 @@ function getConfiguration()
 var GRAPH_SAVED = /Saved to \S+\.dot\r?\n/;
 var GRAPH_MESSAGES = /(Saved to \S+\.dot|No solution yet: type 'n' for the first one\.)\r?\n/g;
 
+function showModelGraph(host)
+{
+	$.post("modelgraph", {"windowKey": host.key}, function(svg)
+	{
+		host.findModule("mdCompiledFormats").setView("graph", svg);
+	}).fail(function(xhr)
+	{
+		host.print("ClaferIDE> " + xhr.responseText + "\n");
+	});
+}
+
 function showSolutionGraph(host)
 {
 	$.post("solutiongraph", {"windowKey": host.key}, function(svg)
 	{
 		host.findModule("mdCompiledFormats").setView("solution_graph", svg);
+
+		// once per run, so that the view chosen afterwards stays
+		if (host.storage.showGraph)
+		{
+			host.storage.showGraph = false;
+			host.findModule("mdCompiledFormats").showView("solution_graph");
+		}
 	}).fail(function(xhr)
 	{
 		host.print("ClaferIDE> " + xhr.responseText + "\n");

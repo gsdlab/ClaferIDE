@@ -142,7 +142,46 @@ server.get('/saveformat', /*fileMiddleware, */function(req, res) {
 //  Command Requests
 //-------------------------------------------------
 
-/* The graph of the latest solution, as SVG: the instance generator saves it as Graphviz */
+// Draws a graph of a session as SVG, with Graphviz
+var sendGraph = function(file, req, res)
+{
+    var svg = "";
+    var dot = spawn("dot", ["-Tsvg", file]);
+
+    dot.on('error', function (err){
+        core.logSpecific('ERROR: Cannot run Graphviz: ' + err.message, req.body.windowKey);
+        res.writeHead(500, { "Content-Type": "text/plain"});
+        res.end("Error: Cannot run Graphviz.");
+    });
+
+    dot.stdout.on("data", function(data) {
+        svg += data;
+    });
+
+    dot.on("close", function(code) {
+        if (res.headersSent)
+            return;
+
+        res.writeHead(code == 0 ? 200 : 500, { "Content-Type": "text/plain"});
+        res.end(code == 0 ? svg : "Error: Cannot draw the graph.");
+    });
+};
+
+/* The graph of the compiled model */
+server.post('/modelgraph', function(req, res)
+{
+    var process = core.getProcess(req.body.windowKey);
+    if (process == null)
+    {
+        res.writeHead(404, { "Content-Type": "text/plain"});
+        res.end("Error: the requested process is not found.");
+        return;
+    }
+
+    sendGraph(process.file + ".dot", req, res);
+});
+
+/* The graph of the latest solution: the solution generator saves it as Graphviz */
 server.post('/solutiongraph', function(req, res)
 {
     var process = core.getProcess(req.body.windowKey);
@@ -173,29 +212,10 @@ server.post('/solutiongraph', function(req, res)
         return;
     }
 
-    var svg = "";
-    var dot = spawn("dot", ["-Tsvg", path.join(process.folder, latest)]);
-
-    dot.on('error', function (err){
-        core.logSpecific('ERROR: Cannot run Graphviz: ' + err.message, req.body.windowKey);
-        res.writeHead(500, { "Content-Type": "text/plain"});
-        res.end("Error: Cannot run Graphviz.");
-    });
-
-    dot.stdout.on("data", function(data) {
-        svg += data;
-    });
-
-    dot.on("close", function(code) {
-        if (res.headersSent)
-            return;
-
-        res.writeHead(code == 0 ? 200 : 500, { "Content-Type": "text/plain"});
-        res.end(code == 0 ? svg : "Error: Cannot draw the solution.");
-    });
+    sendGraph(path.join(process.folder, latest), req, res);
 });
 
-/* Controlling Instance Generators */
+/* Controlling Solution Generators */
 server.post('/control', /*commandMiddleware, */function(req, res)
 {
 
@@ -355,7 +375,7 @@ server.post('/poll', /*pollingMiddleware,*/ function(req, res, next)
                 jsonObj.scopes = "";
                 jsonObj.model = process.model;
                 jsonObj.compiler_message = process.compiler_message;
-                // temporal models run only on the Alloy-based instance generator
+                // temporal models run only on the Alloy-based solution generator
                 jsonObj.temporal = lib.isTemporalModel(process);
                 res.end(JSON.stringify(jsonObj));
 
