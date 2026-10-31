@@ -1,3 +1,9 @@
+##### ClaferIDE Version 0.5.6, unreleased
+
+Minor release with Clafer 0.5.6.
+
+* The help pages are shown with their styles, images and the title and version of the tool: their paths broke when the tool moved to relative URLs in 0.5.5.
+
 ##### ClaferIDE Version 0.5.5, Oct 27, 2026
 
 Minor release with Clafer 0.5.5.
