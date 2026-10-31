@@ -146,7 +146,8 @@ server.get('/saveformat', /*fileMiddleware, */function(req, res) {
 var sendGraph = function(file, req, res)
 {
     var svg = "";
-    var dot = spawn("dot", ["-Tsvg", file]);
+    // about the size of the text of the other windows: the default of 14pt is 19px
+    var dot = spawn("dot", ["-Tsvg", "-Gfontsize=9", "-Nfontsize=9", "-Efontsize=9", file]);
 
     dot.on('error', function (err){
         core.logSpecific('ERROR: Cannot run Graphviz: ' + err.message, req.body.windowKey);
