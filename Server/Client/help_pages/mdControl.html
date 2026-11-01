@@ -1,18 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" type="text/css" href="commons/Client/styles.css"/>
-<script type = "text/javascript" src="commons/Client/help_utils.js"></script>
+<link rel="stylesheet" type="text/css" href="../../commons/Client/styles.css"/>
+<script type = "text/javascript" src="../../commons/Client/help_utils.js"></script>
 </head>
 
 <body class="helpbody" onload="docLoad()">
-<h2>Instance Generator</h2>
-In this window, you can select, run, and control an instance generator. 
+<h2>Solution Generator</h2>
+In this window, you can select, run, and control a solution generator. 
 <ul>
-<li>Use the button "<span><input type="submit" value="Run"></span>" to begin a session with the selected instance generator.</li>
-<li>Use the button "<span><input type="submit" value="Kill"></span>" to kill a session with a running instance generator.</li>
-<li>Use the button "<span><input type="submit" value="Get Instances"></span>" to ask for next N instances (if possible).</li>
-<li>Use the button "<span><input type="submit" value="Reset"></span>" to reset the settings made to the current instance generator session.</li>
+<li>Use the button "<span><input type="submit" value="Run"></span>" to begin a session with the selected solution generator.</li>
+<li>Use the button "<span><input type="submit" value="Kill"></span>" to kill a session with a running solution generator.</li>
+<li>Use the button "<span><input type="submit" value="Next"></span>" to get the next solution: an instance of a static model, or a trace of a dynamic model.</li>
+<li>Use the button "<span><input type="submit" value="Diff"></span>" to show each next solution, or state of a trace, as its changes. It is on by default, and can be set before running.</li>
+<li>Use the button "<span><input type="submit" value="Fork"></span>" to get another trace with the same states as the last trace before the given state.</li>
+<li>Use the button "<span><input type="submit" value="Next Config"></span>" to get a solution with another configuration: a trace with other final clafers, or an instance with other clafers, whatever their values.</li>
+<li>Use the button "<span><input type="submit" value="Check"></span>" to check the assertions of the model within the scopes and the maximum trace length: those on the line in the field next to the button, or all of them if it is empty or not positive. The console lists each assertion, and each one that fails gives a counterexample, which the Solution Graph shows.</li>
+<li>Use the button "<span><input type="submit" value="Reload"></span>" to reload the model, preserving the scopes and other settings.</li>
 <li>Use the button "<span><input type="submit" value="Quit"></span>" to finish the session safely.</li>
 <li>Adjust scopes or Maximum Integer bound settings using "<span><input type="submit" value="Set"></span>" or "<span><input type="submit" value="Inc"></span>" buttons.</li>
 </ul>

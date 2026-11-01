@@ -108,15 +108,15 @@ A model can import other models with `//# OPTIONS --import=...` (Clafer 0.5.4). 
 
 `clafer --version`
 
-> `Clafer 0.5.5`
+> `Clafer 0.5.6`
 
 `claferIG --version`
 
-> `ClaferIG 0.5.5`
+> `ClaferIG 0.5.6`
 
 `chocosolver --version`
 
-> `chocosolver v0.5.5.2026-10-25`
+> `chocosolver v0.5.6.2026-11-01`
 
 `java -version`
 
@@ -153,7 +153,7 @@ Then you can go to any browser and type `http://localhost:[port]/` and open any 
 
 * Choose `Simple model of a Person` example in the dropdown box in the upper-left corner of the tool window.
 * Press `Compile` button right in the front of the drop down list.
-* Once you see the compilation is complete, go to `Instance Generator` view and press `Run` there (the default backend is `Alloy-based IG (IG only)`).
+* Once you see the compilation is complete, go to `Solution Generator` view and press `Run` there (the default backend is `Alloy-based (with traces)`).
 * The `Output` view should print the first generated instance.
 
 ### Important: Branches must correspond
