@@ -88,7 +88,8 @@ temperature -> integer
     // and the machine is still hot in the step after ready
     [ this = 10 -[ machine.ready ]-> this = 10 ]
 
-    // An assertion must hold in all traces, and a failed one gives a counterexample.
+    // An assertion must hold in all traces. Press Check to check it: a failed one gives a
+    // counterexample, a trace in which it does not hold.
     assert [ this >= 0 && this <= 10 ]
 
 // A scenario: one concrete trace to try, written as a chain of transitions. A chain is a
