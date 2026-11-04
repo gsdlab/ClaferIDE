@@ -2,6 +2,8 @@
 
 Minor release with Clafer 0.5.7.
 
+* The example `CoffeeMachine.cfr` gives `brewing` its second way out as a constraint in the state, `[ this -[ no milk ]->> ready ]`, which lasts as long as the state's own transition.
+
 ##### ClaferIDE Version 0.5.6, Nov 1, 2026
 
 Minor release with Clafer 0.5.6.
