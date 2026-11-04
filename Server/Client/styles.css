@@ -116,6 +116,11 @@ fieldset{
     z-index: 1000;
 }
 
+/* the console's scrollbar is the browser's own: on the black terminal theme its default colours barely show */
+#console_editor .ace_scrollbar {
+    scrollbar-color: #8c8c8c #262626;
+}
+
 .save_button{    
     display: inline-block; 
     border: 1px solid #ccc;

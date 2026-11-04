@@ -2,6 +2,9 @@
 
 Minor release with Clafer 0.5.7.
 
+* TL button for the Alloy backend, next to Check: sets the maximum length of the traces of a dynamic model (by default 10 states) and solves again; checks use it too.
+* The scrollbar of the Output console shows on its black background, and the mouse wheel scrolls it by a few lines instead of about a page.
+* Next Config, Next and Fork on large dynamic models no longer fill the server's temporary folder (ClaferIG 0.5.7).
 * The example `CoffeeMachine.cfr` gives `brewing` its second way out as a constraint in the state, `[ this -[ no milk ]->> ready ]`, which lasts as long as the state's own transition.
 
 ##### ClaferIDE Version 0.5.6, Nov 1, 2026
