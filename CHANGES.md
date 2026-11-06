@@ -1,3 +1,20 @@
+##### ClaferIDE Version 0.5.7, unreleased
+
+Minor release with Clafer 0.5.7.
+
+* TL button for the Alloy backend, next to Check: sets the maximum length of the traces of a dynamic model (by default 10 states) and solves again; checks use it too.
+* The scrollbar of the Output console shows on its black background, and the mouse wheel scrolls it by a few lines instead of about a page.
+* Next Config, Next and Fork on large dynamic models no longer fill the server's temporary folder (ClaferIG 0.5.7).
+* The example `CoffeeMachine.cfr` gives `brewing` its second way out as a constraint in the state, `[ this -[ no milk ]->> ready ]`, which lasts as long as the state's own transition.
+* The client libraries jQuery, jQuery Form, d3, lodash and Chosen are npm dependencies in `package.json`, served from `node_modules` (ClaferToolsUICommonPlatform), so that `npm audit` and Dependabot report their vulnerabilities; they were copies in the commons. Chosen is upgraded from 1.0.0 to 1.8.7, and the HTML5 placeholder shim for old browsers is removed.
+* The client code no longer uses jQuery APIs deprecated in jQuery 3 (`.bind`, `.unbind`, `.delegate`, `.hover` and event shorthands such as `.click()`), a step towards jQuery 4.
+* multer 2.5.0 and body-parser 1.20.9 (of express) fix denial-of-service advisories of the server.
+* The editor is Ace 1.45.2, an npm dependency like the other client libraries, instead of a copy of Ace 1.1 from 2013 in the commons; the Clafer and console highlighting modes are ported to it.
+* The server runs on Express 5.3 (was 4.22), whose support continues, and express-rate-limit 8.7.3.
+* jQuery 4.0.0 (was 3.7.1). The forms are sent with $.ajax and FormData instead of the unmaintained jQuery Form plugin, and the clafers of the model are suggestions of the field Clafer name(s) of the custom scope (a datalist) instead of the drop-down of the unmaintained Chosen plugin; choosing one fills in its scope.
+* The editor highlights Clafer like the VS Code extension: the temporal keywords (`always`, `eventually`, `until`, `initially`, `never`, ...), `initial`, `final`, `assert`, `enum`, `if`/`then`/`else`, `parent`, `dref` and the transition arrows. Braces `{ }` were shown as comments and apostrophes in names (`x'`) as strings, and keywords were case-insensitive.
+* The client code uses the browser's own array functions and optional chaining instead of lodash, which is no longer a dependency.
+
 ##### ClaferIDE Version 0.5.6, Nov 1, 2026
 
 Minor release with Clafer 0.5.6.

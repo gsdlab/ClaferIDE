@@ -35,9 +35,9 @@ xor machine
     heating -[ temperature = 10 ]-> brewing
 
     // guarded, multi-step: only with milk is the coffee frothed
-    // a state with two ways out: one on the clafer, the other as a constraint
+    // a state with two ways out: one on the clafer, the other as a constraint in the state
     brewing -[ milk ]->> frothing
-    [ brewing -[ no milk ]->> ready ]
+        [ this -[ no milk ]->> ready ]
 
     // unguarded, multi-step: frothing takes as long as it takes
     frothing -->> ready
