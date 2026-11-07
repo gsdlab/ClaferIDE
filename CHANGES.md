@@ -14,6 +14,7 @@ Minor release with Clafer 0.5.7.
 * jQuery 4.0.0 (was 3.7.1). The forms are sent with $.ajax and FormData instead of the unmaintained jQuery Form plugin, and the clafers of the model are suggestions of the field Clafer name(s) of the custom scope (a datalist) instead of the drop-down of the unmaintained Chosen plugin; choosing one fills in its scope.
 * The editor highlights Clafer like the VS Code extension: the temporal keywords (`always`, `eventually`, `until`, `initially`, `never`, ...), `initial`, `final`, `assert`, `enum`, `if`/`then`/`else`, `parent`, `dref` and the transition arrows. Braces `{ }` were shown as comments and apostrophes in names (`x'`) as strings, and keywords were case-insensitive.
 * The client code uses the browser's own array functions and optional chaining instead of lodash, which is no longer a dependency.
+* `npm test` runs the tests of the commons, `commons/test`, in a page simulated by jsdom, a development dependency that the deployment (`npm ci --omit=dev`) leaves out: the Feature and Quality Matrix does not select a variant that is removed, and the clafers are shown by their UIDs as they are.
 
 ##### ClaferIDE Version 0.5.6, Nov 1, 2026
 
