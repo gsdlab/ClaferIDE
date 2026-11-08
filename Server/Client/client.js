@@ -251,7 +251,7 @@ function getConfiguration()
 	    },
     	"onLoaded": function(host)
 	    {
-	    	$("#myform").submit();
+	    	$("#myform").trigger("submit");
 	    }
 	};
 

@@ -100,20 +100,13 @@ fieldset{
     left: 0;
 }
 
-#ClaferListCont .chosen-with-drop .chosen-drop {
-    visibility: visible;
-}
-
-#ClaferListCont .chosen-drop {
-    border-bottom: 0;
-    border-top: 1px solid #aaa;
-    z-index: 3000;
-    position: fixed;
-    visibility: hidden;
-}
-
 #clafer_editor .ace_search, #console_editor .ace_search {
     z-index: 1000;
+}
+
+/* the console's scrollbar is the browser's own: on the black terminal theme its default colours barely show */
+#console_editor .ace_scrollbar {
+    scrollbar-color: #8c8c8c #262626;
 }
 
 .save_button{    
