@@ -1,0 +1,52 @@
+// Counters: values that change over time, with an initial value given by :=.
+//
+// The model is temporal, so its instances are traces. Press Next to see the one trace of
+// this model: the counters count in step, fixed_counter from 1 to 5, counter_2_to_6 from
+// 2 to 6 and counter_3_to_7 from 3 to 7, and the trace loops back to the first state.
+// Alloy only.
+//
+// A trace is a single loop, so the counters must fit into it together: their periods
+// (here all 5) need a common multiple within the maximum trace length (TL, by default
+// 10 states). With [ this.end = 7 ] in counter_2_to_6, the periods are 5 and 6, and the
+// model has no traces at TL 10.
+
+// := gives the counter its initial value: it starts at 1 and may change afterwards.
+// (With =, the value would be 1 in every state.)
+fixed_counter -> integer := 1
+    // A chain of transitions is a sequence: from 1, the next states are 2, 3, 4 and 5, and
+    // then 1 again. A constraint holds in every state, so the chain starts over at each 1.
+    [ this = 1 --> this = 2 --> this = 3 --> this = 4 --> this = 5 --> this = 1 ]
+
+// A configurable counter, as an object: the counter stays, its value changes.
+//
+// final fixes the counter itself during a trace, and with it start and end, which are
+// final too. The value val is not final, so its reference can change from state to state.
+abstract final ConfigurableCounter
+    final start -> integer
+    final end -> integer
+
+    // The initializer is written in the context of the parent of val, the counter, so
+    // this.start is the counter's start.
+    val -> integer := this.start
+        // A single rule for every value, which does not grow with the limit. A transition
+        // has no name for the value in the current state, so the quantifier names it v.
+        // The parentheses are needed: without them, the quantifier ends before -->, and v
+        // is not known after it. this = v --> ... is the same as this = v => X (...).
+        [ all v : integer | (this = v --> this = (if v < parent.end then v + 1 else parent.start)) ]
+
+    // final on the counter does not fix its child val. Each counter needs one val, so the
+    // scope of val is 2 here; with a spare instance (set the scope of val to 3), a new val
+    // could replace one in the middle of the trace and start over at start, since := gives
+    // every new instance its initial value. This keeps every instance of val from
+    // disappearing, so that the same val counts for the whole trace.
+    [ all v : val | G (v in val) ]
+
+// A counter from 2 to 6: the subclafer sets the values of start and end.
+counter_2_to_6 : ConfigurableCounter
+    [ this.start = 2 ]
+    [ this.end = 6 ]
+
+// A counter from 3 to 7
+counter_3_to_7 : ConfigurableCounter
+    [ this.start = 3 ]
+    [ this.end = 7 ]

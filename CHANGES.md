@@ -2,6 +2,8 @@
 
 Minor release with Clafer 0.5.8.
 
+* The example `Counter.cfr` counts from 1 to 5 and starts over: a reference with an initial value, `counter -> integer := 1`, and a chain of transitions, with a single rule for every value as an alternative.
+
 ##### ClaferIDE Version 0.5.7, Nov 8, 2026
 
 Minor release with Clafer 0.5.7.
