@@ -34,12 +34,13 @@ abstract final ConfigurableCounter
         // is not known after it. this = v --> ... is the same as this = v => X (...).
         [ all v : integer | (this = v --> this = (if v < parent.end then v + 1 else parent.start)) ]
 
-    // final on the counter does not fix its child val. Each counter needs one val, so the
-    // scope of val is 2 here; with a spare instance (set the scope of val to 3), a new val
-    // could replace one in the middle of the trace and start over at start, since := gives
-    // every new instance its initial value. This keeps every instance of val from
-    // disappearing, so that the same val counts for the whole trace.
-    [ all v : val | G (v in val) ]
+    // final on the counter does not fix its child val, but the rule above does: it requires
+    // val to have a value in the next state, and an instance has a value only while it exists.
+    // So the same val counts for the whole trace, also with a spare instance (set the scope
+    // of val to 3), which could otherwise replace it and start over at start, since := gives
+    // every new instance its initial value. Up to Clafer 0.5.7, the value of an instance that
+    // had disappeared was unconstrained, and this constraint was needed to rule that out:
+    // [ all v : val | G (v in val) ]
 
 // A counter from 2 to 6: the subclafer sets the values of start and end.
 counter_2_to_6 : ConfigurableCounter
