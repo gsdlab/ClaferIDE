@@ -108,15 +108,15 @@ A model can import other models with `//# OPTIONS --import=...` (Clafer 0.5.4). 
 
 `clafer --version`
 
-> `Clafer 0.5.8`
+> `Clafer 0.5.9`
 
 `claferIG --version`
 
-> `ClaferIG 0.5.8`
+> `ClaferIG 0.5.9`
 
 `chocosolver --version`
 
-> `chocosolver v0.5.8.2026-11-08`
+> `chocosolver v0.5.9.2026-11-08`
 
 `java -version`
 
