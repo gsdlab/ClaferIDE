@@ -55,6 +55,10 @@ xor machine
     [ idle && no coin => X idle ]
     [ heating && temperature < 10 => X heating ]
 
+    // The past-time operators look back: previous, once, historically, since and triggered.
+    // Each brewing comes after a coin, and the machine has not been idle since that coin.
+    assert [ brewing => (!idle since coin) ]
+
     // 3. DWYER'S PATTERNS
     //
     // Patterns say what must hold in a part of the trace, without any operators. They are
