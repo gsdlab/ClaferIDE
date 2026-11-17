@@ -1,3 +1,3 @@
 [submodule "Server/commons"]
 	path = Server/commons
-	url = https://github.com/gsdlab/ClaferToolsUICommonPlatform.git
+	url = git@github.com:gsdlab/ClaferToolsUICommonPlatform.git
