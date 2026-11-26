@@ -38,7 +38,7 @@
             "label": "Choco-based (with optimization)",
             "tooltip": "A solution generator and optimizer based on the Choco 6 CSP solver library",
             "accepted_format": "choco",
-            "tool": "chocosolver",
+            "tool": "clafersg",
             "tool_args": ["--file=$filepath$", "--repl", "--prettify"],
             "tool_version_args": ["--version"],
             "scope_options": {

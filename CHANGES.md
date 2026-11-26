@@ -2,6 +2,7 @@
 
 Minor release with Clafer 0.6.0.
 
+* The Choco backend runs `clafersg`, the new name of `chocosolver`, from `PATH`; Clafer Tools 0.6.0 no longer installs `chocosolver`.
 * The Outputs show the explicit model twice: "Rich Explicit Clafer" (`-m clafer`, formerly "Desugared Clafer", which it no longer is) and "Core Explicit Clafer" (`-m clafer --core --record-provenance`), the rich constructs lowered to the core, each constraint with the construct and position it comes from. `--core` applies to all the modes of a compilation, so the server compiles the formats with `"compiler_run": "core"` in `Formats/formats.json` in a second run, after a successful first one.
 * A format with `"shows_compilation_errors": "false"` is empty after a failed compilation; the string `"false"` was taken as true, so the outputs of the previous compilation were shown.
 
