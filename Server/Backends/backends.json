@@ -16,9 +16,16 @@
                 "produce_scope_file" : {"command": "saveScopes\n"},
                 "set_int_scope" : {"command": "maxInt $value$\n", "label": "Max. integer:", "argument": "--maxint=$value$", "default_value": 127}
             },
+            "start_command": "dot\n",
             "control_buttons": [
-                {"id": "next_instance", "command": "n\n", "label" : "Next", "tooltip": "Next Solution"},
-                {"id": "reload", "command": "r\n", "label" : "Reload", "tooltip": "Reload the model preserving scopes and other settings"},
+                {"id": "next_instance", "command": "n\ndot\n", "label" : "Next", "tooltip": "Next Solution: an instance of a static model, or a trace of a temporal model"},
+                {"id": "diff", "command": "d\ndot\n", "label" : "Diff", "toggle": true, "default_on": true, "run_command": "d\n", "tooltip": "Show each next instance, or state of a trace, as its changes from the previous one (+ appears, - disappears, ~ changes its value), in the output and the solution graph. It can be set before running."},
+                {"id": "fork", "command": "fork $value$\ndot\n", "label" : "Fork", "temporal_only": true, "argument": {"default_value": 1, "tooltip": "The state from which the new trace differs: the states before it are kept"}, "tooltip": "Temporal models: give another trace with the same states as the last trace before the given state"},
+                {"id": "check", "command": "check $value$\ndot\n", "label" : "Check", "temporal_only": true, "argument": {"default_value": "", "allow_negative": true, "tooltip": "The line of the model whose assertions to check: all the assertions if it is empty or not positive"}, "tooltip": "Temporal models: check the assertions of the model within the scopes and the maximum trace length, and show a counterexample of each one that fails"},
+                {"id": "trace_length", "command": "tl $value$\n", "label" : "TL", "temporal_only": true, "argument": {"default_value": 10, "tooltip": "The maximum number of states of a trace, at least 1"}, "tooltip": "Temporal models: set the maximum trace length of the next traces; checks use it too"},
+                {"id": "next_config", "command": "config\ndot\n", "label" : "Next Config", "temporal_only": true, "tooltip": "Temporal models: next trace whose clafers that do not change over time differ from those of the traces so far"},
+                {"id": "reload", "command": "r\ndot\n", "label" : "Reload", "tooltip": "Reload the model preserving scopes and other settings"},
+                {"id": "clafer_model", "command": "claferModel\n", "label" : "Clafer Model", "temporal_only": true, "tooltip": "Temporal models: print the Clafer model along with the scopes and mappings"},
                 {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
             ],
             "presentation_specifics": {

@@ -98,6 +98,9 @@ function getConfiguration()
 			        module.host.print("Compiler> " + responseObject.message + "\n");
 			        module.host.print(responseObject.compiler_message + "\n");
 
+			        // the buttons of the temporal models only, e.g., clafersg's Fork, are disabled for a static model
+			        module.host.findModule("mdControl").setTemporal(!!responseObject.temporal);
+
 			        if (responseObject.temporal)
 			        {
 			        	module.host.print("ClaferIDE> A temporal model: both solution generators give its traces with Alloy.\n");
