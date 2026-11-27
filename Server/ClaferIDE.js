@@ -376,7 +376,7 @@ server.post('/poll', /*pollingMiddleware,*/ function(req, res, next)
                 jsonObj.scopes = "";
                 jsonObj.model = process.model;
                 jsonObj.compiler_message = process.compiler_message;
-                // temporal models run only on the Alloy-based solution generator
+                // temporal models are solved with Alloy, by clafersg and by claferIG
                 jsonObj.temporal = lib.isTemporalModel(process);
                 res.end(JSON.stringify(jsonObj));
 

@@ -23,9 +23,9 @@ See [clafer.org](http://clafer.org).
 * Provides a web-based IDE for modeling in Clafer.
 * Provides an source code editor (ACE).
 * Compiles the model to HTML for syntax highlighting and navigation via hyperlinks or error highlighting.
-* Instantiates the model using ClaferIG and allows for global scope setting and requesting a next instance.
+* Instantiates the model with `clafersg`, by default, or `claferIG`, and allows for global scope setting and requesting a next instance.
 * Provides a set of predefined examples that can be compiled and instantiated.
-* Temporal (behavioral) Clafer models can be edited and compiled; instance generation supports only static models.
+* Temporal (behavioral) Clafer models can be edited and compiled, and both solution generators give their traces with Alloy, with the buttons Next, Diff, Fork, Next Config, Check, TL, Reload and Clafer Model. With `clafersg`, the buttons for temporal models only (Fork, Next Config, TL and Clafer Model) are disabled for a static model; Diff and Check work for both.
 
 ### Nature
 
@@ -77,7 +77,7 @@ git submodule foreach git checkout develop
 
 This will download all the required `Node.js` modules.
 
-4. Install the backends `clafer`, `claferIG`, `chocosolver` into some location `<bin>` found on `PATH`. The backends in `Server/Backends/backends.json` run them from `PATH`.
+4. Install the backends `clafer`, `claferIG`, `clafersg` into some location `<bin>` found on `PATH`. The backends in `Server/Backends/backends.json` run them from `PATH`.
 
 The fastest way is to unzip a binary distribution into the folder `<bin>`.
 
@@ -102,21 +102,21 @@ All URLs of the tool are relative, so a reverse proxy can serve it under a path,
 
 A model can import other models with `//# OPTIONS --import=...` (Clafer 0.5.4). Since a submitted model may come from anyone, the tool restricts its imports: only `.cfr` files: local files only from the tool's `Examples` folder (`--import=Examples/<file>.cfr`), and URLs only from public addresses and not served as web pages (e.g., `--import=https://example.org/models/design-space.cfr`). A model opened with `?claferFileURL=` imports relative to its URL, so a model next to it on the same server can be imported by its name; a server on a private address (e.g., a wiki on `localhost`) cannot serve imports. The buttons **URL** and **import** next to the example selector copy the selected example's URL (`<tool URL>/Examples/<file>.cfr`) and the line `//# OPTIONS --import=Examples/<file>.cfr`.
 
-2. Make sure `clafer`, `claferIG`, `chocosolver`, `node`, and `java` are in `PATH` environment variables, so they can be executed without any path prefixes.
+2. Make sure `clafer`, `claferIG`, `clafersg`, `node`, and `java` are in `PATH` environment variables, so they can be executed without any path prefixes.
 
 3. Running the following commands should produce the following results or later version:
 
 `clafer --version`
 
-> `Clafer 0.5.8`
+> `Clafer v0.6.0.2026-11-29`
 
 `claferIG --version`
 
-> `ClaferIG 0.5.8`
+> `ClaferIG v0.6.0.2026-11-29`
 
-`chocosolver --version`
+`clafersg --version`
 
-> `chocosolver v0.5.8.2026-11-08`
+> `clafersg v0.6.0.2026-11-29`
 
 `java -version`
 
@@ -153,7 +153,7 @@ Then you can go to any browser and type `http://localhost:[port]/` and open any 
 
 * Choose `Simple model of a Person` example in the dropdown box in the upper-left corner of the tool window.
 * Press `Compile` button right in the front of the drop down list.
-* Once you see the compilation is complete, go to `Solution Generator` view and press `Run` there (the default backend is `Alloy-based (with traces)`).
+* Once you see the compilation is complete, go to `Solution Generator` view and press `Run` there (the default backend is `clafersg (Choco, and Alloy for temporal models)`).
 * The `Output` view should print the first generated instance.
 
 ### Important: Branches must correspond

@@ -21,9 +21,9 @@
             "display_element": "iframe"
         },
         {
-            "id": "desugared_clafer",
-            "label": "Desugared Clafer",
-            "tooltip": "Desugared Clafer model",
+            "id": "rich_explicit_clafer",
+            "label": "Rich Explicit Clafer",
+            "tooltip": "The explicit model with the rich constructs: every name a UID, every multiplicity and group cardinality written out",
             "file_suffix": ".des.cfr",
             "compiler_mode": "clafer",
             "compiler_args": [],
@@ -31,12 +31,13 @@
             "display_element": "textarea"
         },
         {
-            "id": "choco",
-            "label": "Chocosolver's JavaScript",
-            "tooltip": "Choco solver file format (JavaScript)",
-            "file_suffix": ".js",
-            "compiler_mode": "choco",
-            "compiler_args": [],
+            "id": "core_explicit_clafer",
+            "label": "Core Explicit Clafer",
+            "tooltip": "The explicit model of the core: the rich constructs lowered to core constructs, each with its origin",
+            "file_suffix": ".core.cfr",
+            "compiler_mode": "clafer",
+            "compiler_args": ["--core", "--record-provenance"],
+            "compiler_run": "core",
             "shows_compilation_errors" : "false",
             "display_element": "textarea"
         },
