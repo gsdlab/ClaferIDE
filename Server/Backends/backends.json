@@ -1,9 +1,34 @@
 {
     "backends": [
         {
+            "id": "chocoIG",
+            "label": "clafersg (Choco, and Alloy for temporal models)",
+            "tooltip": "The Clafer solution generator: static models with the Choco 6 CSP solver library (with optimization), temporal models with Alloy 6 Analyzer (traces)",
+            "accepted_format": "clafer_source",
+            "tool": "clafersg",
+            "tool_args": ["--file=$filepath$", "--repl", "--prettify"],
+            "tool_version_args": ["--version"],
+            "scope_options": {
+                "set_default_scope" : {"command": "SetGlobalScope $value$\n", "label": "Default:", "argument": "--scope=$value$", "default_value": 1},
+                "set_individual_scope": {"command": "setScope $clafer$ $value$\n"},
+                "inc_all_scopes" : {"command": "IncGlobalScope $value$\n", "label": "All:", "default_value": 1},
+                "inc_individual_scope": {"command": "incScope $clafer$ $value$\n"},
+                "produce_scope_file" : {"command": "saveScopes\n"},
+                "set_int_scope" : {"command": "maxInt $value$\n", "label": "Max. integer:", "argument": "--maxint=$value$", "default_value": 127}
+            },
+            "control_buttons": [
+                {"id": "next_instance", "command": "n\n", "label" : "Next", "tooltip": "Next Solution"},
+                {"id": "reload", "command": "r\n", "label" : "Reload", "tooltip": "Reload the model preserving scopes and other settings"},
+                {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
+            ],
+            "presentation_specifics": {
+                "prompt_title": ["ClaferChocoIG> ", "claferIG> "]
+            }
+        },
+        {
             "id": "alloyIG",
-            "label": "Alloy-based (with traces)",
-            "tooltip": "A solution generator based on Alloy 6 Analyzer",
+            "label": "claferIG (Alloy)",
+            "tooltip": "The solution generator based on Alloy 6 Analyzer, for static models with Alloy too, and for traces with Diff, Fork, Check and TL",
             "accepted_format": "clafer_source",
             "tool": "claferIG",
             "tool_args": ["$filepath$"],
@@ -31,31 +56,6 @@
             ],
             "presentation_specifics": {
                 "prompt_title": "claferIG> "
-            }
-        },
-        {
-            "id": "chocoIG",
-            "label": "Choco-based (with optimization)",
-            "tooltip": "A solution generator and optimizer based on the Choco 6 CSP solver library",
-            "accepted_format": "choco",
-            "tool": "clafersg",
-            "tool_args": ["--file=$filepath$", "--repl", "--prettify"],
-            "tool_version_args": ["--version"],
-            "scope_options": {
-                "set_default_scope" : {"command": "SetGlobalScope $value$\n", "label": "Default:", "argument": "--scope=$value$", "default_value": 1},
-                "set_individual_scope": {"command": "setScope $clafer$ $value$\n"},
-                "inc_all_scopes" : {"command": "IncGlobalScope $value$\n", "label": "All:", "default_value": 1},
-                "inc_individual_scope": {"command": "incScope $clafer$ $value$\n"},
-                "produce_scope_file" : {"command": "saveScopes\n"},
-                "set_int_scope" : {"command": "maxInt $value$\n", "label": "Max. integer:", "argument": "--maxint=$value$", "default_value": 127}
-            },
-            "control_buttons": [
-                {"id": "next_instance", "command": "n\n", "label" : "Next", "tooltip": "Next Solution"},
-                {"id": "reload", "command": "r\n", "label" : "Reload", "tooltip": "Reload the model preserving scopes and other settings"},
-                {"id": "quit", "command": "q\n", "label" : "Quit", "tooltip": "Exit the IG safely"}
-            ],
-            "presentation_specifics": {
-                "prompt_title": "ClaferChocoIG> "
             }
         }
     ]

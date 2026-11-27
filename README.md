@@ -23,9 +23,9 @@ See [clafer.org](http://clafer.org).
 * Provides a web-based IDE for modeling in Clafer.
 * Provides an source code editor (ACE).
 * Compiles the model to HTML for syntax highlighting and navigation via hyperlinks or error highlighting.
-* Instantiates the model using ClaferIG and allows for global scope setting and requesting a next instance.
+* Instantiates the model with `clafersg`, by default, or `claferIG`, and allows for global scope setting and requesting a next instance.
 * Provides a set of predefined examples that can be compiled and instantiated.
-* Temporal (behavioral) Clafer models can be edited and compiled; instance generation supports only static models.
+* Temporal (behavioral) Clafer models can be edited and compiled, and both solution generators give their traces with Alloy; Diff, Fork, Check and TL are buttons of `claferIG (Alloy)`.
 
 ### Nature
 
@@ -153,7 +153,7 @@ Then you can go to any browser and type `http://localhost:[port]/` and open any 
 
 * Choose `Simple model of a Person` example in the dropdown box in the upper-left corner of the tool window.
 * Press `Compile` button right in the front of the drop down list.
-* Once you see the compilation is complete, go to `Solution Generator` view and press `Run` there (the default backend is `Alloy-based (with traces)`).
+* Once you see the compilation is complete, go to `Solution Generator` view and press `Run` there (the default backend is `clafersg (Choco, and Alloy for temporal models)`).
 * The `Output` view should print the first generated instance.
 
 ### Important: Branches must correspond

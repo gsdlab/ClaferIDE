@@ -100,7 +100,7 @@ function getConfiguration()
 
 			        if (responseObject.temporal)
 			        {
-			        	module.host.print("ClaferIDE> Temporal models run only on the Alloy-based solution generator.\n");
+			        	module.host.print("ClaferIDE> A temporal model: both solution generators give its traces with Alloy.\n");
 			        }
 
 			        if (module.host.storage.toReload)
@@ -295,9 +295,12 @@ function filterOutput(host, output)
 {
 	output = output.replace(GRAPH_MESSAGES, "");
 
-	var title = host.storage.backend.presentation_specifics.prompt_title;
-	if (title != "")
-		return output.replaceAll(title, "");
+	// a backend can have several prompts, e.g., clafersg's for static and for temporal models
+	[].concat(host.storage.backend.presentation_specifics.prompt_title).forEach(function(title)
+	{
+		if (title)
+			output = output.replaceAll(title, "");
+	});
 
 	return output;
 }

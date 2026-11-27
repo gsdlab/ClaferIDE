@@ -42,16 +42,6 @@
             "display_element": "textarea"
         },
         {
-            "id": "choco",
-            "label": "Chocosolver's JavaScript",
-            "tooltip": "Choco solver file format (JavaScript)",
-            "file_suffix": ".js",
-            "compiler_mode": "choco",
-            "compiler_args": [],
-            "shows_compilation_errors" : "false",
-            "display_element": "textarea"
-        },
-        {
             "id": "alloy",
             "label": "Alloy Model",
             "tooltip": "Alloy 6 Analyzer's file format (als)",

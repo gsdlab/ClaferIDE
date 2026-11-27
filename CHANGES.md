@@ -2,6 +2,8 @@
 
 Minor release with Clafer 0.6.0.
 
+* The default solution generator is `clafersg`, which reads the `.cfr` model itself, with its Java frontend, and solves static models with Choco and temporal ones with Alloy. `claferIG` stays as `claferIG (Alloy)`, to solve static models with Alloy too and to explore traces with Diff, Fork, Check and TL. The Choco backend took the compiler's `.js` output (`-m choco`), which the server no longer produces, so "Chocosolver's JavaScript" is no longer among the Outputs. clafersg gets the same restrictions of the imports as clafer and claferIG (ClaferToolsUICommonPlatform).
+* Whether a model is temporal comes from its rich explicit model, whose options have a trace length (`--tl=`) only for a temporal model, instead of the compiler's message that it has no Choco output (ClaferToolsUICommonPlatform).
 * The Choco backend runs `clafersg`, the new name of `chocosolver`, from `PATH`; Clafer Tools 0.6.0 no longer installs `chocosolver`.
 * The Outputs show the explicit model twice: "Rich Explicit Clafer" (`-m clafer`, formerly "Desugared Clafer", which it no longer is) and "Core Explicit Clafer" (`-m clafer --core --record-provenance`), the rich constructs lowered to the core, each constraint with the construct and position it comes from. `--core` applies to all the modes of a compilation, so the server compiles the formats with `"compiler_run": "core"` in `Formats/formats.json` in a second run, after a successful first one.
 * A format with `"shows_compilation_errors": "false"` is empty after a failed compilation; the string `"false"` was taken as true, so the outputs of the previous compilation were shown.
