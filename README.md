@@ -25,7 +25,7 @@ See [clafer.org](http://clafer.org).
 * Compiles the model to HTML for syntax highlighting and navigation via hyperlinks or error highlighting.
 * Instantiates the model with `clafersg`, by default, or `claferIG`, and allows for global scope setting and requesting a next instance.
 * Provides a set of predefined examples that can be compiled and instantiated.
-* Temporal (behavioral) Clafer models can be edited and compiled, and both solution generators give their traces with Alloy, with the buttons Next, Diff, Fork, Next Config, Check, TL, Reload and Clafer Model. With `clafersg`, the buttons for temporal models only (Fork, Next Config, Check, TL and Clafer Model) are disabled for a static model; Diff works for both.
+* Temporal (behavioral) Clafer models can be edited and compiled, and both solution generators give their traces with Alloy, with the buttons Next, Diff, Fork, Next Config, Check, TL, Reload and Clafer Model. With `clafersg`, the buttons for temporal models only (Fork, Next Config, TL and Clafer Model) are disabled for a static model; Diff and Check work for both.
 
 ### Nature
 
